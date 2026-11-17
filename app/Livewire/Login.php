@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
+use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -34,7 +34,7 @@ class Login extends Component
         }
 
         // Seuls les comptes actifs peuvent se connecter
-        if (!Auth::attempt(['phone' => $this->phone, 'password' => $this->password, 'status' => 'active'])) {
+        if (!Auth::attempt(['phone' => User::normalizePhone($this->phone), 'password' => $this->password, 'status' => 'active'])) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
             $this->addError('phone', 'Numéro de téléphone ou mot de passe incorrect.');
             return;
@@ -44,14 +44,19 @@ class Login extends Component
         session()->regenerate();
 
         // Le Super Admin arrive sur la liste des maquis
-        $destination = Auth::user()->isPlatformAdmin() ? 'admin.restaurants' : 'dashboard.index';
+        // Mot de passe provisoire : à changer avant tout
+        $destination = match (true) {
+            Auth::user()->mustChangePassword() => 'password.change',
+            Auth::user()->isPlatformAdmin() => 'admin.restaurants',
+            default => 'dashboard.index',
+        };
 
         $this->redirect(route($destination), navigate: false);
     }
 
     private function throttleKey(): string
     {
-        return 'login:' . Str::lower(preg_replace('/\s+/', '', $this->phone)) . '|' . request()->ip();
+        return 'login:' . User::normalizePhone($this->phone) . '|' . request()->ip();
     }
 
     public function render()

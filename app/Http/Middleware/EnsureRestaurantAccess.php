@@ -36,6 +36,11 @@ class EnsureRestaurantAccess
                 ->with('error', 'Votre compte a été désactivé. Contactez votre responsable.');
         }
 
+        // Mot de passe provisoire : rien d'autre tant qu'il n'est pas changé
+        if ($user->mustChangePassword()) {
+            return redirect()->route('password.change');
+        }
+
         if ($user->isPlatformAdmin()) {
             if ($user->currentRestaurant() === null) {
                 return redirect()->route('admin.restaurants')

@@ -33,7 +33,7 @@ class UsersManage extends Component
         return [
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
-            'phone' => ['required', 'string', 'max:30', Rule::unique('users', 'phone')->ignore($this->editingId)],
+            'phone' => ['required', 'regex:' . User::PHONE_REGEX, Rule::unique('users', 'phone')->ignore($this->editingId)],
             'password' => $this->editingId ? 'nullable|string|min:8' : 'required|string|min:8',
             // On ne peut attribuer que les rôles autorisés ; son propre rôle ne change pas
             'role' => $editingSelf ? 'nullable' : ['required', Rule::in(UserPolicy::assignableRoles(auth()->user()))],
@@ -73,7 +73,11 @@ class UsersManage extends Component
         $target = $this->editingId ? $this->findStaff($this->editingId) : null;
         $target ? Gate::authorize('update', $target) : Gate::authorize('create', User::class);
 
-        $this->validate();
+        $this->phone = User::normalizePhone($this->phone);
+        $this->validate(messages: [
+            'phone.regex' => 'Numéro invalide : 10 chiffres, par exemple 07 11 22 33 44.',
+            'phone.unique' => 'Ce numéro est déjà utilisé par un autre compte.',
+        ]);
 
         $data = [
             'first_name' => $this->firstName,
@@ -89,11 +93,18 @@ class UsersManage extends Component
             $data['password'] = Hash::make($this->password);
         }
 
+        // Mot de passe choisi par quelqu'un d'autre = provisoire
+        $mustChange = $this->password !== '' && $this->editingId !== auth()->id();
+
         if ($target) {
             $target->update($data);
         } else {
             $data['restaurant_id'] = auth()->user()->currentRestaurantId();
-            User::create($data);
+            $target = User::create($data);
+        }
+
+        if ($mustChange) {
+            $target->forceFill(['must_change_password' => true])->save();
         }
 
         $this->showForm = false;

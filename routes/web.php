@@ -1,6 +1,8 @@
 <?php
 
+use App\Livewire\Admin\CreateRestaurant;
 use App\Livewire\Admin\RestaurantsList;
+use App\Livewire\ChangePassword;
 use App\Livewire\CashRegisterClosed;
 use App\Livewire\CashRegisterHistory;
 use App\Livewire\CashRegisterManage;
@@ -30,6 +32,9 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
 
+// Choix du mot de passe (obligatoire après un mot de passe provisoire)
+Route::get('/mot-de-passe', ChangePassword::class)->middleware('auth')->name('password.change');
+
 // Page affichée au personnel d'un maquis verrouillé (non-paiement, essai terminé)
 Route::view('/compte-suspendu', 'account-locked')->middleware('auth')->name('account.locked');
 
@@ -53,6 +58,7 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
 // Espace Super Admin (propriétaire de la plateforme)
 Route::middleware(['auth', 'platform_admin'])->group(function () {
     Route::get('/admin/restaurants', RestaurantsList::class)->name('admin.restaurants');
+    Route::get('/admin/restaurants/nouveau', CreateRestaurant::class)->name('admin.restaurants.create');
 
     // Sortir du maquis dans lequel le Super Admin est entré
     Route::post('/admin/quitter-maquis', function () {

@@ -24,7 +24,40 @@ class User extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
         'is_platform_admin' => 'boolean',
+        'must_change_password' => 'boolean',
     ];
+
+    /**
+     * Met un numéro ivoirien au format unique « 0711223344 » :
+     * espaces, points, tirets et indicatif +225 / 00225 retirés.
+     */
+    public static function normalizePhone(?string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone) ?? '';
+
+        if (strlen($digits) === 15 && str_starts_with($digits, '00225')) {
+            $digits = substr($digits, 5);
+        } elseif (strlen($digits) === 13 && str_starts_with($digits, '225')) {
+            $digits = substr($digits, 3);
+        }
+
+        return $digits;
+    }
+
+    /** Numéro ivoirien normalisé : 10 chiffres, mobile (01, 05, 07) ou fixe (21, 25, 27). */
+    public const PHONE_REGEX = '/^[02]\d{9}$/';
+
+    protected function phone(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            set: fn (?string $value) => self::normalizePhone($value),
+        );
+    }
+
+    public function mustChangePassword(): bool
+    {
+        return $this->must_change_password === true;
+    }
 
     public function restaurant(): BelongsTo
     {

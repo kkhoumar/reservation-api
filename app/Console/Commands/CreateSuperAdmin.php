@@ -32,7 +32,7 @@ class CreateSuperAdmin extends Command
             return self::FAILURE;
         }
 
-        $user = User::firstOrNew(['phone' => $this->argument('phone')]);
+        $user = User::firstOrNew(['phone' => User::normalizePhone($this->argument('phone'))]);
 
         // forceFill : is_platform_admin n'est pas assignable en masse
         $user->forceFill([

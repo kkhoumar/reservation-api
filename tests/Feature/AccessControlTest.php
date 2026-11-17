@@ -30,7 +30,7 @@ class AccessControlTest extends TestCase
     {
         parent::setUp();
 
-        RateLimiter::clear('login:+2250500000000|127.0.0.1');
+        RateLimiter::clear('login:0500000000|127.0.0.1');
 
         $this->maquis = Restaurant::factory()->create();
         $this->owner = User::factory()->owner()->create(['restaurant_id' => $this->maquis->id, 'phone' => '+225 05 00 00 00 00']);
@@ -145,7 +145,7 @@ class AccessControlTest extends TestCase
             ->call('save')
             ->assertHasErrors('role');
 
-        $this->assertDatabaseMissing('users', ['phone' => '+225 07 11 22 33 44']);
+        $this->assertDatabaseMissing('users', ['phone' => '0711223344']);
     }
 
     public function test_une_gerante_ne_peut_pas_creer_un_proprietaire(): void
@@ -162,7 +162,7 @@ class AccessControlTest extends TestCase
             ->call('save')
             ->assertHasErrors('role');
 
-        $this->assertDatabaseMissing('users', ['phone' => '+225 07 11 22 33 44']);
+        $this->assertDatabaseMissing('users', ['phone' => '0711223344']);
     }
 
     public function test_une_gerante_peut_gerer_les_serveurs(): void
@@ -179,7 +179,7 @@ class AccessControlTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('users', ['phone' => '+225 07 55 66 77 88', 'role' => 'server', 'restaurant_id' => $this->maquis->id]);
+        $this->assertDatabaseHas('users', ['phone' => '0755667788', 'role' => 'server', 'restaurant_id' => $this->maquis->id]);
 
         Livewire::test(UsersManage::class)->call('toggleStatus', $this->server->id);
         $this->assertSame('inactive', $this->server->fresh()->status);

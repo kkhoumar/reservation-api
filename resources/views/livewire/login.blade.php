@@ -12,7 +12,7 @@
     <form wire:submit="authenticate">
         <div style="margin-bottom: 16px;">
             <label>Téléphone</label>
-            <input type="text" wire:model="phone" placeholder="+225 07 XX XX XX XX" autofocus>
+            <input type="text" wire:model="phone" placeholder="07 XX XX XX XX" inputmode="tel" autocomplete="username" autofocus>
             @error('phone') <div class="error">{{ $message }}</div> @enderror
         </div>
 

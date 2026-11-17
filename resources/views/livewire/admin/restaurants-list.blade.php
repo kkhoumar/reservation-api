@@ -1,9 +1,12 @@
 <div>
-    <div style="margin-bottom: 24px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
-            Super Admin
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
+                Super Admin
+            </div>
+            <h1>Établissements</h1>
         </div>
-        <h1>Établissements</h1>
+        <a href="{{ route('admin.restaurants.create') }}" class="btn btn-primary" style="text-decoration: none;">+ Nouveau maquis</a>
     </div>
 
     @if (session('success'))
