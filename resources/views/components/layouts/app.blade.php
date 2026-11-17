@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $title ?? 'Maquis Express' }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @livewireStyles
+    <style>
+      :root {
+    --color-primary: #0B4D3C;
+    --color-primary-700: #146652;
+    --color-primary-300: #5EBFA0;
+    --color-accent: #C1541E;
+    --color-accent-light: #E0834F;
+    --color-danger: #D93B3B;
+    --color-bg: #FBF6EC;
+    --color-surface: #FFFFFF;
+    --color-text: #1F2933;
+    --color-text-secondary: #6B7280;
+    --color-border: #E7E1D3;
+    --sidebar-width: 232px;
+}
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            font-feature-settings: 'tnum' 1;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--color-primary);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 8px 28px 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .sidebar-brand .badge {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--color-accent);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: -0.02em;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand .name {
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            line-height: 1.2;
+        }
+
+        .sidebar-brand .sub {
+            color: rgba(255,255,255,0.5);
+            font-size: 11px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 12px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: rgba(255,255,255,0.72);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.12s ease, color 0.12s ease;
+        }
+
+        .sidebar-link svg { flex-shrink: 0; opacity: 0.85; }
+
+        .sidebar-link:hover {
+            background: rgba(255,255,255,0.06);
+            color: white;
+        }
+
+        .sidebar-link.active {
+            background: var(--color-primary-700);
+            color: white;
+        }
+
+        .sidebar-link.disabled {
+            color: rgba(255,255,255,0.32);
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .sidebar-link .soon {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 5px;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 12px 8px 0 8px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+        }
+
+        .app-shell {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar .date {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .topbar .acting-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .topbar .avatar {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: var(--color-primary-300);
+            color: var(--color-primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1180px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 28px 32px 48px 32px;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(6,59,39,0.04);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 600;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: filter 0.12s ease, transform 0.05s ease;
+        }
+
+        .btn:active { transform: translateY(1px); }
+        .btn:hover { filter: brightness(1.05); }
+
+        .btn-primary { background: var(--color-accent); color: white; }
+        .btn-secondary { background: var(--color-primary); color: white; }
+        .btn-ghost { background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); }
+        .btn-danger { background: var(--color-danger); color: white; }
+
+        select, input {
+            font-family: inherit;
+            font-size: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+            background: white;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(255,122,0,0.12);
+        }
+
+        h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+        h3 { font-size: 15px; font-weight: 700; }
+
+        /* ---------- Responsive mobile ---------- */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            color: var(--color-text);
+        }
+
+        @media (max-width: 860px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.2s ease;
+                z-index: 100;
+                width: 260px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 0 0 40px rgba(0,0,0,0.3);
+            }
+            .app-shell {
+                margin-left: 0;
+            }
+            .mobile-menu-toggle {
+                display: block;
+            }
+            .topbar {
+                padding: 12px 16px;
+            }
+            .topbar .date {
+                display: none;
+            }
+            .topbar .acting-user span {
+                display: none;
+            }
+            main {
+                padding: 16px;
+            }
+            h1 {
+                font-size: 21px;
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 90;
+            }
+            .sidebar-overlay.open {
+                display: block;
+            }
+            div[style*="grid-template-columns: repeat(auto-fit"] {
+                grid-template-columns: 1fr !important;
+            }
+            div[style*="grid-template-columns: 2fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+            div[style*="grid-template-columns: repeat(2, 1fr)"] {
+                grid-template-columns: 1fr !important;
+            }
+            div[style*="grid-template-columns: repeat(auto-fill"] {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="badge">ME</div>
+            <div>
+                <div class="name">Maquis Express</div>
+                <div class="sub">Gestion de restaurant</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ route('dashboard.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                Tableau de bord
+            </a>
+            <a href="{{ route('tables.index') }}" class="sidebar-link {{ request()->routeIs('tables.index') || request()->routeIs('orders.new') ? 'active' : '' }}">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/></svg>
+                Tables & commandes
+            </a>
+            @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
+                <a href="{{ route('cash-register.manage') }}" class="sidebar-link {{ request()->routeIs('cash-register.manage') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
+                    Caisse
+                </a>
+            @endif
+            @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager'])))
+                <a href="{{ route('cash-register.history') }}" class="sidebar-link {{ request()->routeIs('cash-register.history') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+                    Historique caisse
+                </a>
+            @endif
+            @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
+                <a href="{{ route('sales.today') }}" class="sidebar-link {{ request()->routeIs('sales.today') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Ventes du jour
+                </a>
+            @endif
+            @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
+                <a href="{{ route('expenses.index') }}" class="sidebar-link {{ request()->routeIs('expenses.index') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 9V7a5 5 0 0 0-10 0v2"/><rect x="3" y="9" width="18" height="12" rx="2"/></svg>
+                    Dépenses
+                </a>
+            @endif
+            @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager'])))
+                <a href="{{ route('users.manage') }}" class="sidebar-link {{ request()->routeIs('users.manage') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Utilisateurs
+                </a>
+                <a href="{{ route('products.manage') }}" class="sidebar-link {{ request()->routeIs('products.manage') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M8 21V9"/></svg>
+                    Menu & produits
+                </a>
+            @endif
+        </nav>
+
+        <div class="sidebar-footer">
+            Maquis Chez Koffi<br>Cocody, Abidjan
+        </div>
+    </aside>
+
+    <div class="app-shell">
+        <div class="topbar">
+            <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="date">{{ ucfirst(\Carbon\Carbon::now()->locale('fr')->isoFormat('dddd D MMMM YYYY')) }}</div>
+            <div class="acting-user">
+                @auth
+                    <div class="avatar">{{ strtoupper(substr(auth()->user()->first_name, 0, 1)) }}</div>
+                    <span>{{ auth()->user()->first_name }} {{ auth()->user()->last_name }} · {{ auth()->user()->role }}</span>
+                    <form method="POST" action="{{ route('logout') }}" style="margin: 0 0 0 10px;">
+                        @csrf
+                        <button type="submit" style="background: none; border: none; color: var(--color-text-secondary); cursor: pointer; font-size: 13px; font-family: inherit;">
+                            Déconnexion
+                        </button>
+                    </form>
+                @endauth
+            </div>
+        </div>
+
+        <main>
+            @if (session('error'))
+                <div class="card" style="border-left: 6px solid var(--color-danger); margin-bottom: 16px;">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            {{ $slot }}
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('open');
+        }
+    </script>
+
+    @livewireScripts
+</body>
+</html>
