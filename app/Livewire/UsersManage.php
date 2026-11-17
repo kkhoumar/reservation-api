@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -14,6 +15,7 @@ use Livewire\Component;
 class UsersManage extends Component
 {
     public bool $showForm = false;
+    #[Locked]
     public ?int $editingId = null;
 
     public string $firstName = '';

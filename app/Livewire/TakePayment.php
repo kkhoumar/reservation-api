@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -15,12 +16,14 @@ use Livewire\Component;
  */
 class TakePayment extends Component
 {
+    #[Locked]
     public int $orderId;
     public int $amountReceived = 0;
 
     public function mount($order)
     {
-        $this->orderId = $order;
+        // La commande doit appartenir au restaurant de l'utilisateur (sinon 404)
+        $this->orderId = Order::findOrFail($order)->id;
     }
 
     public function getOrderProperty()

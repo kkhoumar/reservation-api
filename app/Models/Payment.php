@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToRestaurantThroughOrder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
+    use BelongsToRestaurantThroughOrder, HasFactory;
+
     protected $fillable = [
         'order_id', 'user_id', 'payment_method',
         'amount_due', 'amount_received', 'change_given',

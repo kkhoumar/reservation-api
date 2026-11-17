@@ -88,6 +88,18 @@ php artisan db:seed --class=DemoSeeder
 composer dev        # serveur Laravel + Vite
 ```
 
+### Lancer les tests
+
+Les tests tournent dans Docker, dans une base SQLite en mémoire :
+
+```bash
+docker compose run --rm tests
+```
+
+La première fois, si l'autoload est périmé : `docker compose run --rm tests composer dump-autoload`.
+
+> **Règle d'isolation :** tout nouveau modèle qui a un `restaurant_id` doit utiliser le trait `BelongsToRestaurant`, et tout nouvel écran doit avoir son test A/B dans `RestaurantIsolationTest`. Une règle de validation `exists` ou `unique` ne passe pas par ce filtre : il faut la limiter au restaurant à la main.
+
 ### Comptes de démo (`DemoSeeder`)
 
 Restaurant : **Maquis Chez Koffi**. Mot de passe pour tous les comptes : `password`.
@@ -125,7 +137,7 @@ docker/                   configuration Nginx, PHP, entrypoint
 Ces problèmes ont été relevés lors de la revue de code et **ne sont pas encore corrigés**.
 
 **Sécurité**
-- [ ] **Isolation entre restaurants** : `TakePayment`, `PaymentSuccess`, `CashRegisterClosed` et `NewOrder` (`addProduct`, `removeItem`) chargent les données par ID sans filtrer sur `restaurant_id`. Il faut un global scope `BelongsToRestaurant` et `#[Locked]` sur `orderId`/`tableId`.
+- [x] **Isolation entre restaurants** : traits `BelongsToRestaurant` et `BelongsToRestaurantThroughOrder` (dans `app/Models/Concerns`), qui filtrent automatiquement chaque requête par restaurant. `#[Locked]` sur les IDs sensibles des composants, règle `exists` limitée au restaurant. Couvert par `tests/Feature/RestaurantIsolationTest.php`.
 - [ ] La `quantity` de `NewOrder` n'est pas validée : une quantité négative augmente le stock.
 - [ ] Une commande peut être payée deux fois (aucune vérification du statut `paid`).
 - [ ] La connexion ne vérifie pas `status = active`, `Restaurant::isSuspended()` n'est jamais utilisé, et il n'y a pas de limite de tentatives de connexion.

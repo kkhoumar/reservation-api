@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\RestaurantTable;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -20,8 +21,12 @@ use Livewire\Component;
  */
 class NewOrder extends Component
 {
+    // Verrouillés : le navigateur ne peut pas les modifier
+    #[Locked]
     public ?int $tableId = null;
+    #[Locked]
     public ?int $orderId = null;
+    #[Locked]
     public string $orderType = 'dine_in'; // dine_in | takeaway
 
     public ?int $selectedCategoryId = null;
@@ -30,7 +35,8 @@ class NewOrder extends Component
 
     public function mount($table = null)
     {
-        $this->tableId = $table;
+        // La table doit appartenir au restaurant de l'utilisateur (sinon 404)
+        $this->tableId = $table ? RestaurantTable::findOrFail($table)->id : null;
 
         if (!$this->tableId) {
             $this->orderType = 'takeaway';
@@ -175,7 +181,12 @@ class NewOrder extends Component
      */
     public function removeItem($itemId)
     {
-        OrderItem::find($itemId)?->delete();
+        // Uniquement une ligne de LA commande en cours (et donc de ce restaurant)
+        if (!$this->orderId) {
+            return;
+        }
+
+        OrderItem::where('order_id', $this->orderId)->find($itemId)?->delete();
 
         $this->order?->recalculateTotal();
     }

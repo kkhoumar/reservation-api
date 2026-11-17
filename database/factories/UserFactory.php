@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Restaurant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -17,29 +18,43 @@ class UserFactory extends Factory
      */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'restaurant_id' => Restaurant::factory(),
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
+            'phone' => '+225 05 ' . fake()->unique()->numerify('## ## ## ##'),
+            'email' => null,
             'password' => static::$password ??= Hash::make('password'),
+            'role' => 'owner',
+            'status' => 'active',
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function owner(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return $this->state(['role' => 'owner']);
+    }
+
+    public function manager(): static
+    {
+        return $this->state(['role' => 'manager']);
+    }
+
+    public function cashier(): static
+    {
+        return $this->state(['role' => 'cashier']);
+    }
+
+    public function server(): static
+    {
+        return $this->state(['role' => 'server']);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(['status' => 'inactive']);
     }
 }

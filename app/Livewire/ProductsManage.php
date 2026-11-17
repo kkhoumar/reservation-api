@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -14,6 +16,7 @@ class ProductsManage extends Component
 {
     public bool $showProductForm = false;
     public bool $showCategoryForm = false;
+    #[Locked]
     public ?int $editingProductId = null;
 
     public string $name = '';
@@ -30,7 +33,12 @@ class ProductsManage extends Component
         return [
             'name' => 'required|string|max:255',
             'sellingPrice' => 'required|integer|min:0',
-            'categoryId' => 'required|exists:categories,id',
+            // La règle "exists" interroge directement la base, sans le filtre
+            // automatique : on la limite explicitement au restaurant.
+            'categoryId' => [
+                'required',
+                Rule::exists('categories', 'id')->where('restaurant_id', auth()->user()->restaurant_id),
+            ],
             'stockQuantity' => 'required|integer|min:0',
             'stockAlertThreshold' => 'nullable|integer|min:0',
         ];

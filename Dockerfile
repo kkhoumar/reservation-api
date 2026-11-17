@@ -25,6 +25,14 @@ COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-app.ini
 WORKDIR /var/www/html
 
 ############################################
+# 2b. Image de développement / tests
+#     Le code est monté depuis l'hôte (voir service "tests")
+############################################
+FROM php-base AS dev
+RUN install-php-extensions pdo_sqlite
+CMD ["vendor/bin/phpunit", "--testdox"]
+
+############################################
 # 3. Image applicative (app, queue, scheduler)
 ############################################
 FROM php-base AS app
