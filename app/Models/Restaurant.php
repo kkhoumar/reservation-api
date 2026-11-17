@@ -14,11 +14,39 @@ class Restaurant extends Model
         'name', 'logo', 'type', 'phone', 'email', 'address',
         'commune', 'city', 'opening_hours',
         'subscription_status', 'trial_ends_at',
+        'service_mode', 'credit_enabled',
     ];
 
     protected $casts = [
         'trial_ends_at' => 'datetime',
+        'credit_enabled' => 'boolean',
     ];
+
+    protected $attributes = [
+        'service_mode' => 'both',
+        'credit_enabled' => false,
+    ];
+
+    public const SERVICE_MODES = [
+        'both' => ['label' => 'Tables et vente rapide', 'hint' => 'Service à table, et vente directe au comptoir.'],
+        'tables' => ['label' => 'Service à table', 'hint' => 'Chaque commande est liée à une table.'],
+        'quick' => ['label' => 'Vente rapide', 'hint' => 'Pas de tables : on sert et on encaisse directement.'],
+    ];
+
+    public function usesTables(): bool
+    {
+        return in_array($this->service_mode, ['tables', 'both'], true);
+    }
+
+    public function usesQuickSale(): bool
+    {
+        return in_array($this->service_mode, ['quick', 'both'], true);
+    }
+
+    public function creditEnabled(): bool
+    {
+        return $this->credit_enabled === true;
+    }
 
     public function users(): HasMany
     {

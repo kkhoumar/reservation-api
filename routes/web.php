@@ -13,6 +13,7 @@ use App\Livewire\Login;
 use App\Livewire\NewOrder;
 use App\Livewire\PaymentSuccess;
 use App\Livewire\DemoRequestForm;
+use App\Livewire\RestaurantSettings;
 use App\Livewire\SalesToday;
 use App\Livewire\TablesBoard;
 use App\Livewire\TakePayment;
@@ -55,6 +56,7 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/sales-today', SalesToday::class)->middleware('role:owner,manager,cashier')->name('sales.today');
     Route::get('/users', UsersManage::class)->middleware('role:owner,manager')->name('users.manage');
     Route::get('/products', ProductsManage::class)->middleware('role:owner,manager')->name('products.manage');
+    Route::get('/parametres', RestaurantSettings::class)->middleware('role:owner')->name('settings');
 });
 
 // Espace Super Admin (propriétaire de la plateforme)

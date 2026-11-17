@@ -178,7 +178,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [ ] Supprimer `ActingUserSwitcher` (solution temporaire) et `app/Livewire/ash-register-manage.blade.php` (ancien fichier).
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis et demandes de démo (94 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo et réglages (105 tests).
 
 ---
 
@@ -213,6 +213,12 @@ L'appli ne repose pas sur des profils ni sur de nombreux réglages : chaque rég
 - **Ardoise** activée ou non.
 
 Le reste se déduit automatiquement : pas de compte cuisine, pas de ticket cuisine ; pas de serveuses, pas d'écran de versement ; pas de tables, vente au comptoir. C'est la plateforme qui configure le maquis à l'installation.
+
+Mis en place : colonnes `restaurants.service_mode` (`tables`, `quick`, `both` ; `both` par défaut) et `restaurants.credit_enabled`.
+- Choix à la création par le Super Admin, puis modifiables par le **propriétaire** dans **Paramètres** (`/parametres`).
+- En mode `quick` : le plan des tables redirige vers la vente rapide, et le menu affiche « Vente rapide ». En mode `tables` : la vente sans table est refusée.
+- On ne peut pas passer en `quick` tant qu'une commande de table n'est pas payée.
+- `credit_enabled` est enregistré ; il commandera l'écran ardoise (étape 3).
 
 **Rôles :** une gérante de petit maquis peut tout faire, sauf ce qui est réservé au patron (bénéfice, marges et, au choix du patron, les prix). Le patron peut travailler seul.
 

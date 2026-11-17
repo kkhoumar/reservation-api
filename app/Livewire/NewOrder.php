@@ -41,6 +41,22 @@ class NewOrder extends Component
         // La table doit appartenir au restaurant de l'utilisateur (sinon 404)
         $this->tableId = $table ? RestaurantTable::findOrFail($table)->id : null;
 
+        // Le mode de service du maquis décide des parcours autorisés
+        $restaurant = auth()->user()->currentRestaurant();
+
+        if ($this->tableId && ! $restaurant?->usesTables()) {
+            $this->redirect(route('orders.new'), navigate: false);
+
+            return;
+        }
+
+        if (! $this->tableId && ! $restaurant?->usesQuickSale()) {
+            session()->flash('error', "La vente rapide n'est pas activée : choisis une table.");
+            $this->redirect(route('tables.index'), navigate: false);
+
+            return;
+        }
+
         if (!$this->tableId) {
             $this->orderType = 'takeaway';
         }

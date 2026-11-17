@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 class CreateRestaurantWithOwner
 {
     /**
-     * @param  array{name: string, type: string, phone: string, commune: ?string, city: ?string, trial_days: int}  $restaurant
+     * @param  array{name: string, type: string, phone: string, commune: ?string, city: ?string, trial_days: int, service_mode?: string, credit_enabled?: bool}  $restaurant
      * @param  array{first_name: string, last_name: string, phone: string}  $owner
      * @return array{restaurant: Restaurant, owner: User, password: string}
      */
@@ -34,6 +34,8 @@ class CreateRestaurantWithOwner
                 'phone' => User::normalizePhone($restaurant['phone']),
                 'commune' => $restaurant['commune'] ?: null,
                 'city' => $restaurant['city'] ?: null,
+                'service_mode' => $restaurant['service_mode'] ?? 'both',
+                'credit_enabled' => $restaurant['credit_enabled'] ?? false,
                 'subscription_status' => $trialDays > 0 ? 'trial' : 'active',
                 'trial_ends_at' => $trialDays > 0 ? now()->addDays($trialDays)->endOfDay() : null,
             ]);

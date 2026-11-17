@@ -29,7 +29,9 @@
         </div>
     @endforeach
 
-    <div style="margin-top: 24px;">
-        <a href="{{ route('orders.new') }}" class="btn btn-primary">+ Commande à emporter</a>
-    </div>
+    @if ($quickSale)
+        <div style="margin-top: 24px;">
+            <a href="{{ route('orders.new') }}" class="btn btn-primary">+ Vente rapide / à emporter</a>
+        </div>
+    @endif
 </div>

@@ -76,6 +76,21 @@
                     </div>
                 </div>
 
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 13px; font-weight: 600;">Mode de service</label>
+                    <select wire:model="serviceMode" style="width: 100%; margin-top: 6px;">
+                        @foreach ($modes as $value => $mode)
+                            <option value="{{ $value }}">{{ $mode['label'] }}</option>
+                        @endforeach
+                    </select>
+                    @error('serviceMode') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                </div>
+
+                <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 14px; cursor: pointer;">
+                    <input type="checkbox" wire:model="creditEnabled">
+                    Ardoise (crédit client) activée
+                </label>
+
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Jours d'essai gratuit</label>
                     <input type="number" wire:model="trialDays" min="0" max="90" style="width: 100%; margin-top: 6px;">
