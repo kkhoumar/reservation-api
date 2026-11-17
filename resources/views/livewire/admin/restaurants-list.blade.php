@@ -6,6 +6,12 @@
         <h1>Établissements</h1>
     </div>
 
+    @if (session('success'))
+        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
+            {{ session('success') }}
+        </div>
+    @endif
+
     <div class="card" style="padding: 0; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
@@ -31,17 +37,33 @@
                                     'suspended' => ['bg' => 'rgba(232,74,58,0.12)', 'text' => '#E84A3A', 'label' => 'Suspendu'],
                                 ];
                                 $s = $statusColors[$restaurant->subscription_status] ?? $statusColors['trial'];
+                                if ($restaurant->isTrialExpired()) {
+                                    $s = $statusColors['suspended'];
+                                    $s['label'] = 'Essai terminé';
+                                }
                             @endphp
                             <span style="background: {{ $s['bg'] }}; color: {{ $s['text'] }}; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
                                 {{ $s['label'] }}
                             </span>
+                            @if ($restaurant->subscription_status === 'trial' && $restaurant->trial_ends_at)
+                                <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
+                                    jusqu'au {{ $restaurant->trial_ends_at->format('d/m/Y') }}
+                                </div>
+                            @endif
                         </td>
-                        <td style="padding: 14px 20px; text-align: right;">
-                            <button wire:click="toggleStatus({{ $restaurant->id }})"
-                                    wire:confirm="Confirmer le changement de statut de {{ $restaurant->name }} ?"
-                                    class="btn {{ $restaurant->subscription_status === 'suspended' ? 'btn-primary' : 'btn-danger' }}"
+                        <td style="padding: 14px 20px; text-align: right; white-space: nowrap;">
+                            <button wire:click="enterRestaurant({{ $restaurant->id }})"
+                                    class="btn btn-secondary"
                                     style="padding: 7px 14px; font-size: 13px;">
-                                {{ $restaurant->subscription_status === 'suspended' ? 'Réactiver' : 'Suspendre' }}
+                                Entrer
+                            </button>
+                            <button wire:click="toggleStatus({{ $restaurant->id }})"
+                                    wire:confirm="{{ $restaurant->subscription_status === 'suspended'
+                                        ? 'Réactiver ' . $restaurant->name . ' ?'
+                                        : 'Verrouiller ' . $restaurant->name . ' ? Son personnel n\'aura plus accès à l\'application.' }}"
+                                    class="btn {{ $restaurant->subscription_status === 'suspended' ? 'btn-primary' : 'btn-danger' }}"
+                                    style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">
+                                {{ $restaurant->subscription_status === 'suspended' ? 'Réactiver' : 'Verrouiller' }}
                             </button>
                         </td>
                     </tr>

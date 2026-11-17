@@ -100,6 +100,21 @@ La première fois, si l'autoload est périmé : `docker compose run --rm tests c
 
 > **Règle d'isolation :** tout nouveau modèle qui a un `restaurant_id` doit utiliser le trait `BelongsToRestaurant`, et tout nouvel écran doit avoir son test A/B dans `RestaurantIsolationTest`. Une règle de validation `exists` ou `unique` ne passe pas par ce filtre : il faut la limiter au restaurant à la main.
 
+### Créer le compte Super Admin (propriétaire de la plateforme)
+
+```bash
+docker compose exec app php artisan app:create-super-admin "+225 07 XX XX XX XX" --first=Prénom --last=Nom
+# Le mot de passe (12 caractères minimum) est demandé de façon masquée
+```
+
+Le Super Admin :
+- arrive sur **/admin/restaurants**, la liste de tous les maquis ;
+- clique sur **Entrer** pour ouvrir un maquis et voir ou gérer toutes ses données. Un bandeau « Mode Super Admin » rappelle dans quel maquis il se trouve, avec un bouton **Quitter ce maquis** ;
+- **verrouille** un maquis qui n'a pas payé, ou le **réactive**. Le personnel d'un maquis verrouillé voit la page « Accès suspendu ». Les données sont conservées, et le Super Admin garde l'accès ;
+- chacune de ces actions est enregistrée dans les logs.
+
+Un maquis en essai dont la date `trial_ends_at` est dépassée est verrouillé automatiquement.
+
 ### Comptes de démo (`DemoSeeder`)
 
 Restaurant : **Maquis Chez Koffi**. Mot de passe pour tous les comptes : `password`.
@@ -140,9 +155,10 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] **Isolation entre restaurants** : traits `BelongsToRestaurant` et `BelongsToRestaurantThroughOrder` (dans `app/Models/Concerns`), qui filtrent automatiquement chaque requête par restaurant. `#[Locked]` sur les IDs sensibles des composants, règle `exists` limitée au restaurant. Couvert par `tests/Feature/RestaurantIsolationTest.php`.
 - [ ] La `quantity` de `NewOrder` n'est pas validée : une quantité négative augmente le stock.
 - [ ] Une commande peut être payée deux fois (aucune vérification du statut `paid`).
-- [ ] La connexion ne vérifie pas `status = active`, `Restaurant::isSuspended()` n'est jamais utilisé, et il n'y a pas de limite de tentatives de connexion.
-- [ ] Le middleware `role` n'est pas réappliqué aux actions Livewire (`Livewire::addPersistentMiddleware`, ou des Policies).
-- [ ] La colonne `is_platform_admin` manque dans les migrations.
+- [x] Comptes désactivés et maquis verrouillés : connexion refusée si `status != active`, déconnexion immédiate pendant la session, maquis suspendu ou en fin d'essai bloqué (middleware `restaurant.access`).
+- [ ] Pas de limite de tentatives de connexion.
+- [x] Middlewares `role`, `restaurant.access` et `platform_admin` réappliqués aux actions Livewire (`Livewire::addPersistentMiddleware` dans `AppServiceProvider`). ⚠️ Non couvert par les tests automatiques (Livewire ne réapplique pas ces middlewares en test) : à vérifier à la main. Il manque aussi les Policies par action.
+- [x] La colonne `is_platform_admin` a été ajoutée (non assignable en masse).
 
 **Fiabilité**
 - [ ] Pas de `DB::transaction()` sur l'inscription, l'ajout d'article, le paiement et la clôture de caisse. Ajouter `lockForUpdate()` sur le stock.
@@ -150,7 +166,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [ ] `Order::generateOrderNumber()` (`max(id)+1`) produit des doublons en cas d'accès simultanés.
 - [ ] On peut ouvrir deux caisses en même temps.
 - [ ] `customer_id` manque dans le `$fillable` de `Order`.
-- [ ] Le bas de la sidebar affiche en dur « Maquis Chez Koffi ».
+- [x] Le bas de la sidebar affiche le maquis courant (et non plus « Maquis Chez Koffi » en dur).
 - [ ] `DatabaseSeeder` crée un utilisateur avec une colonne `name` qui n'existe plus, donc `php artisan db:seed` échoue. Utiliser `--class=DemoSeeder`.
 
 **Qualité**

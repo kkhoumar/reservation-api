@@ -13,7 +13,8 @@ class User extends Authenticatable
 
     protected $fillable = [
         'restaurant_id', 'first_name', 'last_name', 'phone', 'email',
-        'password', 'role', 'status', 'is_platform_admin',
+        'password', 'role', 'status',
+        // is_platform_admin volontairement absent : jamais assignable en masse
     ];
 
     protected $hidden = [
@@ -58,6 +59,34 @@ class User extends Authenticatable
     public function isPlatformAdmin(): bool
     {
         return $this->is_platform_admin === true;
+    }
+
+    /**
+     * Clé de session du maquis dans lequel le Super Admin est « entré ».
+     */
+    public const ADMIN_RESTAURANT_SESSION_KEY = 'admin_restaurant_id';
+
+    /**
+     * Le maquis sur lequel l'utilisateur travaille en ce moment :
+     * - patron / employé : son propre maquis ;
+     * - Super Admin : le maquis qu'il a choisi d'ouvrir (null = aucun).
+     */
+    public function currentRestaurantId(): ?int
+    {
+        if ($this->isPlatformAdmin()) {
+            $id = session(self::ADMIN_RESTAURANT_SESSION_KEY);
+
+            return $id !== null ? (int) $id : null;
+        }
+
+        return $this->restaurant_id;
+    }
+
+    public function currentRestaurant(): ?Restaurant
+    {
+        $id = $this->currentRestaurantId();
+
+        return $id ? Restaurant::find($id) : null;
     }
 
     public function canManagePricing(): bool

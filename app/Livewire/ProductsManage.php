@@ -37,7 +37,7 @@ class ProductsManage extends Component
             // automatique : on la limite explicitement au restaurant.
             'categoryId' => [
                 'required',
-                Rule::exists('categories', 'id')->where('restaurant_id', auth()->user()->restaurant_id),
+                Rule::exists('categories', 'id')->where('restaurant_id', auth()->user()->currentRestaurantId()),
             ],
             'stockQuantity' => 'required|integer|min:0',
             'stockAlertThreshold' => 'nullable|integer|min:0',
@@ -53,7 +53,7 @@ class ProductsManage extends Component
 
     public function editProduct($productId)
     {
-        $product = Product::where('restaurant_id', auth()->user()->restaurant_id)->findOrFail($productId);
+        $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
 
         $this->editingProductId = $product->id;
         $this->name = $product->name;
@@ -70,7 +70,7 @@ class ProductsManage extends Component
         $this->validate();
 
         $data = [
-            'restaurant_id' => auth()->user()->restaurant_id,
+            'restaurant_id' => auth()->user()->currentRestaurantId(),
             'category_id' => $this->categoryId,
             'name' => $this->name,
             'selling_price' => $this->sellingPrice,
@@ -80,7 +80,7 @@ class ProductsManage extends Component
         ];
 
         if ($this->editingProductId) {
-            Product::where('restaurant_id', auth()->user()->restaurant_id)
+            Product::where('restaurant_id', auth()->user()->currentRestaurantId())
                 ->findOrFail($this->editingProductId)
                 ->update($data);
         } else {
@@ -93,7 +93,7 @@ class ProductsManage extends Component
 
     public function toggleAvailability($productId)
     {
-        $product = Product::where('restaurant_id', auth()->user()->restaurant_id)->findOrFail($productId);
+        $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
         $product->update(['is_available' => !$product->is_available]);
     }
 
@@ -102,9 +102,9 @@ class ProductsManage extends Component
         $this->validate(['newCategoryName' => 'required|string|max:255']);
 
         Category::create([
-            'restaurant_id' => auth()->user()->restaurant_id,
+            'restaurant_id' => auth()->user()->currentRestaurantId(),
             'name' => $this->newCategoryName,
-            'sort_order' => Category::where('restaurant_id', auth()->user()->restaurant_id)->count() + 1,
+            'sort_order' => Category::where('restaurant_id', auth()->user()->currentRestaurantId())->count() + 1,
         ]);
 
         $this->newCategoryName = '';
@@ -114,7 +114,7 @@ class ProductsManage extends Component
 
     public function render()
     {
-        $categories = Category::where('restaurant_id', auth()->user()->restaurant_id)
+        $categories = Category::where('restaurant_id', auth()->user()->currentRestaurantId())
             ->with(['products' => fn ($q) => $q->orderBy('name')])
             ->orderBy('sort_order')
             ->get();

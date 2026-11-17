@@ -16,7 +16,7 @@ class CashRegisterManage extends Component
 
     protected function currentRegister(): ?CashRegister
     {
-        return CashRegister::where('restaurant_id', auth()->user()->restaurant_id)
+        return CashRegister::where('restaurant_id', auth()->user()->currentRestaurantId())
             ->whereNull('closed_at')
             ->latest('opened_at')
             ->first();
@@ -29,7 +29,7 @@ class CashRegisterManage extends Component
         ]);
 
         CashRegister::create([
-            'restaurant_id' => auth()->user()->restaurant_id,
+            'restaurant_id' => auth()->user()->currentRestaurantId(),
             'opened_by' => auth()->id(),
             'opening_amount' => $this->openingAmount,
             'opened_at' => now(),
@@ -70,7 +70,7 @@ class CashRegisterManage extends Component
 
         $breakdown = $register?->breakdown();
 
-        $history = CashRegister::where('restaurant_id', auth()->user()->restaurant_id)
+        $history = CashRegister::where('restaurant_id', auth()->user()->currentRestaurantId())
             ->whereNotNull('closed_at')
             ->latest('closed_at')
             ->limit(5)

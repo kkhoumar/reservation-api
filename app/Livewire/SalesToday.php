@@ -16,7 +16,7 @@ class SalesToday extends Component
     {
         $payments = Payment::with(['order.restaurantTable', 'cashier'])
             ->where('status', 'completed')
-            ->whereHas('order', fn ($q) => $q->where('restaurant_id', auth()->user()->restaurant_id))
+            ->whereHas('order', fn ($q) => $q->where('restaurant_id', auth()->user()->currentRestaurantId()))
             ->whereDate('paid_at', now()->toDateString())
             ->latest('paid_at')
             ->get();

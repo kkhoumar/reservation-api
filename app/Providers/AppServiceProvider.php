@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\EnsureRestaurantAccess;
+use App\Http\Middleware\EnsureRole;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +23,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Les actions Livewire (clics, formulaires) passent par /livewire/update.
+        // Ces middlewares y sont réappliqués avec les paramètres de la route
+        // d'origine : un maquis verrouillé ou un rôle insuffisant reste bloqué
+        // même après le chargement de la page.
+        Livewire::addPersistentMiddleware([
+            EnsureRestaurantAccess::class,
+            EnsureRole::class,
+            EnsurePlatformAdmin::class,
+        ]);
     }
 }

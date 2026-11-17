@@ -13,7 +13,7 @@ class CashRegisterHistory extends Component
     public function render()
     {
         $registers = CashRegister::with(['openedByUser', 'closedByUser'])
-            ->where('restaurant_id', auth()->user()->restaurant_id)
+            ->where('restaurant_id', auth()->user()->currentRestaurantId())
             ->whereNotNull('closed_at')
             ->latest('closed_at')
             ->paginate(15);

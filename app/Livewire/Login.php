@@ -19,14 +19,18 @@ class Login extends Component
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt(['phone' => $this->phone, 'password' => $this->password])) {
+        // Seuls les comptes actifs peuvent se connecter
+        if (!Auth::attempt(['phone' => $this->phone, 'password' => $this->password, 'status' => 'active'])) {
             $this->addError('phone', 'Numéro de téléphone ou mot de passe incorrect.');
             return;
         }
 
         session()->regenerate();
 
-        $this->redirect(route('dashboard.index'), navigate: false);
+        // Le Super Admin arrive sur la liste des maquis
+        $destination = Auth::user()->isPlatformAdmin() ? 'admin.restaurants' : 'dashboard.index';
+
+        $this->redirect(route($destination), navigate: false);
     }
 
     public function render()

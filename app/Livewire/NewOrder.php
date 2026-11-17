@@ -65,7 +65,7 @@ class NewOrder extends Component
     {
         return Category::where(
             'restaurant_id',
-            auth()->user()->restaurant_id
+            auth()->user()->currentRestaurantId()
         )
             ->with([
                 'products' => fn ($q) =>
@@ -87,7 +87,7 @@ class NewOrder extends Component
      */
     public function addProduct($productId)
     {
-        $restaurantId = auth()->user()->restaurant_id;
+        $restaurantId = auth()->user()->currentRestaurantId();
         $userId = auth()->id();
 
         // Vérification de l'utilisateur

@@ -64,4 +64,21 @@ class Restaurant extends Model
     {
         return $this->subscription_status === 'suspended';
     }
+
+    public function isTrialExpired(): bool
+    {
+        return $this->subscription_status === 'trial'
+            && $this->trial_ends_at !== null
+            && $this->trial_ends_at->isPast();
+    }
+
+    /**
+     * Maquis verrouillé : suspendu par le Super Admin (non-paiement)
+     * ou période d'essai terminée. Son personnel ne peut plus utiliser
+     * l'application ; les données sont conservées.
+     */
+    public function isLocked(): bool
+    {
+        return $this->isSuspended() || $this->isTrialExpired();
+    }
 }

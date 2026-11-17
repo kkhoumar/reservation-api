@@ -38,13 +38,13 @@ class ExpensesList extends Component
             'description' => 'nullable|string|max:255',
         ]);
 
-        $openRegister = CashRegister::where('restaurant_id', auth()->user()->restaurant_id)
+        $openRegister = CashRegister::where('restaurant_id', auth()->user()->currentRestaurantId())
             ->whereNull('closed_at')
             ->latest('opened_at')
             ->first();
 
         Expense::create([
-            'restaurant_id' => auth()->user()->restaurant_id,
+            'restaurant_id' => auth()->user()->currentRestaurantId(),
             'user_id' => auth()->id(),
             'cash_register_id' => $openRegister?->id,
             'category' => $this->category,
@@ -61,7 +61,7 @@ class ExpensesList extends Component
 
     public function render()
     {
-        $expenses = Expense::where('restaurant_id', auth()->user()->restaurant_id)
+        $expenses = Expense::where('restaurant_id', auth()->user()->currentRestaurantId())
             ->whereDate('expense_date', now()->toDateString())
             ->latest()
             ->get();

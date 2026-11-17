@@ -5,6 +5,10 @@
         Connectez-vous à votre établissement
     </p>
 
+    @if (session('error'))
+        <div class="error" style="margin: 0 0 16px 0;">{{ session('error') }}</div>
+    @endif
+
     <form wire:submit="authenticate">
         <div style="margin-bottom: 16px;">
             <label>Téléphone</label>

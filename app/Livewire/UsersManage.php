@@ -49,7 +49,7 @@ class UsersManage extends Component
 
     public function editUser($userId)
     {
-        $user = User::where('restaurant_id', auth()->user()->restaurant_id)->findOrFail($userId);
+        $user = User::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($userId);
 
         $this->editingId = $user->id;
         $this->firstName = $user->first_name;
@@ -76,11 +76,11 @@ class UsersManage extends Component
         }
 
         if ($this->editingId) {
-            User::where('restaurant_id', auth()->user()->restaurant_id)
+            User::where('restaurant_id', auth()->user()->currentRestaurantId())
                 ->findOrFail($this->editingId)
                 ->update($data);
         } else {
-            $data['restaurant_id'] = auth()->user()->restaurant_id;
+            $data['restaurant_id'] = auth()->user()->currentRestaurantId();
             $data['password'] = Hash::make($this->password);
             User::create($data);
         }
@@ -91,7 +91,7 @@ class UsersManage extends Component
 
     public function toggleStatus($userId)
     {
-        $user = User::where('restaurant_id', auth()->user()->restaurant_id)->findOrFail($userId);
+        $user = User::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($userId);
 
         if ($user->id === auth()->id()) {
             session()->flash('error', 'Vous ne pouvez pas désactiver votre propre compte.');
@@ -103,7 +103,7 @@ class UsersManage extends Component
 
     public function render()
     {
-        $users = User::where('restaurant_id', auth()->user()->restaurant_id)
+        $users = User::where('restaurant_id', auth()->user()->currentRestaurantId())
             ->orderBy('role')
             ->orderBy('first_name')
             ->get();

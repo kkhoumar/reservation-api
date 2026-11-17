@@ -355,8 +355,16 @@
             @endif
         </nav>
 
+        @php $currentRestaurant = auth()->user()?->currentRestaurant(); @endphp
         <div class="sidebar-footer">
-            Maquis Chez Koffi<br>Cocody, Abidjan
+            @if ($currentRestaurant)
+                {{ $currentRestaurant->name }}
+                @if ($currentRestaurant->commune || $currentRestaurant->city)
+                    <br>{{ collect([$currentRestaurant->commune, $currentRestaurant->city])->filter()->join(', ') }}
+                @endif
+            @elseif (auth()->user()?->isPlatformAdmin())
+                Super Admin
+            @endif
         </div>
     </aside>
 
@@ -381,6 +389,29 @@
         </div>
 
         <main>
+            @if (auth()->user()?->isPlatformAdmin())
+                <div class="card" style="border-left: 6px solid var(--color-accent); margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                    <div style="font-size: 14px;">
+                        <strong>Mode Super Admin</strong>
+                        @if ($currentRestaurant)
+                            — vous êtes dans <strong>{{ $currentRestaurant->name }}</strong>
+                            @if ($currentRestaurant->isLocked())
+                                <span style="color: var(--color-danger); font-weight: 600;">(verrouillé)</span>
+                            @endif
+                        @endif
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ route('admin.restaurants') }}" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">Tous les maquis</a>
+                        @if ($currentRestaurant)
+                            <form method="POST" action="{{ route('admin.leave-restaurant') }}" style="margin: 0;">
+                                @csrf
+                                <button type="submit" class="btn btn-secondary" style="padding: 7px 14px; font-size: 13px;">Quitter ce maquis</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             @if (session('error'))
                 <div class="card" style="border-left: 6px solid var(--color-danger); margin-bottom: 16px;">
                     {{ session('error') }}

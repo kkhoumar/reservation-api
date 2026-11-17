@@ -17,7 +17,7 @@ class TablesBoard extends Component
     public function render()
     {
         $zones = Zone::with(['tables' => fn ($q) => $q->orderBy('label')])
-            ->where('restaurant_id', auth()->user()->restaurant_id)
+            ->where('restaurant_id', auth()->user()->currentRestaurantId())
             ->get();
 
         return view('livewire.tables-board', ['zones' => $zones]);

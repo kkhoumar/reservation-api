@@ -50,7 +50,7 @@ class Dashboard extends Component
 
     public function render()
     {
-        $restaurantId = auth()->user()->restaurant_id;
+        $restaurantId = auth()->user()->currentRestaurantId();
 
         if (!$restaurantId) {
             return view('livewire.dashboard', [

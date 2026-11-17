@@ -30,7 +30,11 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
 
-Route::middleware('auth')->group(function () {
+// Page affichée au personnel d'un maquis verrouillé (non-paiement, essai terminé)
+Route::view('/compte-suspendu', 'account-locked')->middleware('auth')->name('account.locked');
+
+// Écrans d'un maquis : connexion + compte actif + maquis non verrouillé
+Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/tables', TablesBoard::class)->name('tables.index');
     Route::get('/orders/new/{table?}', NewOrder::class)->name('orders.new');
     Route::get('/payment/{order}', TakePayment::class)->name('payment.take');
@@ -46,6 +50,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/products', ProductsManage::class)->middleware('role:owner,manager')->name('products.manage');
 });
 
+// Espace Super Admin (propriétaire de la plateforme)
 Route::middleware(['auth', 'platform_admin'])->group(function () {
     Route::get('/admin/restaurants', RestaurantsList::class)->name('admin.restaurants');
+
+    // Sortir du maquis dans lequel le Super Admin est entré
+    Route::post('/admin/quitter-maquis', function () {
+        session()->forget(\App\Models\User::ADMIN_RESTAURANT_SESSION_KEY);
+
+        return redirect()->route('admin.restaurants');
+    })->name('admin.leave-restaurant');
 });
