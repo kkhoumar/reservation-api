@@ -123,10 +123,13 @@ class RestaurantIsolationTest extends TestCase
     public function test_le_numero_de_commande_reste_unique_entre_maquis(): void
     {
         $this->actingAs($this->ownerA);
+        $commandeA = Order::create(['user_id' => $this->ownerA->id]);
 
-        $numero = Order::generateOrderNumber();
+        $this->actingAs($this->ownerB);
+        $commandeB = Order::create(['user_id' => $this->ownerB->id]);
 
-        $this->assertFalse(Order::withoutGlobalScopes()->where('order_number', $numero)->exists());
+        $this->assertNotSame($commandeA->order_number, $commandeB->order_number);
+        $this->assertSame('CMD-' . str_pad((string) $commandeB->id, 5, '0', STR_PAD_LEFT), $commandeB->order_number);
     }
 
     // ---------------------------------------------------------------

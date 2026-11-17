@@ -153,19 +153,20 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 
 **Sécurité**
 - [x] **Isolation entre restaurants** : traits `BelongsToRestaurant` et `BelongsToRestaurantThroughOrder` (dans `app/Models/Concerns`), qui filtrent automatiquement chaque requête par restaurant. `#[Locked]` sur les IDs sensibles des composants, règle `exists` limitée au restaurant. Couvert par `tests/Feature/RestaurantIsolationTest.php`.
-- [ ] La `quantity` de `NewOrder` n'est pas validée : une quantité négative augmente le stock.
-- [ ] Une commande peut être payée deux fois (aucune vérification du statut `paid`).
+- [x] La `quantity` de `NewOrder` est validée (de 1 à 100), ainsi que les montants (reçu, fonds de caisse, montant compté).
+- [x] Une commande ne peut plus être payée deux fois (commande verrouillée et vérification du statut et des paiements existants).
 - [x] Comptes désactivés et maquis verrouillés : connexion refusée si `status != active`, déconnexion immédiate pendant la session, maquis suspendu ou en fin d'essai bloqué (middleware `restaurant.access`).
 - [ ] Pas de limite de tentatives de connexion.
 - [x] Middlewares `role`, `restaurant.access` et `platform_admin` réappliqués aux actions Livewire (`Livewire::addPersistentMiddleware` dans `AppServiceProvider`). ⚠️ Non couvert par les tests automatiques (Livewire ne réapplique pas ces middlewares en test) : à vérifier à la main. Il manque aussi les Policies par action.
 - [x] La colonne `is_platform_admin` a été ajoutée (non assignable en masse).
 
 **Fiabilité**
-- [ ] Pas de `DB::transaction()` sur l'inscription, l'ajout d'article, le paiement et la clôture de caisse. Ajouter `lockForUpdate()` sur le stock.
-- [ ] `removeItem` ne remet pas le stock à jour.
-- [ ] `Order::generateOrderNumber()` (`max(id)+1`) produit des doublons en cas d'accès simultanés.
-- [ ] On peut ouvrir deux caisses en même temps.
-- [ ] `customer_id` manque dans le `$fillable` de `Order`.
+- [x] Transactions et verrous (`lockForUpdate`) sur l'ajout et le retrait d'article, le paiement, ainsi que l'ouverture et la clôture de caisse. Les refus métier passent par `App\Exceptions\BusinessRuleException`, dont le message est affiché à l'utilisateur.
+- [ ] L'inscription (`Register`) n'est pas transactionnelle. Ce sera traité lors de son remplacement par la création de maquis côté Super Admin.
+- [x] `removeItem` remet le stock à jour. Une commande à l'encaissement ou payée ne peut plus être modifiée.
+- [x] Numéro de commande dérivé de l'ID (`CMD-00042`) : aucun doublon possible.
+- [x] Une seule caisse ouverte à la fois, et une caisse ne se clôture qu'une fois.
+- [x] `customer_id` ajouté au `$fillable` de `Order`.
 - [x] Le bas de la sidebar affiche le maquis courant (et non plus « Maquis Chez Koffi » en dur).
 - [ ] `DatabaseSeeder` crée un utilisateur avec une colonne `name` qui n'existe plus, donc `php artisan db:seed` échoue. Utiliser `--class=DemoSeeder`.
 

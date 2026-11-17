@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use App\Models\CashRegister;
+use App\Models\Restaurant;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class CashRegisterManage extends Component
@@ -25,15 +27,34 @@ class CashRegisterManage extends Component
     public function openRegister()
     {
         $this->validate([
-            'openingAmount' => 'required|integer|min:0',
+            'openingAmount' => 'required|integer|min:0|max:100000000',
         ]);
 
-        CashRegister::create([
-            'restaurant_id' => auth()->user()->currentRestaurantId(),
-            'opened_by' => auth()->id(),
-            'opening_amount' => $this->openingAmount,
-            'opened_at' => now(),
-        ]);
+        $restaurantId = auth()->user()->currentRestaurantId();
+
+        $opened = DB::transaction(function () use ($restaurantId) {
+            // Verrou sur le maquis : deux ouvertures simultanées sont sérialisées
+            Restaurant::whereKey($restaurantId)->lockForUpdate()->first();
+
+            if ($this->currentRegister()) {
+                return false;
+            }
+
+            CashRegister::create([
+                'restaurant_id' => $restaurantId,
+                'opened_by' => auth()->id(),
+                'opening_amount' => $this->openingAmount,
+                'opened_at' => now(),
+            ]);
+
+            return true;
+        });
+
+        if (!$opened) {
+            session()->flash('error', 'Une caisse est déjà ouverte.');
+
+            return;
+        }
 
         $this->openingAmount = 0;
         session()->flash('success', 'Caisse ouverte.');
@@ -48,7 +69,8 @@ class CashRegisterManage extends Component
         }
 
         $this->validate([
-            'countedAmount' => 'required|integer|min:0',
+            'countedAmount' => 'required|integer|min:0|max:100000000',
+            'closingNote' => 'nullable|string|max:1000',
         ]);
 
         $theoretical = $register->calculateTheoreticalAmount();
@@ -59,7 +81,24 @@ class CashRegisterManage extends Component
             return;
         }
 
-        $register->close($this->countedAmount, auth()->id(), $this->closingNote ?: null);
+        $closed = DB::transaction(function () use ($register) {
+            // Verrou + revérification : une caisse ne se clôture qu'une fois
+            $register = CashRegister::whereKey($register->id)->lockForUpdate()->first();
+
+            if (!$register || !$register->isOpen()) {
+                return false;
+            }
+
+            $register->close($this->countedAmount, auth()->id(), $this->closingNote ?: null);
+
+            return true;
+        });
+
+        if (!$closed) {
+            session()->flash('error', 'Cette caisse est déjà clôturée.');
+
+            return;
+        }
 
         $this->redirect(route('cash-register.closed', ['register' => $register->id]), navigate: false);
     }

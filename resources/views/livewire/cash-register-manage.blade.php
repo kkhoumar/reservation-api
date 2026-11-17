@@ -1,4 +1,10 @@
 <div>
+    @if (session('error'))
+        <div class="card" style="border-left: 6px solid var(--color-danger); margin-bottom: 16px;">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @if (session('success'))
         <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
             {{ session('success') }}

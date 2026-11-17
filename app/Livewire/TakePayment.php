@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\User;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -38,16 +38,17 @@ class TakePayment extends Component
 
     public function confirmPayment()
     {
-        $userId = auth()->id();
+        $this->validate([
+            'amountReceived' => 'required|integer|min:0|max:100000000',
+        ]);
 
-        if ($this->amountReceived < $this->order->total) {
-            session()->flash('error', 'Le montant reçu est inférieur au total de la commande.');
+        try {
+            Payment::recordCashPayment($this->order, auth()->user(), $this->amountReceived);
+        } catch (BusinessRuleException $e) {
+            session()->flash('error', $e->getMessage());
+
             return;
         }
-
-        $cashier = User::findOrFail($userId);
-
-        Payment::recordCashPayment($this->order, $cashier, $this->amountReceived);
 
         $this->redirect(route('payment.success', ['order' => $this->orderId]), navigate: false);
     }

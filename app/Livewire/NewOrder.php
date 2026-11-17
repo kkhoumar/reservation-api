@@ -2,10 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\RestaurantTable;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -45,7 +48,7 @@ class NewOrder extends Component
         // Reprend une commande déjà ouverte sur cette table
         if ($this->tableId) {
             $existing = Order::where('table_id', $this->tableId)
-                ->whereIn('status', ['created', 'in_preparation'])
+                ->whereIn('status', Order::EDITABLE_STATUSES)
                 ->first();
 
             if ($existing) {
@@ -87,97 +90,64 @@ class NewOrder extends Component
      */
     public function addProduct($productId)
     {
-        $restaurantId = auth()->user()->currentRestaurantId();
-        $userId = auth()->id();
-
-        // Vérification de l'utilisateur
-        if (!$restaurantId || !$userId) {
-            session()->flash(
-                'error',
-                'Connecte-toi avec un utilisateur avant de prendre une commande.'
-            );
-
-            return;
-        }
-
-        // Vérifie que le produit existe
-        $product = \App\Models\Product::findOrFail($productId);
-
-        // Vérifie que le produit est disponible
-        if (!$product->is_available) {
-            session()->flash(
-                'error',
-                "Le produit {$product->name} n'est plus disponible."
-            );
-
-            return;
-        }
-
-        // Vérifie que le stock n'est pas à zéro
-        if ($product->stock_quantity <= 0) {
-            session()->flash(
-                'error',
-                "Rupture de stock : {$product->name} n'est plus disponible."
-            );
-
-            return;
-        }
-
-        // Vérifie que le stock est suffisant pour la quantité demandée
-        if ($product->stock_quantity < $this->quantity) {
-            session()->flash(
-                'error',
-                "Stock insuffisant : {$product->name}. "
-                . "Stock disponible : {$product->stock_quantity}."
-            );
-
-            return;
-        }
-
-        // Crée la commande au premier article ajouté
-        if (!$this->orderId) {
-            $order = Order::create([
-                'restaurant_id' => $restaurantId,
-                'table_id' => $this->tableId,
-                'user_id' => $userId,
-                'order_number' => Order::generateOrderNumber(),
-                'order_type' => $this->orderType,
-                'status' => 'created',
-            ]);
-
-            $this->orderId = $order->id;
-
-            // Occupe la table
-            if ($this->tableId) {
-                RestaurantTable::find($this->tableId)?->update([
-                    'status' => 'occupied'
-                ]);
-            }
-        }
-
-        // Crée la ligne de commande
-        OrderItem::create([
-            'order_id' => $this->orderId,
-            'product_id' => $product->id,
-            'quantity' => $this->quantity,
-            'unit_price' => $product->selling_price,
-            'total' => $product->selling_price * $this->quantity,
-            'note' => $this->note ?: null,
+        $this->validate([
+            'quantity' => 'required|integer|min:1|max:100',
+            'note' => 'nullable|string|max:255',
+        ], [
+            'quantity.min' => 'La quantité doit être d\'au moins 1.',
+            'quantity.max' => 'La quantité ne peut pas dépasser 100.',
         ]);
 
-        // Décrémente le stock
-        $product->decrementStock($this->quantity);
+        try {
+            // Tout ou rien : commande + ligne + stock + total
+            $orderId = DB::transaction(function () use ($productId) {
+                // Produit verrouillé : deux serveuses ne peuvent pas vendre
+                // en même temps la dernière bouteille
+                $product = Product::whereKey($productId)->lockForUpdate()->firstOrFail();
 
-        // Recalcule le total de la commande
-        $this->order->recalculateTotal();
+                if (!$product->is_available) {
+                    throw new BusinessRuleException("Le produit {$product->name} n'est plus disponible.");
+                }
 
-        // Réinitialise la quantité et la note
+                if ($product->stock_quantity < $this->quantity) {
+                    throw new BusinessRuleException($product->stock_quantity <= 0
+                        ? "Rupture de stock : {$product->name} n'est plus disponible."
+                        : "Stock insuffisant : {$product->name}. Stock disponible : {$product->stock_quantity}.");
+                }
+
+                $order = $this->orderId
+                    ? $this->lockEditableOrder()
+                    : $this->createOrder();
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'quantity' => $this->quantity,
+                    // Le prix vient toujours de la base, jamais du navigateur
+                    'unit_price' => $product->selling_price,
+                    'total' => $product->selling_price * $this->quantity,
+                    'note' => $this->note ?: null,
+                ]);
+
+                $product->decrementStock($this->quantity);
+                $order->recalculateTotal();
+
+                return $order->id;
+            });
+        } catch (BusinessRuleException $e) {
+            session()->flash('error', $e->getMessage());
+
+            return;
+        }
+
+        // Affecté seulement une fois la transaction validée
+        $this->orderId = $orderId;
         $this->quantity = 1;
         $this->note = '';
     }
 
     /**
-     * Supprime un article de la commande.
+     * Retire un article de la commande et remet sa quantité en stock.
      */
     public function removeItem($itemId)
     {
@@ -186,9 +156,23 @@ class NewOrder extends Component
             return;
         }
 
-        OrderItem::where('order_id', $this->orderId)->find($itemId)?->delete();
+        try {
+            DB::transaction(function () use ($itemId) {
+                $order = $this->lockEditableOrder();
 
-        $this->order?->recalculateTotal();
+                $item = OrderItem::where('order_id', $order->id)->find($itemId);
+
+                if (!$item) {
+                    return;
+                }
+
+                Product::whereKey($item->product_id)->increment('stock_quantity', $item->quantity);
+                $item->delete();
+                $order->recalculateTotal();
+            });
+        } catch (BusinessRuleException $e) {
+            session()->flash('error', $e->getMessage());
+        }
     }
 
     /**
@@ -199,14 +183,11 @@ class NewOrder extends Component
      */
     public function sendToKitchen()
     {
-        $this->order?->update([
-            'status' => 'in_preparation'
-        ]);
+        if (!$this->changeStatus('in_preparation')) {
+            return;
+        }
 
-        session()->flash(
-            'success',
-            'Commande envoyée en cuisine.'
-        );
+        session()->flash('success', 'Commande envoyée en cuisine.');
     }
 
     /**
@@ -214,9 +195,7 @@ class NewOrder extends Component
      */
     public function markServed()
     {
-        $this->order?->update([
-            'status' => 'served'
-        ]);
+        $this->changeStatus('served');
     }
 
     /**
@@ -224,9 +203,9 @@ class NewOrder extends Component
      */
     public function goToPayment()
     {
-        $this->order?->update([
-            'status' => 'awaiting_payment'
-        ]);
+        if (!$this->changeStatus('awaiting_payment')) {
+            return;
+        }
 
         if ($this->tableId) {
             RestaurantTable::find($this->tableId)?->update([
@@ -238,6 +217,64 @@ class NewOrder extends Component
             'payment.take',
             ['order' => $this->orderId]
         );
+    }
+
+    /**
+     * Fait avancer la commande, seulement si elle est encore modifiable
+     * et contient au moins un article.
+     */
+    protected function changeStatus(string $status): bool
+    {
+        $order = $this->order;
+
+        if (!$order || $order->items->isEmpty()) {
+            session()->flash('error', 'La commande est vide.');
+
+            return false;
+        }
+
+        if (!$order->isEditable()) {
+            session()->flash('error', 'Cette commande est déjà à l\'encaissement ou payée.');
+
+            return false;
+        }
+
+        $order->update(['status' => $status]);
+
+        return true;
+    }
+
+    /**
+     * Commande en cours, verrouillée, et encore modifiable.
+     *
+     * @throws BusinessRuleException
+     */
+    protected function lockEditableOrder(): Order
+    {
+        $order = Order::whereKey($this->orderId)->lockForUpdate()->firstOrFail();
+
+        if (!$order->isEditable()) {
+            throw new BusinessRuleException('Cette commande est déjà à l\'encaissement ou payée : elle ne peut plus être modifiée.');
+        }
+
+        return $order;
+    }
+
+    protected function createOrder(): Order
+    {
+        $order = Order::create([
+            'restaurant_id' => auth()->user()->currentRestaurantId(),
+            'table_id' => $this->tableId,
+            'user_id' => auth()->id(),
+            'order_type' => $this->orderType,
+            'status' => 'created',
+        ]);
+
+        if ($this->tableId) {
+            RestaurantTable::find($this->tableId)?->update(['status' => 'occupied']);
+        }
+
+        return $order;
     }
 
     /**
