@@ -58,12 +58,12 @@
                                 Entrer
                             </button>
                             <button wire:click="toggleStatus({{ $restaurant->id }})"
-                                    wire:confirm="{{ $restaurant->subscription_status === 'suspended'
+                                    wire:confirm="{{ $restaurant->isLocked()
                                         ? 'Réactiver ' . $restaurant->name . ' ?'
                                         : 'Verrouiller ' . $restaurant->name . ' ? Son personnel n\'aura plus accès à l\'application.' }}"
-                                    class="btn {{ $restaurant->subscription_status === 'suspended' ? 'btn-primary' : 'btn-danger' }}"
+                                    class="btn {{ $restaurant->isLocked() ? 'btn-primary' : 'btn-danger' }}"
                                     style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">
-                                {{ $restaurant->subscription_status === 'suspended' ? 'Réactiver' : 'Verrouiller' }}
+                                {{ $restaurant->isLocked() ? 'Réactiver' : 'Verrouiller' }}
                             </button>
                         </td>
                     </tr>

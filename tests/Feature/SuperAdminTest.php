@@ -148,6 +148,19 @@ class SuperAdminTest extends TestCase
         $this->assertSame('active', $this->maquisA->fresh()->subscription_status);
     }
 
+    public function test_le_super_admin_reactive_en_un_clic_un_maquis_en_fin_d_essai(): void
+    {
+        $this->maquisA->update(['subscription_status' => 'trial', 'trial_ends_at' => now()->subDay()]);
+        $this->actingAs($this->admin);
+
+        Livewire::test(RestaurantsList::class)
+            ->assertSee('Réactiver')
+            ->call('toggleStatus', $this->maquisA->id);
+
+        $this->assertSame('active', $this->maquisA->fresh()->subscription_status);
+        $this->assertFalse($this->maquisA->fresh()->isLocked());
+    }
+
     public function test_le_personnel_d_un_maquis_verrouille_est_bloque(): void
     {
         $this->maquisA->update(['subscription_status' => 'suspended']);

@@ -32,7 +32,8 @@ class RestaurantsList extends Component
     {
         $restaurant = Restaurant::findOrFail($restaurantId);
 
-        $newStatus = $restaurant->subscription_status === 'suspended' ? 'active' : 'suspended';
+        // Bloqué (suspendu ou essai terminé) → réactivé ; sinon → suspendu
+        $newStatus = $restaurant->isLocked() ? 'active' : 'suspended';
 
         $restaurant->update(['subscription_status' => $newStatus]);
 
