@@ -17,6 +17,7 @@ class ExpensesList extends Component
     public int $amount = 0;
     public string $description = '';
 
+    #[\Livewire\Attributes\Locked]
     public array $categories = [
         'goods_purchase' => 'Achat de marchandises',
         'salary' => 'Salaires',
@@ -33,8 +34,8 @@ class ExpensesList extends Component
     public function addExpense()
     {
         $this->validate([
-            'category' => 'required|string',
-            'amount' => 'required|integer|min:1',
+            'category' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys($this->categories))],
+            'amount' => 'required|integer|min:1|max:100000000',
             'description' => 'nullable|string|max:255',
         ]);
 

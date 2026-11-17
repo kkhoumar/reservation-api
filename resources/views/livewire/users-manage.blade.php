@@ -51,14 +51,20 @@
                 @error('password') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label style="font-size: 13px; font-weight: 600;">Rôle</label>
-                <select wire:model="role" style="width: 100%; margin-top: 6px;">
-                    <option value="server">Serveur</option>
-                    <option value="cashier">Caissier</option>
-                    <option value="manager">Gérant</option>
-                </select>
-            </div>
+            @if ($editingId !== auth()->id())
+                @php $formRoles = ['server' => 'Serveur', 'cashier' => 'Caissier', 'manager' => 'Gérant']; @endphp
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 13px; font-weight: 600;">Rôle</label>
+                    <select wire:model="role" style="width: 100%; margin-top: 6px;">
+                        @foreach ($formRoles as $value => $label)
+                            @if (in_array($value, $assignableRoles, true))
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    @error('role') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                </div>
+            @endif
 
             <div style="display: flex; gap: 10px;">
                 <button wire:click="save" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
@@ -95,15 +101,17 @@
                             </span>
                         </td>
                         <td style="padding: 12px 20px; text-align: right;">
-                            @if ($user->role !== 'owner')
+                            @can('update', $user)
                                 <button wire:click="editUser({{ $user->id }})" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">Modifier</button>
+                            @endcan
+                            @can('toggleStatus', $user)
                                 <button wire:click="toggleStatus({{ $user->id }})"
                                         wire:confirm="Confirmer ?"
                                         class="btn {{ $user->status === 'active' ? 'btn-danger' : 'btn-primary' }}"
                                         style="padding: 6px 12px; font-size: 12px;">
                                     {{ $user->status === 'active' ? 'Désactiver' : 'Réactiver' }}
                                 </button>
-                            @endif
+                            @endcan
                         </td>
                     </tr>
                 @endforeach
