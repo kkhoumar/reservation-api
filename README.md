@@ -156,8 +156,10 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] La `quantity` de `NewOrder` est validée (de 1 à 100), ainsi que les montants (reçu, fonds de caisse, montant compté).
 - [x] Une commande ne peut plus être payée deux fois (commande verrouillée et vérification du statut et des paiements existants).
 - [x] Comptes désactivés et maquis verrouillés : connexion refusée si `status != active`, déconnexion immédiate pendant la session, maquis suspendu ou en fin d'essai bloqué (middleware `restaurant.access`).
-- [ ] Pas de limite de tentatives de connexion.
-- [x] Middlewares `role`, `restaurant.access` et `platform_admin` réappliqués aux actions Livewire (`Livewire::addPersistentMiddleware` dans `AppServiceProvider`). ⚠️ Non couvert par les tests automatiques (Livewire ne réapplique pas ces middlewares en test) : à vérifier à la main. Il manque aussi les Policies par action.
+- [x] Connexion limitée à 5 essais par numéro et par IP, puis blocage de 15 minutes.
+- [x] Middlewares `role`, `restaurant.access` et `platform_admin` réappliqués aux actions Livewire (`Livewire::addPersistentMiddleware` dans `AppServiceProvider`). ⚠️ Non couvert par les tests automatiques (Livewire ne réapplique pas ces middlewares en test) : à vérifier à la main.
+- [x] `UserPolicy` : une gérante gère seulement les caissiers et les serveurs, seul le propriétaire gère les gérants, et personne d'autre que lui (ou le Super Admin) ne modifie le propriétaire.
+- [x] Dépenses : catégorie et montant validés.
 - [x] La colonne `is_platform_admin` a été ajoutée (non assignable en masse).
 
 **Fiabilité**
@@ -174,7 +176,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [ ] Supprimer `ActingUserSwitcher` (solution temporaire) et `app/Livewire/ash-register-manage.blade.php` (ancien fichier).
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [ ] Écrire des tests : isolation entre restaurants, paiement, solde de caisse, stock.
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion et droits (70 tests).
 
 ---
 
