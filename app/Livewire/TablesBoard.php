@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\Zone;
-use Livewire\Attributes\On;
 use Livewire\Component;
 
 class TablesBoard extends Component
@@ -14,12 +13,6 @@ class TablesBoard extends Component
         if (! auth()->user()->currentRestaurant()?->usesTables()) {
             $this->redirect(route('orders.new'), navigate: false);
         }
-    }
-
-    #[On('user-switched')]
-    public function refresh()
-    {
-        //
     }
 
     public function render()

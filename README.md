@@ -48,8 +48,10 @@ cp .env.docker.example .env.docker
 # Remplir APP_KEY (php artisan key:generate --show) et changer les mots de passe
 
 docker compose up -d --build
-docker compose exec app php artisan db:seed --class=DemoSeeder --force   # données de démo (optionnel)
+docker compose exec app php artisan app:create-super-admin "07 XX XX XX XX"   # ton compte Super Admin
 ```
+
+> Les données de démo (`db:seed`) sont **refusées quand `APP_ENV=production`**, car leurs comptes utilisent le mot de passe `password`. Pour une démo dans Docker, mets `APP_ENV=local` dans `.env.docker`, puis lance `docker compose exec app php artisan db:seed --force`.
 
 L'application est disponible sur **http://localhost:8080**. Le port se change avec `APP_PORT`.
 
@@ -84,7 +86,7 @@ cp .env.example .env
 php artisan key:generate
 touch database/database.sqlite
 php artisan migrate
-php artisan db:seed --class=DemoSeeder
+php artisan db:seed  # maquis de démo (relançable sans doublon)
 composer dev        # serveur Laravel + Vite
 ```
 
@@ -117,13 +119,14 @@ Un maquis en essai dont la date `trial_ends_at` est dépassée est verrouillé a
 
 ### Comptes de démo (`DemoSeeder`)
 
-Restaurant : **Maquis Chez Koffi**. Mot de passe pour tous les comptes : `password`.
+Restaurant : **Maquis Chez Koffi** (tables et vente rapide, ardoise activée, essai de 30 jours). Mot de passe pour tous les comptes : `password`.
 
-| Rôle | Téléphone |
-|---|---|
-| Patron (owner) | 0711111111 |
-| Serveur | 0722222222 |
-| Caissier | 0733333333 |
+| Rôle | Prénom | Téléphone |
+|---|---|---|
+| Patron (owner) | Koffi | 0711111111 |
+| Gérante (manager) | Mariam | 0744444444 |
+| Serveur | Aya | 0722222222 |
+| Caissier | Jean | 0733333333 |
 
 Les numéros sont enregistrés au format `0711223344`. À la connexion, `07 11 22 33 44` ou `+225 07 11 22 33 44` fonctionnent aussi.
 
@@ -172,13 +175,13 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] Une seule caisse ouverte à la fois, et une caisse ne se clôture qu'une fois.
 - [x] `customer_id` ajouté au `$fillable` de `Order`.
 - [x] Le bas de la sidebar affiche le maquis courant (et non plus « Maquis Chez Koffi » en dur).
-- [ ] `DatabaseSeeder` crée un utilisateur avec une colonne `name` qui n'existe plus, donc `php artisan db:seed` échoue. Utiliser `--class=DemoSeeder`.
+- [x] `php artisan db:seed` lance `DemoSeeder` : relançable sans doublon, refusé en production.
 
 **Qualité**
-- [ ] Supprimer `ActingUserSwitcher` (solution temporaire) et `app/Livewire/ash-register-manage.blade.php` (ancien fichier).
+- [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo et réglages (105 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages et données de démo (108 tests).
 
 ---
 
