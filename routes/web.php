@@ -12,7 +12,7 @@ use App\Livewire\Landing;
 use App\Livewire\Login;
 use App\Livewire\NewOrder;
 use App\Livewire\PaymentSuccess;
-use App\Livewire\Register;
+use App\Livewire\DemoRequestForm;
 use App\Livewire\SalesToday;
 use App\Livewire\TablesBoard;
 use App\Livewire\TakePayment;
@@ -22,7 +22,9 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\ProductsManage;
 
 Route::get('/', Landing::class)->middleware('guest')->name('landing');
-Route::get('/register', Register::class)->middleware('guest')->name('register');
+// Plus d'inscription libre : c'est le Super Admin qui crée les maquis
+Route::get('/demande-demo', DemoRequestForm::class)->middleware('guest')->name('demo.request');
+Route::redirect('/register', '/demande-demo', 301);
 Route::get('/login', Login::class)->middleware('guest')->name('login');
 
 Route::post('/logout', function () {

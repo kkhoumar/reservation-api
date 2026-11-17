@@ -87,7 +87,7 @@
         </div>
         <div class="nav-actions">
             <a href="{{ route('login') }}" class="btn-nav-ghost">Connexion</a>
-            <a href="{{ route('register') }}" class="btn-nav-primary">S'inscrire</a>
+            <a href="{{ route('demo.request') }}" class="btn-nav-primary">Demander une démo</a>
         </div>
     </nav>
 
@@ -101,7 +101,7 @@
         </div>
         <div class="foot-links">
             <a href="{{ route('login') }}">Connexion</a>
-            <a href="{{ route('register') }}">S'inscrire</a>
+            <a href="{{ route('demo.request') }}">Demander une démo</a>
         </div>
     </footer>
 

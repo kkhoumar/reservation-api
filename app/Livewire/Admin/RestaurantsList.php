@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\DemoRequest;
 use App\Models\Restaurant;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
@@ -48,10 +49,21 @@ class RestaurantsList extends Component
             : "{$restaurant->name} est réactivé.");
     }
 
+    /** Demande de démo : « contacté » ou « sans suite ». */
+    public function setDemoStatus($demoRequestId, string $status)
+    {
+        if (! in_array($status, ['contacted', 'rejected'], true)) {
+            return;
+        }
+
+        DemoRequest::findOrFail($demoRequestId)->forceFill(['status' => $status])->save();
+    }
+
     public function render()
     {
         return view('livewire.admin.restaurants-list', [
             'restaurants' => Restaurant::withCount('users')->orderBy('name')->get(),
+            'demoRequests' => DemoRequest::whereIn('status', ['new', 'contacted'])->latest()->get(),
         ]);
     }
 }

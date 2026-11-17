@@ -15,6 +15,45 @@
         </div>
     @endif
 
+    @if ($demoRequests->isNotEmpty())
+        <h3 style="margin: 0 0 10px 0;">Demandes de démo ({{ $demoRequests->count() }})</h3>
+        <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 28px; border-left: 6px solid var(--color-accent);">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tbody>
+                    @foreach ($demoRequests as $demo)
+                        <tr style="border-bottom: 1px solid var(--color-border);">
+                            <td style="padding: 12px 20px;">
+                                <div style="font-weight: 600;">{{ $demo->restaurant_name }}</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">
+                                    {{ $demo->contact_name }}{{ $demo->commune ? ' · ' . $demo->commune : '' }} · {{ $demo->created_at->diffForHumans() }}
+                                </div>
+                                @if ($demo->message)
+                                    <div style="font-size: 12px; margin-top: 4px;">« {{ $demo->message }} »</div>
+                                @endif
+                            </td>
+                            <td style="padding: 12px 20px; white-space: nowrap;">
+                                <a href="tel:{{ $demo->phone }}" style="font-weight: 600;">{{ $demo->phone }}</a>
+                                <a href="https://wa.me/225{{ $demo->phone }}" target="_blank" rel="noopener" style="font-size: 12px; margin-left: 6px;">WhatsApp</a>
+                            </td>
+                            <td style="padding: 12px 20px;">
+                                <span style="font-size: 12px; font-weight: 600; color: {{ $demo->status === 'new' ? 'var(--color-accent)' : 'var(--color-text-secondary)' }};">
+                                    {{ \App\Models\DemoRequest::STATUSES[$demo->status] }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 20px; text-align: right; white-space: nowrap;">
+                                <a href="{{ route('admin.restaurants.create', ['demande' => $demo->id]) }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">Créer le maquis</a>
+                                @if ($demo->status === 'new')
+                                    <button wire:click="setDemoStatus({{ $demo->id }}, 'contacted')" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">Contacté</button>
+                                @endif
+                                <button wire:click="setDemoStatus({{ $demo->id }}, 'rejected')" wire:confirm="Classer cette demande sans suite ?" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">Sans suite</button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
     <div class="card" style="padding: 0; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse;">
             <thead>

@@ -121,9 +121,11 @@ Restaurant : **Maquis Chez Koffi**. Mot de passe pour tous les comptes : `passwo
 
 | Rôle | Téléphone |
 |---|---|
-| Patron (owner) | +225 07 11 11 11 11 |
-| Serveur | +225 07 22 22 22 22 |
-| Caissier | +225 07 33 33 33 33 |
+| Patron (owner) | 0711111111 |
+| Serveur | 0722222222 |
+| Caissier | 0733333333 |
+
+Les numéros sont enregistrés au format `0711223344`. À la connexion, `07 11 22 33 44` ou `+225 07 11 22 33 44` fonctionnent aussi.
 
 ---
 
@@ -164,7 +166,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 
 **Fiabilité**
 - [x] Transactions et verrous (`lockForUpdate`) sur l'ajout et le retrait d'article, le paiement, ainsi que l'ouverture et la clôture de caisse. Les refus métier passent par `App\Exceptions\BusinessRuleException`, dont le message est affiché à l'utilisateur.
-- [ ] L'inscription (`Register`) n'est pas transactionnelle. Ce sera traité lors de son remplacement par la création de maquis côté Super Admin.
+- [x] L'inscription libre (`Register`) a été supprimée. La création « maquis + propriétaire » (`App\Actions\CreateRestaurantWithOwner`) se fait dans une transaction.
 - [x] `removeItem` remet le stock à jour. Une commande à l'encaissement ou payée ne peut plus être modifiée.
 - [x] Numéro de commande dérivé de l'ID (`CMD-00042`) : aucun doublon possible.
 - [x] Une seule caisse ouverte à la fois, et une caisse ne se clôture qu'une fois.
@@ -176,7 +178,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [ ] Supprimer `ActingUserSwitcher` (solution temporaire) et `app/Livewire/ash-register-manage.blade.php` (ancien fichier).
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion et droits (70 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis et demandes de démo (94 tests).
 
 ---
 
@@ -190,7 +192,11 @@ Pas d'inscription libre.
 2. Le patron reçoit ses accès (mot de passe provisoire ou lien par SMS/WhatsApp) et doit **changer son mot de passe à la première connexion**.
 3. Le patron crée son personnel selon ses besoins : personne, une seule gérante, ou une équipe complète. Seul le patron crée des gérants. Un gérant ne crée que des serveurs et des caissiers.
 
-À faire : remplacer `/register` par « Demander une démo », ajouter « Créer un maquis + son patron » dans l'espace Super Admin, forcer le changement de mot de passe.
+Mis en place :
+- **`/demande-demo`** : le prospect laisse son nom, son maquis, son numéro et sa commune. Protections : champ piège anti-robot, 3 demandes par heure et par IP, pas de doublon pour un même numéro. `/register` redirige vers cette page.
+- **Super Admin → Établissements** : les demandes en attente s'affichent en haut (appel, WhatsApp, « Contacté », « Sans suite »). « Créer le maquis » ouvre le formulaire pré-rempli.
+- **Super Admin → + Nouveau maquis** : le maquis et le patron sont créés ensemble, avec un mot de passe provisoire facile à dicter (`Kp7m-Wx3r`) et un message WhatsApp prêt à envoyer.
+- **Première connexion** : l'écran `/mot-de-passe` est obligatoire tant que le mot de passe provisoire n'est pas changé. La même règle s'applique au personnel dont le mot de passe a été fixé par le patron ou la gérante.
 
 ### Un seul modèle pour tous les maquis, du petit au grand
 L'appli ne repose pas sur des profils ni sur de nombreux réglages : chaque réglage ajoute des combinaisons à tester, donc des risques d'erreur sur la caisse. **Le fonctionnement s'adapte au personnel créé.**

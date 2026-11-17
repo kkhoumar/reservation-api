@@ -13,7 +13,7 @@
                 Commandes, tables, caisse et dépenses réunis dans une seule application simple — pour un gérant qui n'a pas de temps à perdre.
             </p>
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="{{ route('register') }}" class="btn-primary">Créer mon établissement</a>
+                <a href="{{ route('demo.request') }}" class="btn-primary">Demander une démo</a>
                 <a href="#comment-ca-marche" class="btn-secondary-outline">Voir comment ça marche</a>
             </div>
             <div style="margin-top: 28px; font-size: 13px; color: var(--color-text-secondary);">
@@ -207,8 +207,8 @@
                 </div>
             </div>
 
-            <a href="{{ route('register') }}" class="btn-primary" style="display: block; text-align: center;">
-                Démarrer mon essai gratuit
+            <a href="{{ route('demo.request') }}" class="btn-primary" style="display: block; text-align: center;">
+                Demander une démo gratuite
             </a>
 
             <p style="font-size: 12px; color: var(--color-text-secondary); margin-top: 14px;">
@@ -223,7 +223,7 @@
         <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin: 0 0 24px 0;">
             14 jours d'essai gratuit, sans carte bancaire.
         </p>
-        <a href="{{ route('register') }}" class="btn-primary">Créer mon établissement</a>
+        <a href="{{ route('demo.request') }}" class="btn-primary">Demander une démo</a>
     </div>
 
 </div>

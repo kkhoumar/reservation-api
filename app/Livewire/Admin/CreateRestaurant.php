@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Actions\CreateRestaurantWithOwner;
+use App\Models\DemoRequest;
 use App\Models\User;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -34,9 +35,35 @@ class CreateRestaurant extends Component
     public string $ownerLastName = '';
     public string $ownerPhone = '';
 
+    // Demande de démo d'origine (facultatif)
+    #[Locked]
+    public ?int $demoRequestId = null;
+
     // Résultat, affiché une seule fois
     #[Locked]
     public ?array $created = null;
+
+    public function mount(): void
+    {
+        $demo = request()->integer('demande')
+            ? DemoRequest::whereIn('status', ['new', 'contacted'])->find(request()->integer('demande'))
+            : null;
+
+        if (! $demo) {
+            return;
+        }
+
+        // Pré-remplissage : « Koffi Yao » → prénom Koffi, nom Yao
+        $parts = preg_split('/\s+/', trim($demo->contact_name), 2);
+
+        $this->demoRequestId = $demo->id;
+        $this->name = $demo->restaurant_name;
+        $this->commune = (string) $demo->commune;
+        $this->restaurantPhone = $demo->phone;
+        $this->ownerPhone = $demo->phone;
+        $this->ownerFirstName = $parts[0] ?? '';
+        $this->ownerLastName = $parts[1] ?? '';
+    }
 
     protected function rules(): array
     {
@@ -85,6 +112,13 @@ class CreateRestaurant extends Component
                 'phone' => $this->ownerPhone,
             ],
         );
+
+        if ($this->demoRequestId) {
+            DemoRequest::whereKey($this->demoRequestId)->update([
+                'status' => 'converted',
+                'restaurant_id' => $result['restaurant']->id,
+            ]);
+        }
 
         $this->created = [
             'restaurant_name' => $result['restaurant']->name,
