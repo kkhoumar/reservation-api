@@ -141,6 +141,8 @@ class NewOrder extends Component
                     'quantity' => $this->quantity,
                     // Le prix vient toujours de la base, jamais du navigateur
                     'unit_price' => $product->selling_price,
+                    // Prix d'achat figé à la vente : le bénéfice passé ne change pas si le prix change
+                    'unit_cost' => $product->cost_price,
                     'total' => $product->selling_price * $this->quantity,
                     'note' => $this->note ?: null,
                 ]);

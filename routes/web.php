@@ -68,6 +68,7 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/sales-today', SalesToday::class)->middleware('role:owner,manager,cashier')->name('sales.today');
     Route::get('/users', UsersManage::class)->middleware('role:owner,manager')->name('users.manage');
     Route::get('/products', ProductsManage::class)->middleware('role:owner,manager')->name('products.manage');
+    Route::get('/stock', \App\Livewire\StockManage::class)->middleware('role:owner,manager')->name('stock.index');
     Route::get('/parametres', RestaurantSettings::class)->middleware('role:owner')->name('settings');
 });
 

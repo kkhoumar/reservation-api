@@ -156,6 +156,7 @@ class Order extends Model
                     'product_id' => $item->product_id,
                     'quantity' => $quantity,
                     'unit_price' => $item->unit_price,
+                    'unit_cost' => $item->unit_cost,
                     'note' => $item->note,
                 ] + $offered);
             }

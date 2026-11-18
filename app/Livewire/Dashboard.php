@@ -85,6 +85,16 @@ class Dashboard extends Component
             ->limit(3)
             ->get();
 
+        // Bénéfice : ventes − coût des produits vendus − dépenses (sauf achats de
+        // marchandises, déjà comptés dans le coût des produits) − pertes de stock
+        $otherExpenses = (int) Expense::where('restaurant_id', $restaurantId)
+            ->whereBetween('expense_date', [$start, $end])
+            ->where('category', '!=', 'goods_purchase')
+            ->sum('amount');
+        $stockLosses = PeriodStats::stockLosses($restaurantId, $start, $end);
+        $grossMargin = $sales->total() - $stats->costOfGoods;
+        $profit = $grossMargin - $otherExpenses - $stockLosses;
+
         // Écarts de caisse des clôtures de la période
         $closings = CashRegister::where('restaurant_id', $restaurantId)
             ->whereBetween('closed_at', [$start, $end])
@@ -120,6 +130,12 @@ class Dashboard extends Component
             'expenses' => $expenses,
             'expensesByCategory' => $expensesByCategory,
             'netCash' => $sales->collected() - $expenses,
+            'costOfGoods' => $stats->costOfGoods,
+            'grossMargin' => $grossMargin,
+            'otherExpenses' => $otherExpenses,
+            'stockLosses' => $stockLosses,
+            'profit' => $profit,
+            'uncostedQuantity' => $stats->uncostedQuantity,
             'stats' => $stats,
             'closingsCount' => $closings->count(),
             'closingsWithGap' => $closings->filter(fn ($c) => abs((int) $c->discrepancy) >= CashRegisterManage::DISCREPANCY_THRESHOLD)->count(),

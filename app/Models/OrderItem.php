@@ -12,7 +12,7 @@ class OrderItem extends Model
     use BelongsToRestaurantThroughOrder, HasFactory;
 
     protected $fillable = [
-        'order_id', 'product_id', 'quantity', 'unit_price', 'total', 'note',
+        'order_id', 'product_id', 'quantity', 'unit_price', 'unit_cost', 'total', 'note',
         'is_offered', 'offered_reason', 'offered_by',
     ];
 

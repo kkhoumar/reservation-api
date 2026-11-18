@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Actions\StockService;
 use App\Models\Category;
+use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -22,6 +24,7 @@ class ProductsManage extends Component
     public string $name = '';
     public string $sellingPrice = '';
     public ?int $categoryId = null;
+    public string $costPrice = '';
     public string $stockQuantity = '';
     public string $stockAlertThreshold = '';
     public bool $isAvailable = true;
@@ -39,14 +42,17 @@ class ProductsManage extends Component
                 'required',
                 Rule::exists('categories', 'id')->where('restaurant_id', auth()->user()->currentRestaurantId()),
             ],
-            'stockQuantity' => 'required|integer|min:0',
+            'costPrice' => 'nullable|integer|min:0|max:10000000',
+            // Le stock ne se saisit qu'à la création ; ensuite il ne bouge que
+            // par les ventes, livraisons, pertes et inventaires (écran Stock)
+            'stockQuantity' => $this->editingProductId ? 'nullable' : 'required|integer|min:0|max:1000000',
             'stockAlertThreshold' => 'nullable|integer|min:0',
         ];
     }
 
     public function openCreateForm()
     {
-        $this->reset(['editingProductId', 'name', 'sellingPrice', 'categoryId', 'stockQuantity', 'stockAlertThreshold']);
+        $this->reset(['editingProductId', 'name', 'sellingPrice', 'costPrice', 'categoryId', 'stockQuantity', 'stockAlertThreshold']);
         $this->isAvailable = true;
         $this->showProductForm = true;
     }
@@ -58,6 +64,7 @@ class ProductsManage extends Component
         $this->editingProductId = $product->id;
         $this->name = $product->name;
         $this->sellingPrice = (string) $product->selling_price;
+        $this->costPrice = $product->cost_price !== null ? (string) $product->cost_price : '';
         $this->categoryId = $product->category_id;
         $this->stockQuantity = (string) $product->stock_quantity;
         $this->stockAlertThreshold = $product->stock_alert_threshold !== null ? (string) $product->stock_alert_threshold : '';
@@ -74,17 +81,21 @@ class ProductsManage extends Component
             'category_id' => $this->categoryId,
             'name' => $this->name,
             'selling_price' => $this->sellingPrice,
-            'stock_quantity' => $this->stockQuantity,
+            'cost_price' => $this->costPrice !== '' ? (int) $this->costPrice : null,
             'stock_alert_threshold' => $this->stockAlertThreshold !== '' ? $this->stockAlertThreshold : null,
             'is_available' => $this->isAvailable,
         ];
 
         if ($this->editingProductId) {
+            // Le stock n'est jamais modifié ici (pas de correction silencieuse)
             Product::where('restaurant_id', auth()->user()->currentRestaurantId())
                 ->findOrFail($this->editingProductId)
                 ->update($data);
         } else {
-            Product::create($data);
+            DB::transaction(function () use ($data) {
+                $product = Product::create($data + ['stock_quantity' => (int) $this->stockQuantity]);
+                app(StockService::class)->recordInitial(auth()->user(), $product);
+            });
         }
 
         $this->showProductForm = false;

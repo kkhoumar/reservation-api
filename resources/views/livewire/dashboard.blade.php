@@ -117,9 +117,20 @@
         </div>
 
         <div class="card">
-            <div style="font-size: 13px; color: var(--color-text-secondary);">Reste après dépenses</div>
-            <div style="font-size: 28px; font-weight: 800; margin-top: 4px; color: {{ $netCash < 0 ? 'var(--color-danger)' : 'inherit' }};">{{ $fcfa($netCash) }}</div>
-            <div style="{{ $small }}">Argent rentré (espèces + Mobile Money) moins les dépenses. Le prix d'achat des boissons et les crédits non payés ne sont pas comptés.</div>
+            <div style="font-size: 13px; color: var(--color-text-secondary);">Bénéfice estimé</div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px; color: {{ $profit < 0 ? 'var(--color-danger)' : 'var(--color-primary)' }};">{{ $fcfa($profit) }}</div>
+            <div style="{{ $small }} line-height: 1.6; margin-top: 4px;">
+                Ventes {{ $fcfa($revenue) }}<br>
+                − prix d'achat des produits vendus {{ $fcfa($costOfGoods) }}<br>
+                − autres dépenses {{ $fcfa($otherExpenses) }}
+                @if ($stockLosses !== 0)<br>− pertes de stock {{ $fcfa($stockLosses) }}@endif
+            </div>
+            @if ($uncostedQuantity > 0)
+                <div style="font-size: 12px; color: var(--color-accent); margin-top: 6px;">
+                    ⚠️ {{ $uncostedQuantity }} article(s) vendu(s) sans prix d'achat : bénéfice surestimé.
+                    <a href="{{ route('products.manage') }}" style="color: var(--color-accent);">Renseigner les prix</a>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -167,7 +178,14 @@
 
         <div class="card">
             <h3 style="margin: 0 0 10px 0;">À surveiller</h3>
-            @php $nothing = $stats->gesturesTotal === 0 && $stats->cancelledCount === 0 && $closingsWithGap === 0; @endphp
+            @php $nothing = $stats->gesturesTotal === 0 && $stats->cancelledCount === 0 && $closingsWithGap === 0 && $stockLosses <= 0; @endphp
+
+            <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                <span>Pertes et écarts de stock <span style="{{ $small }}">· casse, périmé, inventaire</span></span>
+                <a href="{{ route('stock.index') }}" style="text-decoration: none;">
+                    <strong style="color: {{ $stockLosses > 0 ? 'var(--color-danger)' : 'inherit' }};">{{ $fcfa(max(0, $stockLosses)) }}</strong>
+                </a>
+            </div>
 
             <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
                 <span>Offerts et remises <span style="{{ $small }}">· {{ $stats->gestures->count() }}</span></span>

@@ -52,17 +52,35 @@
                 @error('categoryId') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
             </div>
 
-            <div style="margin-bottom: 14px;">
-                <label style="font-size: 13px; font-weight: 600;">Prix de vente (FCFA)</label>
-                <input type="number" wire:model="sellingPrice" style="width: 100%; margin-top: 6px;">
-                @error('sellingPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                <div>
+                    <label style="font-size: 13px; font-weight: 600;">Prix de vente (FCFA)</label>
+                    <input type="number" wire:model="sellingPrice" style="width: 100%; margin-top: 6px;">
+                    @error('sellingPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight: 600;">Prix d'achat (FCFA)</label>
+                    <input type="number" wire:model="costPrice" placeholder="Facultatif" style="width: 100%; margin-top: 6px;">
+                    @error('costPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                </div>
+            </div>
+            <div style="font-size: 12px; color: var(--color-text-secondary); margin: -8px 0 14px 0;">
+                Le prix d'achat sert à calculer le bénéfice. Il est mis à jour à chaque livraison.
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                 <div>
-                    <label style="font-size: 13px; font-weight: 600;">Stock actuel</label>
-                    <input type="number" wire:model="stockQuantity" style="width: 100%; margin-top: 6px;">
-                    @error('stockQuantity') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                    @if ($editingProductId)
+                        <label style="font-size: 13px; font-weight: 600;">Stock actuel</label>
+                        <div style="margin-top: 6px; padding: 10px 12px; background: var(--color-bg); border-radius: 8px; font-size: 14px;">
+                            {{ $stockQuantity }}
+                            <a href="{{ route('stock.index') }}" style="display: block; font-size: 12px; color: var(--color-accent);">Livraison, perte ou inventaire →</a>
+                        </div>
+                    @else
+                        <label style="font-size: 13px; font-weight: 600;">Stock de départ</label>
+                        <input type="number" wire:model="stockQuantity" style="width: 100%; margin-top: 6px;">
+                        @error('stockQuantity') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                    @endif
                 </div>
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Seuil d'alerte</label>
@@ -96,6 +114,11 @@
                                 <td style="padding: 12px 20px; font-weight: 600;">{{ $product->name }}</td>
                                 <td style="padding: 12px 20px; color: var(--color-text-secondary);">
                                     {{ number_format($product->selling_price, 0, ',', ' ') }} FCFA
+                                    @if ($product->cost_price !== null)
+                                        <span style="display: block; font-size: 12px;">achat {{ number_format($product->cost_price, 0, ',', ' ') }} · marge {{ number_format($product->unitMargin(), 0, ',', ' ') }}</span>
+                                    @else
+                                        <span style="display: block; font-size: 12px; color: var(--color-accent);">prix d'achat manquant</span>
+                                    @endif
                                 </td>
                                 <td style="padding: 12px 20px;">
                                     @if ($product->isLowStock())

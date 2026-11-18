@@ -32,6 +32,10 @@ class PeriodStats
     public readonly int $gesturesTotal;
     public readonly int $cancelledCount;
     public readonly int $cancelledTotal;
+    /** Coût d'achat des articles vendus (ou offerts) sur la période. */
+    public readonly int $costOfGoods;
+    /** Articles vendus dont le prix d'achat est inconnu : bénéfice surestimé. */
+    public readonly int $uncostedQuantity;
 
     public function __construct(
         public readonly int $restaurantId,
@@ -85,6 +89,16 @@ class PeriodStats
                 'amount' => (int) $row->amount,
             ]);
 
+        // Coût des produits vendus (prix d'achat figé à la vente) ; les articles
+        // offerts comptent aussi : ils ont été achetés et consommés
+        $costs = OrderItem::query()
+            ->whereIn('order_id', $settledIds)
+            ->selectRaw('COALESCE(SUM(CASE WHEN unit_cost IS NOT NULL THEN quantity * unit_cost ELSE 0 END), 0) as cogs')
+            ->selectRaw('COALESCE(SUM(CASE WHEN unit_cost IS NULL THEN quantity ELSE 0 END), 0) as uncosted')
+            ->first();
+        $this->costOfGoods = (int) $costs->cogs;
+        $this->uncostedQuantity = (int) $costs->uncosted;
+
         $offered = OrderItem::query()
             ->with(['product:id,name', 'offeredBy:id,first_name', 'order.restaurantTable'])
             ->whereIn('order_id', $settledIds)
@@ -121,6 +135,20 @@ class PeriodStats
             ->whereBetween('updated_at', [$from, $to]);
         $this->cancelledCount = (clone $cancelled)->count();
         $this->cancelledTotal = (int) (clone $cancelled)->sum('total');
+    }
+
+    /**
+     * Valeur des pertes de stock (casse, périmé) et des écarts d'inventaire
+     * sur une période. Positif = perte pour le maquis.
+     */
+    public static function stockLosses(int $restaurantId, CarbonInterface $from, CarbonInterface $to): int
+    {
+        return -(int) \App\Models\StockMovement::query()
+            ->where('restaurant_id', $restaurantId)
+            ->whereIn('type', ['loss', 'inventory'])
+            ->whereBetween('created_at', [$from, $to])
+            ->selectRaw('COALESCE(SUM(quantity * COALESCE(unit_cost, 0)), 0) as value')
+            ->value('value');
     }
 
     /** Total dû par les clients à crédit (tous les temps). */

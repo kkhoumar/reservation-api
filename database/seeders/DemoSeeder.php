@@ -88,13 +88,13 @@ class DemoSeeder extends Seeder
 
             $menu = [
                 'Plats' => [
-                    ['Attiéké Poisson', 3000, 50, 5],
-                    ['Alloco', 1500, 40, 5],
-                    ['Poulet Braisé', 3500, 30, 5],
+                    ['Attiéké Poisson', 3000, 50, 5, 1800],
+                    ['Alloco', 1500, 40, 5, 800],
+                    ['Poulet Braisé', 3500, 30, 5, 2200],
                 ],
                 'Boissons' => [
-                    ['Bière', 1000, 100, 10],
-                    ['Jus de Bissap', 800, 25, 5],
+                    ['Bière', 1000, 100, 10, 600],
+                    ['Jus de Bissap', 800, 25, 5, 300],
                 ],
             ];
 
@@ -106,12 +106,13 @@ class DemoSeeder extends Seeder
                     'sort_order' => $order++,
                 ]);
 
-                foreach ($products as [$name, $price, $stock, $alert]) {
+                foreach ($products as [$name, $price, $stock, $alert, $cost]) {
                     Product::create([
                         'restaurant_id' => $restaurant->id,
                         'category_id' => $category->id,
                         'name' => $name,
                         'selling_price' => $price,
+                        'cost_price' => $cost,
                         'stock_quantity' => $stock,
                         'stock_alert_threshold' => $alert,
                     ]);

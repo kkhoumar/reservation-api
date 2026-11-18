@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements, rapport WhatsApp automatique et documents légaux (262 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements, rapport WhatsApp automatique, documents légaux, stock tracé et vrai bénéfice (279 tests).
 
 ---
 
@@ -397,6 +397,21 @@ Une fois l'API configurée, chaque clôture de caisse **envoie toute seule** un 
 6. Renseigner dans `.env.docker` : `WHATSAPP_TOKEN` (le jeton permanent) et `WHATSAPP_PHONE_NUMBER_ID` (l'identifiant du numéro, à ne pas confondre avec le numéro lui-même).
 
 Chaque message est **facturé par Meta**, en général quelques dizaines de FCFA par conversation pour la catégorie « Utilitaire ». C'est à prévoir dans le prix des formules.
+
+### Stock tracé (patron et gérante)
+Le stock ne bouge que par **une vente, une livraison, une perte ou un inventaire**. Chaque mouvement hors vente est enregistré dans `stock_movements` (qui, quand, combien, avant → après, pourquoi), via `App\Actions\StockService`.
+- **Menu & produits** : le stock se saisit **seulement à la création** (« stock de départ », tracé). Ensuite, il n'est plus modifiable : on ne peut plus le corriger en cachette. Le prix d'achat est facultatif et s'affiche avec la marge.
+- **Stock → Livraison** : on saisit plusieurs produits à la fois (quantité et prix d'achat), avec le fournisseur. Le prix d'achat du produit est mis à jour. Si l'on coche **« payée avec la caisse »**, la dépense « Achat de marchandises » est créée dans la caisse ouverte. Tout ou rien : sans caisse ouverte, rien n'est enregistré.
+- **Stock → Perte / casse** : quantité et motif obligatoire (casse, périmé, renversé…). On ne peut pas perdre plus que le stock.
+- **Stock → Inventaire** : on compte le réel **à l'aveugle** (le stock attendu est caché). L'application corrige le stock et affiche ce qui manque, en quantité et en FCFA (au prix d'achat, ou au prix de vente s'il manque). Séances gardées dans `stock_counts`.
+- **Stock → Historique** : tous les mouvements, filtrables par type.
+- **La caissière et la serveuse n'ont pas accès** au stock.
+
+### Vrai bénéfice
+- **Le prix d'achat est figé sur chaque vente** (`order_items.unit_cost`) : un changement de prix plus tard ne fausse pas le passé.
+- **Tableau de bord → « Bénéfice estimé »** = ventes − prix d'achat des produits vendus (offerts compris) − autres dépenses − pertes de stock (casse et écarts d'inventaire). Les dépenses « Achat de marchandises » ne sont pas retirées une seconde fois, car elles sont déjà dans le prix d'achat.
+- **Si des articles vendus n'ont pas de prix d'achat**, un avertissement indique que le bénéfice est surestimé.
+- **« À surveiller »** affiche aussi les pertes et écarts de stock de la période.
 
 ### Documents légaux
 - **`/conditions`** : les conditions d'utilisation, c'est-à-dire le contrat entre la plateforme et l'établissement. On y trouve les prix, le paiement à l'avance, les jours de grâce, la coupure le matin, les responsabilités et le droit ivoirien.

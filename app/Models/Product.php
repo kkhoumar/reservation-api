@@ -14,12 +14,35 @@ class Product extends Model
 
     protected $fillable = [
         'restaurant_id', 'category_id', 'name', 'photo',
-        'selling_price', 'is_available', 'stock_quantity', 'stock_alert_threshold',
+        'selling_price', 'cost_price', 'is_available', 'stock_quantity', 'stock_alert_threshold',
     ];
 
     protected $casts = [
         'is_available' => 'boolean',
+        'cost_price' => 'integer',
+        'selling_price' => 'integer',
+        'stock_quantity' => 'integer',
     ];
+
+    /**
+     * Valeur d'une unité pour chiffrer une perte ou un écart d'inventaire :
+     * le prix d'achat s'il est connu, sinon le prix de vente.
+     */
+    public function unitValue(): int
+    {
+        return (int) ($this->cost_price ?? $this->selling_price);
+    }
+
+    /** Bénéfice par unité vendue (null si le prix d'achat est inconnu). */
+    public function unitMargin(): ?int
+    {
+        return $this->cost_price === null ? null : $this->selling_price - $this->cost_price;
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
 
     public function restaurant(): BelongsTo
     {
