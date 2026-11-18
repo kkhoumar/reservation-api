@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements, rapport WhatsApp automatique, documents légaux, stock tracé et vrai bénéfice (279 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements, rapport WhatsApp automatique, documents légaux, stock tracé, vrai bénéfice et exports Excel (288 tests).
 
 ---
 
@@ -412,6 +412,21 @@ Le stock ne bouge que par **une vente, une livraison, une perte ou un inventaire
 - **Tableau de bord → « Bénéfice estimé »** = ventes − prix d'achat des produits vendus (offerts compris) − autres dépenses − pertes de stock (casse et écarts d'inventaire). Les dépenses « Achat de marchandises » ne sont pas retirées une seconde fois, car elles sont déjà dans le prix d'achat.
 - **Si des articles vendus n'ont pas de prix d'achat**, un avertissement indique que le bénéfice est surestimé.
 - **« À surveiller »** affiche aussi les pertes et écarts de stock de la période.
+
+### Exports (patron et gérante)
+Le menu **Exports** (`/exports`) permet de choisir une période (raccourcis : ce mois, mois dernier, cette année ; 2 ans au plus) et de télécharger 6 fichiers :
+
+| Fichier | Contenu |
+|---|---|
+| Ventes | Chaque bon réglé : date, table, serveuse, qui a encaissé, mode, référence, sous-total, remise, espèces, Mobile Money, crédit et client |
+| Articles vendus | Produit par produit : quantité, prix, prix d'achat, marge, offert et motif |
+| Dépenses | Catégorie, description, montant, qui l'a saisie, caisse ou hors caisse |
+| Clôtures de caisse | Fonds de départ, attendu, compté, écart, note |
+| Crédits clients | Le solde de chaque client, et les consommations et remboursements de la période |
+| Stock | L'état et la valeur du stock aujourd'hui, et les livraisons, pertes et inventaires de la période |
+
+- **Format** : CSV « Excel français » (`App\Support\CsvExport`) : séparateur `;`, UTF-8 avec BOM pour les accents, montants en nombres. Il s'ouvre d'un double-clic dans Excel, Google Sheets ou LibreOffice. Aucune bibliothèque à installer.
+- **Sécurité** : seules les données du maquis courant sont exportées. Les textes qui commencent par `=`, `+`, `-` ou `@` sont neutralisés, pour éviter qu'une formule cachée dans un nom s'exécute dans Excel.
 
 ### Documents légaux
 - **`/conditions`** : les conditions d'utilisation, c'est-à-dire le contrat entre la plateforme et l'établissement. On y trouve les prix, le paiement à l'avance, les jours de grâce, la coupure le matin, les responsabilités et le droit ivoirien.
