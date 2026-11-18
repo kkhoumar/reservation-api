@@ -44,7 +44,11 @@
         .lp .trust span { display: inline-flex; align-items: center; gap: 7px; }
         .lp .trust span::before { content: ''; width: 18px; height: 18px; border-radius: 50%; background: rgba(94,191,160,.25) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235EBFA0' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/11px no-repeat; }
         .lp .pay-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+        .lp .phone-col { display: flex; flex-direction: column; align-items: center; }
+        .lp .phone-col .phone-zone { width: 100%; }
         .lp .app-dl { margin-top: 26px; max-width: 420px; }
+        .lp .app-dl-under { margin-top: 30px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .lp .app-dl-under .app-dl-help { text-align: left; }
         .lp .app-dl-btn { display: inline-flex; align-items: center; gap: 12px; background: #0A0F0D; color: white; border: 1px solid rgba(255,255,255,.22); border-radius: 14px; padding: 10px 18px 10px 12px; cursor: pointer; font-family: inherit; transition: transform .15s, border-color .15s, background .15s; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
         .lp .app-dl-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: #111A16; }
         .lp .app-dl-ico { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -218,22 +222,9 @@
                 <div class="pay-row" aria-label="Moyens de paiement acceptés">
                     <span class="pay">Espèces</span><span class="pay">Wave</span><span class="pay">Orange Money</span><span class="pay">MTN MoMo</span><span class="pay">Moov Money</span>
                 </div>
-
-                {{-- Application mobile installable --}}
-                <div class="app-dl">
-                    <button type="button" id="installAppBtn" class="app-dl-btn">
-                        <span class="app-dl-ico">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>
-                        </span>
-                        <span style="text-align: left;">
-                            <small id="installAppSmall">Sur Android et iPhone</small>
-                            <strong id="installAppLabel">Installer l'application mobile</strong>
-                        </span>
-                    </button>
-                    <div id="installAppHelp" class="app-dl-help" hidden></div>
-                </div>
             </div>
 
+            <div class="phone-col">
             <div class="phone-zone">
                 <div class="float f1"><div class="dot" style="background: #E7F6EF;">✅</div><div><b>Caisse juste</b><small>Écart : 0 F</small></div></div>
                 <div class="float f2"><div class="dot" style="background: #FDEFE6;">💰</div><div><b>+ 71 000 F</b><small>apportés par Aya</small></div></div>
@@ -265,6 +256,21 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {{-- Application mobile installable --}}
+            <div class="app-dl app-dl-under">
+                <button type="button" id="installAppBtn" class="app-dl-btn">
+                    <span class="app-dl-ico">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>
+                    </span>
+                    <span style="text-align: left;">
+                        <small id="installAppSmall">Sur Android et iPhone</small>
+                        <strong id="installAppLabel">Installer l'application mobile</strong>
+                    </span>
+                </button>
+                <div id="installAppHelp" class="app-dl-help" hidden></div>
+            </div>
             </div>
         </div>
     </div>
