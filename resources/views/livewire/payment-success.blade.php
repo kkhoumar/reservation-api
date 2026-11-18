@@ -59,8 +59,25 @@
             <span>{{ number_format($order->payment->change_given, 0, ',', ' ') }} FCFA</span>
         </div>
 
-        <a href="{{ route('tables.index') }}" class="btn btn-primary" style="width: 100%; justify-content: center;">
-            Retour aux tables
-        </a>
+        {{-- Enchaîner tout de suite sur la vente suivante --}}
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            @if ($order->restaurantTable)
+                <a href="{{ route('orders.new', ['table' => $order->restaurantTable->id]) }}" class="btn btn-primary" style="justify-content: center; font-size: 16px; padding: 14px 18px; text-decoration: none;">
+                    Nouvelle tournée — {{ $order->restaurantTable->label }}
+                </a>
+                <a href="{{ route('tables.index') }}" class="btn btn-ghost" style="justify-content: center; text-decoration: none;">
+                    Retour aux tables
+                </a>
+            @else
+                <a href="{{ route('orders.new') }}" class="btn btn-primary" style="justify-content: center; font-size: 16px; padding: 14px 18px; text-decoration: none;">
+                    Nouvelle vente
+                </a>
+                @if ($usesTables)
+                    <a href="{{ route('tables.index') }}" class="btn btn-ghost" style="justify-content: center; text-decoration: none;">
+                        Plan des tables
+                    </a>
+                @endif
+            @endif
+        </div>
     </div>
 </div>

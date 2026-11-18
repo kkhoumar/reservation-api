@@ -127,6 +127,7 @@ class Dashboard extends Component
             'register' => $register,
             'drawerAmount' => $register?->calculateTheoreticalAmount(),
             'paysBefore' => (bool) $restaurant?->paysBeforeService(),
+            'showCounter' => (bool) $restaurant?->paysBeforeService() && ($restaurant->hasActiveServers() || Order::where('status', 'awaiting_payment')->exists()),
             'pendingCount' => (clone $pending)->count(),
             'pendingTotal' => (int) (clone $pending)->sum('total'),
             'occupiedTables' => RestaurantTable::where('restaurant_id', $restaurantId)->where('status', '!=', 'free')->count(),

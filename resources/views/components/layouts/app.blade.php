@@ -327,8 +327,16 @@
                     Vente rapide
                 </a>
             @endif
-            @php $paysBefore = $currentRestaurant?->paysBeforeService() ?? false; @endphp
-            @if($paysBefore && auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
+            @php
+                $paysBefore = $currentRestaurant?->paysBeforeService() ?? false;
+                // Le maquis s'adapte au personnel : sans serveuse, la personne qui
+                // prend la commande encaisse elle-même (pas de comptoir, pas de sacoche)
+                $hasServers = $currentRestaurant?->hasActiveServers() ?? false;
+                $showCounter = $paysBefore && ($hasServers || \App\Models\Order::where('status', 'awaiting_payment')->exists());
+                $showSacoches = ! $paysBefore && $currentRestaurant
+                    && ($hasServers || \App\Support\PeriodStats::sacochesOutstanding($currentRestaurant->id) > 0);
+            @endphp
+            @if($showCounter && auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
                 <a href="{{ route('counter') }}" class="sidebar-link {{ request()->routeIs('counter') ? 'active' : '' }}">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18v10H3z"/><path d="M7 10V6h10v4"/><path d="M12 14h.01"/></svg>
                     Comptoir
@@ -345,12 +353,12 @@
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
                     Caisse
                 </a>
-                @unless ($paysBefore)
+                @if ($showSacoches)
                     <a href="{{ route('sacoches') }}" class="sidebar-link {{ request()->routeIs('sacoches') ? 'active' : '' }}">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12H5L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
                         Sacoches
                     </a>
-                @endunless
+                @endif
             @endif
             @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager'])))
                 <a href="{{ route('cash-register.history') }}" class="sidebar-link {{ request()->routeIs('cash-register.history') ? 'active' : '' }}">

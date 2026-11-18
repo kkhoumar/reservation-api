@@ -341,6 +341,7 @@ class NewOrder extends Component
             'order' => $this->order,
             'paysBefore' => $this->paysBeforeService(),
             'canCollect' => ! auth()->user()->isServer(),
+            'hasServers' => (bool) auth()->user()->currentRestaurant()?->hasActiveServers(),
         ]);
     }
 }

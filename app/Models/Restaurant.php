@@ -33,6 +33,15 @@ class Restaurant extends Model
         'after' => ['label' => 'Paiement à la fin', 'hint' => 'Le client consomme, puis paie l\'addition en partant.'],
     ];
 
+    /**
+     * Le maquis a-t-il des serveuses actives ? Sinon, la personne qui prend
+     * la commande encaisse elle-même : pas de comptoir, pas de sacoche.
+     */
+    public function hasActiveServers(): bool
+    {
+        return $this->users()->where('role', 'server')->where('status', 'active')->exists();
+    }
+
     public function paysBeforeService(): bool
     {
         return $this->payment_timing !== 'after';

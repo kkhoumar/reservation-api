@@ -44,7 +44,7 @@
             @endif
         </a>
 
-        @if ($paysBefore)
+        @if ($showCounter)
             <a href="{{ route('counter') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit; border-left: 4px solid {{ $pendingCount > 0 ? 'var(--color-accent)' : 'var(--color-border)' }};">
                 <div style="{{ $small }}">Au comptoir</div>
                 <div style="{{ $big }}">{{ $pendingCount }} bon{{ $pendingCount > 1 ? 's' : '' }}</div>

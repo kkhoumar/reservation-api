@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse et tableau de bord (211 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord et petit maquis à une personne (219 tests).
 
 ---
 
@@ -271,6 +271,15 @@ Il y a **un seul paiement par bon**, ce qui évite de le compter deux fois :
 - l'ardoise.
 
 Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du client.
+
+### Petit maquis : une seule personne fait tout
+L'écran s'adapte au personnel créé, sans aucun réglage (`Restaurant::hasActiveServers()`).
+- **Celui qui prend la commande a le droit d'encaisser** (patron, gérante, caissière) : le gros bouton est **« Encaisser »**.
+- **Aucune serveuse active** : pas de menu *Comptoir* ni *Sacoches*, ni de bouton « Envoyer au comptoir ». Le Comptoir reste visible tant qu'un bon y attend.
+- **Au moins une serveuse active** : le Comptoir réapparaît tout seul. La serveuse ne voit que « Envoyer au comptoir ». Les autres gardent « Encaisser » en gros et « Envoyer au comptoir » en petit.
+- **Après un paiement** : « **Nouvelle tournée — Table X** » ou « **Nouvelle vente** », pour enchaîner sans repasser par le plan des tables.
+
+Pour une employée seule, on lui donne le rôle **Gérante** (de confiance) ou **Caissière** (sans crédit ni offert), jamais **Serveuse**.
 
 ### Tableau de bord (patron et gérante)
 - **En ce moment** : la caisse (montant attendu dans le tiroir, qui l'a ouverte), les bons qui attendent au comptoir, les tables occupées, les crédits à récupérer, les sacoches non versées. Chaque case mène à l'écran concerné.

@@ -21,6 +21,9 @@ class PaymentSuccess extends Component
     {
         $order = Order::with(['items.product', 'restaurantTable', 'payment'])->findOrFail($this->orderId);
 
-        return view('livewire.payment-success', ['order' => $order]);
+        return view('livewire.payment-success', [
+            'order' => $order,
+            'usesTables' => (bool) auth()->user()->currentRestaurant()?->usesTables(),
+        ]);
     }
 }

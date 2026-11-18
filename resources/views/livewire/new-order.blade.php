@@ -83,14 +83,19 @@
 
                 <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
                 @if ($paysBefore)
-                    {{-- Paiement avant service : l'argent va au comptoir, puis on sert --}}
-                    <button wire:click="sendToCounter" class="btn btn-primary" style="justify-content: center;">Envoyer au comptoir</button>
+                    {{-- Paiement avant service : on encaisse, puis on sert --}}
                     @if ($canCollect)
-                        <button wire:click="goToPayment" class="btn btn-ghost" style="justify-content: center;">Encaisser tout de suite</button>
+                        {{-- Patron, gérante, caissière : ils encaissent eux-mêmes --}}
+                        <button wire:click="goToPayment" class="btn btn-primary" style="justify-content: center; font-size: 16px; padding: 14px 18px;">Encaisser</button>
+                        @if ($hasServers)
+                            <button wire:click="sendToCounter" class="btn btn-ghost" style="justify-content: center;">Envoyer au comptoir</button>
+                        @endif
+                    @else
+                        <button wire:click="sendToCounter" class="btn btn-primary" style="justify-content: center; font-size: 16px; padding: 14px 18px;">Envoyer au comptoir</button>
+                        <div style="font-size: 12px; color: var(--color-text-secondary);">
+                            Apporte l'argent au comptoir : le bon est servi une fois encaissé.
+                        </div>
                     @endif
-                    <div style="font-size: 12px; color: var(--color-text-secondary);">
-                        Apporte l'argent au comptoir : le bon est servi une fois encaissé.
-                    </div>
                 @else
                     @if ($order->status === 'created')
                         <button wire:click="sendToKitchen" class="btn btn-secondary">Envoyer en cuisine</button>
