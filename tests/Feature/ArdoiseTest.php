@@ -234,6 +234,35 @@ class ArdoiseTest extends TestCase
             ->assertSee('https://wa.me/2250707070707', false);
     }
 
+    public function test_la_fiche_client_detaille_les_consommations_et_les_remboursements(): void
+    {
+        $biere = \App\Models\Product::factory()->create(['restaurant_id' => $this->maquis->id, 'name' => 'Bière', 'selling_price' => 1000]);
+        $table = RestaurantTable::factory()->create(['restaurant_id' => $this->maquis->id, 'label' => 'Table 7']);
+        $order = $this->bon(3000, $table);
+        \App\Models\OrderItem::factory()->create([
+            'order_id' => $order->id, 'product_id' => $biere->id,
+            'quantity' => 3, 'unit_price' => 1000, 'total' => 3000,
+        ]);
+
+        CreditTransaction::chargeOrder($order, $this->konan, $this->gerante);
+        CreditTransaction::recordRepayment($this->konan, $this->caissier, 1000, 'Avance');
+
+        $this->actingAs($this->patron);
+
+        Livewire::test(Ardoise::class)
+            ->call('select', $this->konan->id)
+            ->assertSee(now()->format('d/m/Y'))
+            ->assertSee('Consommation')
+            ->assertSee('3 × Bière')
+            ->assertSee('Table 7')
+            ->assertSee('servi par ' . $this->aya->first_name)
+            ->assertSee('crédit autorisé par Mariam')
+            ->assertSee('Remboursement')
+            ->assertSee('Encaissé par ' . $this->caissier->first_name)
+            ->assertSee('Avance')
+            ->assertSee('2 000 FCFA');
+    }
+
     public function test_paiement_a_la_fin_le_patron_met_sur_l_ardoise_depuis_l_encaissement(): void
     {
         $this->maquis->update(['payment_timing' => 'after']);

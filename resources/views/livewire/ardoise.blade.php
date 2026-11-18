@@ -127,15 +127,37 @@
 
                 <h3 style="margin: 18px 0 6px 0;">Historique</h3>
                 @forelse ($history as $t)
-                    <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 13px;">
-                        <span>
-                            {{ $t->created_at->format('d/m H:i') }} ·
-                            {{ $t->type === 'charge' ? ($t->order?->order_number ?? 'Bon') : 'Remboursement' }}
-                            <span style="color: var(--color-text-secondary);">· {{ $t->recordedBy?->first_name }}</span>
-                        </span>
-                        <strong style="color: {{ $t->type === 'charge' ? 'var(--color-accent)' : 'var(--color-primary-300)' }};">
-                            {{ $t->type === 'charge' ? '+' : '−' }}{{ number_format($t->amount, 0, ',', ' ') }}
-                        </strong>
+                    <div style="padding: 8px 0; border-top: 1px solid var(--color-border); font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; gap: 8px;">
+                            <span>
+                                <strong>{{ $t->created_at->format('d/m/Y H:i') }}</strong> ·
+                                {{ $t->type === 'charge' ? 'Consommation' : 'Remboursement' }}
+                            </span>
+                            <strong style="color: {{ $t->type === 'charge' ? 'var(--color-accent)' : 'var(--color-primary-300)' }}; white-space: nowrap;">
+                                {{ $t->type === 'charge' ? '+' : '−' }}{{ number_format($t->amount, 0, ',', ' ') }}
+                            </strong>
+                        </div>
+
+                        @if ($t->type === 'charge' && $t->order)
+                            <div style="margin: 4px 0 2px 10px; padding-left: 8px; border-left: 2px solid var(--color-border);">
+                                @foreach ($t->order->items as $item)
+                                    <div style="display: flex; justify-content: space-between; gap: 8px;">
+                                        <span>{{ $item->quantity }} × {{ $item->product?->name ?? 'Produit supprimé' }}</span>
+                                        <span style="color: var(--color-text-secondary);">{{ number_format($item->total, 0, ',', ' ') }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-secondary);">
+                                {{ $t->order->order_number }}
+                                @if ($t->order->restaurantTable) · {{ $t->order->restaurantTable->label }} @endif
+                                @if ($t->order->server) · servi par {{ $t->order->server->first_name }} @endif
+                                · crédit autorisé par {{ $t->recordedBy?->first_name ?? '—' }}
+                            </div>
+                        @else
+                            <div style="font-size: 12px; color: var(--color-text-secondary);">
+                                Encaissé par {{ $t->recordedBy?->first_name ?? '—' }}@if ($t->note) · {{ $t->note }}@endif
+                            </div>
+                        @endif
                     </div>
                 @empty
                     <p style="font-size: 13px; color: var(--color-text-secondary);">Aucun mouvement.</p>

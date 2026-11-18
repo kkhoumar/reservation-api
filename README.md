@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise et rapport du soir (164 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise et rapport du soir (165 tests).
 
 ---
 
@@ -281,7 +281,7 @@ Visible seulement si `credit_enabled` est activé.
 
 **Écran Ardoise** (`/ardoise`, réservé au patron, à la gérante et à la caissière) :
 - le total dû au maquis et les clients triés par dette, avec une recherche ;
-- la fiche du client avec son historique, qui affiche qui a fait chaque mouvement ;
+- la fiche du client avec son historique daté : le détail de chaque consommation (articles, table, serveuse, qui a autorisé le crédit) et chaque remboursement (montant, qui l'a encaissé, note) ;
 - **« Relancer sur WhatsApp »** avec un message poli déjà rédigé.
 
 **Remboursement** (patron, gérante ou caissière) :

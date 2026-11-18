@@ -167,7 +167,11 @@ class Ardoise extends Component
             'selected' => $selected,
             'selectedBalance' => $selected?->balance() ?? 0,
             'history' => $selected
-                ? $selected->transactions()->with(['order', 'recordedBy'])->latest()->limit(30)->get()
+                ? $selected->transactions()
+                    ->with(['order.items.product', 'order.server', 'order.restaurantTable', 'recordedBy'])
+                    ->latest()
+                    ->limit(30)
+                    ->get()
                 : collect(),
             'whatsappUrl' => $selected?->whatsappUrl($restaurantName),
             'canManage' => $this->canManage(),
