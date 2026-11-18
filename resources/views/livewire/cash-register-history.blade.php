@@ -21,6 +21,7 @@
                         <th style="padding: 12px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600;">Clôturée par</th>
                         <th style="padding: 12px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600; text-align: right;">Montant compté</th>
                         <th style="padding: 12px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600; text-align: right;">Écart</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,6 +38,9 @@
                                     {{ $register->discrepancy > 0 ? '+' : '' }}{{ number_format($register->discrepancy, 0, ',', ' ') }}
                                     @if ($hasIssue) ⚠️ @endif
                                 </span>
+                            </td>
+                            <td style="padding: 12px 20px; text-align: right;">
+                                <a href="{{ route('cash-register.closed', $register->id) }}" style="color: var(--color-accent); font-weight: 600; font-size: 13px; text-decoration: none;">Rapport →</a>
                             </td>
                         </tr>
                     @endforeach

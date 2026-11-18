@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir et ardoise (156 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise et rapport du soir (164 tests).
 
 ---
 
@@ -252,6 +252,23 @@ Mis en place : colonnes `restaurants.service_mode` (`tables`, `quick`, `both` ; 
 - En mode `quick` : le plan des tables redirige vers la vente rapide, et le menu affiche « Vente rapide ». En mode `tables` : la vente sans table est refusée.
 - On ne peut pas passer en `quick` tant qu'une commande de table n'est pas payée.
 - On ne peut pas désactiver l'ardoise tant que des clients doivent de l'argent.
+
+### Rapport du soir
+Dès la clôture de la caisse, l'écran « Caisse clôturée » affiche le rapport de la session (`App\Support\RegisterReport`). On le retrouve ensuite dans **Historique caisse → Rapport**.
+
+Contenu du rapport :
+- les **ventes** : ce qui a été encaissé, plus ce qui a été mis sur l'ardoise, avec le nombre de bons ;
+- les dépenses et les remboursements d'ardoise ;
+- la **caisse** : le montant attendu, le montant compté, l'écart (✅ ou ⚠️) et la note de clôture ;
+- **par serveuse** : le nombre de bons et le montant ;
+- les **3 meilleures ventes** ;
+- **À surveiller** : les bons annulés, les sacoches non vidées et le total dû sur l'ardoise.
+
+Pour le partager :
+- **« Envoyer au patron sur WhatsApp »** ouvre WhatsApp avec le texte prêt, adressé au numéro du patron. Le bouton est masqué si c'est le patron lui-même qui clôture.
+- On peut aussi **partager** le texte vers n'importe quel contact, ou le **copier**.
+
+L'envoi demande un clic, et il est gratuit. Pour un envoi **automatique**, il faudra l'API WhatsApp Business, qui est payante et demande une validation par Meta. C'est prévu à l'étape 4.
 
 ### Ardoise (crédit client)
 Visible seulement si `credit_enabled` est activé.
