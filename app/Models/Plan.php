@@ -12,13 +12,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Plan extends Model
 {
     protected $fillable = [
-        'code', 'name', 'monthly_price', 'max_users', 'description', 'sort_order', 'is_active',
+        'code', 'name', 'monthly_price', 'max_users', 'includes_auto_report', 'description', 'sort_order', 'is_active',
     ];
 
     protected $casts = [
         'monthly_price' => 'integer',
         'max_users' => 'integer',
         'is_active' => 'boolean',
+        'includes_auto_report' => 'boolean',
     ];
 
     public function restaurants(): HasMany

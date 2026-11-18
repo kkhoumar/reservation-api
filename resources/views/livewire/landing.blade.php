@@ -425,7 +425,7 @@
             <div class="wrap"><section id="tarifs">
                 <div class="center reveal"><span class="eyebrow">Tarifs</span></div>
                 <h2 class="reveal">Un prix clair, selon la taille de votre équipe</h2>
-                <p class="lead reveal">Toutes les fonctionnalités dans chaque formule : seul le nombre de personnes change. {{ $trialDays }} jours d'essai gratuit pour commencer.</p>
+                <p class="lead reveal">Le cœur de l'application dans chaque formule : seuls le nombre de personnes et le rapport automatique changent. {{ $trialDays }} jours d'essai gratuit pour commencer.</p>
                 <div class="plans" style="grid-template-columns: repeat({{ min(3, $plans->count()) }}, 1fr);">
                     @foreach ($plans as $i => $plan)
                         @php $featured = $plans->count() >= 3 && $i === 1; @endphp
@@ -441,6 +441,11 @@
                                 <li>Espèces et Mobile Money</li>
                                 <li>Crédits clients et stock</li>
                                 <li>Tableau de bord et exports</li>
+                                @if ($plan->includes_auto_report)
+                                    <li><strong>Rapport du soir automatique sur WhatsApp</strong></li>
+                                @else
+                                    <li>Rapport du soir à envoyer d'un clic</li>
+                                @endif
                             </ul>
                             <a href="{{ route('demo.request') }}" class="{{ $featured ? 'btn-primary' : 'btn-secondary-outline' }}">Demander une démo</a>
                         </div>

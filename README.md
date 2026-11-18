@@ -275,11 +275,13 @@ Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du clie
 ### Abonnements des maquis (le business de la plateforme)
 **Formules** (table `plans`) : Basic, Pro et Premium. Le prix mensuel et le nombre maximum d'utilisateurs actifs se modifient dans **Super Admin → Formules et prix**.
 
-| Formule | Prix de départ (à valider) | Utilisateurs actifs |
-|---|---|---|
-| Basic | 5 000 FCFA / mois | 3 |
-| Pro | 10 000 FCFA / mois | 8 |
-| Premium | 20 000 FCFA / mois | illimité |
+| Formule | Prix de départ (à valider) | Utilisateurs actifs | Rapport du soir automatique (WhatsApp) |
+|---|---|---|---|
+| Basic | 5 000 FCFA / mois | 3 | — (envoi d'un clic) |
+| Pro | 10 000 FCFA / mois | 8 | ✅ |
+| Premium | 20 000 FCFA / mois | illimité | ✅ |
+
+Toutes les autres fonctionnalités sont incluses dans chaque formule. Le rapport automatique est la seule fonction qui coûte un message Meta : il est réservé aux formules qui l'incluent (`plans.includes_auto_report`, case à cocher dans *Formules et prix*), et **inclus pour tous pendant l'essai** (`Restaurant::hasAutoReport()`). En Basic, le patron voit « disponible à partir de la formule Pro » dans ses Paramètres, et la caissière garde l'envoi d'un clic.
 
 **Paiement** (`App\Actions\RecordSubscriptionPayment`) :
 - Le maquis paie par Wave, Orange Money, MTN, Moov, en espèces ou par virement, en indiquant sa référence `ME-0012`.

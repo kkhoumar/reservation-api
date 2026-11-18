@@ -125,7 +125,7 @@ class CashRegisterManage extends Component
         }
 
         // Rapport du soir envoyé automatiquement au patron (si WhatsApp est configuré)
-        if ($register->restaurant?->whatsapp_report_enabled && app(WhatsAppCloud::class)->isConfigured()) {
+        if ($register->restaurant?->whatsapp_report_enabled && $register->restaurant->hasAutoReport() && app(WhatsAppCloud::class)->isConfigured()) {
             SendRegisterReport::queueFor($register->fresh());
         }
 

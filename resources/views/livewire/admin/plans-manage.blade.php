@@ -36,6 +36,11 @@
                 <input type="text" wire:model="form.{{ $plan->id }}.description" maxlength="255" style="width: 100%; margin-top: 4px;">
 
                 <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; margin-top: 12px; cursor: pointer;">
+                    <input type="checkbox" wire:model="form.{{ $plan->id }}.includes_auto_report">
+                    Rapport du soir automatique sur WhatsApp inclus
+                </label>
+
+                <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; margin-top: 8px; cursor: pointer;">
                     <input type="checkbox" wire:model="form.{{ $plan->id }}.is_active">
                     Proposée aux nouveaux paiements
                 </label>

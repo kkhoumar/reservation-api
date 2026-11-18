@@ -22,6 +22,7 @@ class PlansManage extends Component
                 'name' => $plan->name,
                 'monthly_price' => $plan->monthly_price,
                 'max_users' => $plan->max_users,
+                'includes_auto_report' => $plan->includes_auto_report,
                 'description' => $plan->description,
                 'is_active' => $plan->is_active,
             ];
@@ -38,6 +39,7 @@ class PlansManage extends Component
             "form.$planId.max_users" => 'nullable|integer|min:1|max:1000',
             "form.$planId.description" => 'nullable|string|max:255',
             "form.$planId.is_active" => 'boolean',
+            "form.$planId.includes_auto_report" => 'boolean',
         ], [], [
             "form.$planId.monthly_price" => 'prix',
             "form.$planId.max_users" => 'nombre d\'utilisateurs',
@@ -50,6 +52,7 @@ class PlansManage extends Component
             'max_users' => $data['max_users'] === '' || $data['max_users'] === null ? null : (int) $data['max_users'],
             'description' => $data['description'] ?: null,
             'is_active' => (bool) $data['is_active'],
+            'includes_auto_report' => (bool) ($data['includes_auto_report'] ?? false),
         ]);
 
         Log::info('Formule modifiée', ['admin_id' => auth()->id(), 'plan' => $plan->code, 'price' => $plan->monthly_price]);

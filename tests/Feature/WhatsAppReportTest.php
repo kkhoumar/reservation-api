@@ -43,6 +43,8 @@ class WhatsAppReportTest extends TestCase
         ]);
 
         $this->maquis = Restaurant::factory()->create(['name' => 'Maquis Chez Koffi']);
+        // Formule Pro : le rapport automatique est inclus
+        $this->maquis->forceFill(['plan_id' => \App\Models\Plan::where('code', 'pro')->value('id')])->save();
         $this->patron = User::factory()->owner()->create(['restaurant_id' => $this->maquis->id, 'phone' => '0711111111']);
         $this->jean = User::factory()->cashier()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Jean']);
         $this->caisse = CashRegister::factory()->create([

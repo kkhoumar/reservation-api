@@ -44,6 +44,16 @@
 
         <div class="card" style="margin-bottom: 16px;">
             <h3 style="margin-top: 0;">Rapport du soir sur WhatsApp</h3>
+            @if (! $restaurant->hasAutoReport())
+                <div style="background: var(--color-mint); border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.55;">
+                    <strong>Le rapport automatique est disponible à partir de la formule Pro.</strong>
+                    Avec votre formule {{ $restaurant->plan?->name }}, la caissière vous l'envoie d'un clic à chaque clôture de caisse.
+                    <a href="#abonnement" style="font-weight: 700;">Voir les formules</a>
+                </div>
+            @else
+            @if ($restaurant->subscription_status === 'trial')
+                <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 10px;">Inclus pendant votre essai gratuit. Ensuite : à partir de la formule Pro.</p>
+            @endif
             <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer;">
                 <input type="checkbox" wire:model.live="whatsappReportEnabled" style="margin-top: 3px;">
                 <span>
@@ -63,6 +73,7 @@
                     L'envoi automatique n'est pas encore en service sur Maquis Express. En attendant, la caissière envoie le rapport d'un clic à la clôture.
                 </p>
             @endunless
+            @endif
         </div>
 
         <div class="card" style="margin-bottom: 16px;">

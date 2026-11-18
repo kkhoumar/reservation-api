@@ -53,6 +53,15 @@ class SendRegisterReport implements ShouldQueue
         $restaurant = $register->restaurant;
         $phone = $restaurant?->reportRecipientPhone();
 
+        if ($restaurant && ! $restaurant->hasAutoReport()) {
+            $register->forceFill([
+                'report_status' => 'skipped',
+                'report_error' => 'Rapport automatique non inclus dans la formule ' . ($restaurant->plan?->name ?? '') . '.',
+            ])->save();
+
+            return;
+        }
+
         if (! $restaurant?->whatsapp_report_enabled || ! $phone || ! $whatsapp->isConfigured()) {
             $register->forceFill([
                 'report_status' => 'skipped',

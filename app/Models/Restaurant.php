@@ -251,6 +251,15 @@ class Restaurant extends Model
         };
     }
 
+    /**
+     * Rapport du soir envoyé automatiquement sur WhatsApp : inclus pendant
+     * l'essai (le patron découvre tout), puis selon la formule.
+     */
+    public function hasAutoReport(): bool
+    {
+        return $this->subscription_status === 'trial' || (bool) $this->plan?->includes_auto_report;
+    }
+
     /** Utilisateurs qui comptent dans la formule : actifs, pas partis. */
     public function activeUsersCount(): int
     {

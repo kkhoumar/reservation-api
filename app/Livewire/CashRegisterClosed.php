@@ -51,7 +51,7 @@ class CashRegisterClosed extends Component
             'ownerUrl' => $report->whatsappToOwnerUrl(),
             'shareUrl' => $report->whatsappShareUrl(),
             'isOwner' => auth()->user()->isOwner(),
-            'autoAvailable' => $whatsapp->isConfigured() && $register->restaurant?->whatsapp_report_enabled,
+            'autoAvailable' => $whatsapp->isConfigured() && $register->restaurant?->whatsapp_report_enabled && $register->restaurant->hasAutoReport(),
         ]);
     }
 }
