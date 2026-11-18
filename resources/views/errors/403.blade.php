@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '403')
+@section('icon', '🔒')
+@section('title', 'Accès non autorisé')
+@section('message', "Cette page n'est pas accessible avec votre rôle. Si vous pensez que c'est une erreur, demandez à votre patron ou à votre gérante.")

@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '500')
+@section('icon', '🛠️')
+@section('title', 'Un problème est survenu')
+@section('message', "Quelque chose ne s'est pas passé comme prévu. Réessayez dans un instant ; si le problème continue, contactez Maquis Express.")

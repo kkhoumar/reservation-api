@@ -34,10 +34,10 @@ class RestaurantTable extends Model
     public function statusColor(): string
     {
         return match ($this->status) {
-            'free' => '#65B96E',
-            'occupied' => '#E84A3A',
-            'awaiting_payment' => '#FF7A00',
-            default => '#6B7280',
+            'free' => '#1E8E5A',
+            'occupied' => '#D2622A',
+            'awaiting_payment' => '#D93B3B',
+            default => '#5B6B65',
         };
     }
 }

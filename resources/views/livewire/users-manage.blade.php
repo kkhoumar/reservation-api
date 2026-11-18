@@ -101,7 +101,7 @@
                             {{ $roleLabels[$user->role] ?? $user->role }}
                         </td>
                         <td style="padding: 12px 20px;">
-                            <span style="background: {{ $user->status === 'active' ? 'rgba(94,191,160,0.15)' : 'rgba(217,59,59,0.1)' }}; color: {{ $user->status === 'active' ? '#146652' : '#D93B3B' }}; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                            <span style="background: {{ $user->status === 'active' ? 'var(--color-success-bg)' : 'var(--color-danger-bg)' }}; color: {{ $user->status === 'active' ? 'var(--color-success)' : 'var(--color-danger)' }}; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
                                 {{ $user->status === 'active' ? 'Actif' : 'Inactif' }}
                             </span>
                         </td>

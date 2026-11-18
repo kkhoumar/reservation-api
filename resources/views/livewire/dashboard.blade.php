@@ -182,7 +182,7 @@
 
             <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
                 <span>Pertes et écarts de stock <span style="{{ $small }}">· casse, périmé, inventaire</span></span>
-                <a href="{{ route('stock.index') }}" style="text-decoration: none;">
+                <a href="{{ route('stock.index') }}" style="text-decoration: none; color: inherit;">
                     <strong style="color: {{ $stockLosses > 0 ? 'var(--color-danger)' : 'inherit' }};">{{ $fcfa(max(0, $stockLosses)) }}</strong>
                 </a>
             </div>
@@ -216,7 +216,7 @@
             <strong style="font-size: 14px;">{{ $lowStockProducts->count() }} produit{{ $lowStockProducts->count() > 1 ? 's' : '' }} bientôt en rupture</strong>
             <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
                 @foreach ($lowStockProducts as $product)
-                    <span style="background: rgba(217,59,59,0.1); color: var(--color-danger); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                    <span style="background: var(--color-danger-bg); color: var(--color-danger); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
                         {{ $product->name }} : {{ $product->stock_quantity }} restant{{ $product->stock_quantity > 1 ? 's' : '' }}
                     </span>
                 @endforeach

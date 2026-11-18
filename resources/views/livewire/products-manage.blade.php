@@ -128,7 +128,7 @@
                                     @endif
                                 </td>
                                 <td style="padding: 12px 20px;">
-                                    <span style="background: {{ $product->is_available ? 'rgba(94,191,160,0.15)' : 'rgba(217,59,59,0.1)' }}; color: {{ $product->is_available ? '#146652' : '#D93B3B' }}; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                                    <span style="background: {{ $product->is_available ? 'var(--color-success-bg)' : 'var(--color-danger-bg)' }}; color: {{ $product->is_available ? 'var(--color-success)' : 'var(--color-danger)' }}; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
                                         {{ $product->is_available ? 'Disponible' : 'Indisponible' }}
                                     </span>
                                 </td>

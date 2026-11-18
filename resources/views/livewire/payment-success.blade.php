@@ -1,7 +1,7 @@
 <div style="display: flex; justify-content: center; padding-top: 20px;">
     <div class="card" style="max-width: 420px; width: 100%; text-align: center;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(101,185,110,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0B5D3B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-success-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E8E5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
             </svg>
         </div>
