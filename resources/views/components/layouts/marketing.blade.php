@@ -102,6 +102,8 @@
         <div class="foot-links">
             <a href="{{ route('login') }}">Connexion</a>
             <a href="{{ route('demo.request') }}">Demander une démo</a>
+            <a href="{{ route('legal.terms') }}">Conditions d'utilisation</a>
+            <a href="{{ route('legal.privacy') }}">Confidentialité</a>
         </div>
     </footer>
 

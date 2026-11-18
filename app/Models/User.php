@@ -27,7 +27,19 @@ class User extends Authenticatable
         'is_platform_admin' => 'boolean',
         'must_change_password' => 'boolean',
         'left_at' => 'datetime',
+        'terms_accepted_at' => 'datetime',
     ];
+
+    /**
+     * Le patron signe le contrat avec la plateforme : il doit accepter la
+     * version en vigueur des conditions d'utilisation.
+     */
+    public function mustAcceptTerms(): bool
+    {
+        return $this->role === 'owner'
+            && ! $this->isPlatformAdmin()
+            && $this->terms_version !== config('maquis.terms_version');
+    }
 
     /**
      * Garde-fou : on n'efface jamais quelqu'un qui a un historique.

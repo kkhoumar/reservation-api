@@ -41,6 +41,11 @@ class EnsureRestaurantAccess
             return redirect()->route('password.change');
         }
 
+        // Le patron accepte les conditions d'utilisation (et chaque nouvelle version)
+        if ($user->mustAcceptTerms()) {
+            return redirect()->route('terms.accept');
+        }
+
         if ($user->isPlatformAdmin()) {
             if ($user->currentRestaurant() === null) {
                 return redirect()->route('admin.restaurants')

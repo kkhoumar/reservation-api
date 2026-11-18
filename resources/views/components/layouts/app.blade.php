@@ -405,6 +405,10 @@
             @elseif (auth()->user()?->isPlatformAdmin())
                 Super Admin
             @endif
+            <div style="margin-top: 8px;">
+                <a href="{{ route('legal.terms') }}" target="_blank" style="color: rgba(255,255,255,0.5); font-size: 11px;">Conditions</a>
+                · <a href="{{ route('legal.privacy') }}" target="_blank" style="color: rgba(255,255,255,0.5); font-size: 11px;">Confidentialité</a>
+            </div>
         </div>
     </aside>
 

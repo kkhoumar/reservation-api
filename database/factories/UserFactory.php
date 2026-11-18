@@ -30,7 +30,15 @@ class UserFactory extends Factory
             'role' => 'owner',
             'status' => 'active',
             'remember_token' => Str::random(10),
+            // Conditions d'utilisation déjà acceptées (sinon le patron est redirigé)
+            'terms_accepted_at' => now(),
+            'terms_version' => config('maquis.terms_version'),
         ];
+    }
+
+    public function withoutAcceptedTerms(): static
+    {
+        return $this->state(['terms_accepted_at' => null, 'terms_version' => null]);
     }
 
     public function owner(): static

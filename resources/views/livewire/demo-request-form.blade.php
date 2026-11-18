@@ -53,6 +53,10 @@
             </div>
 
             <button type="submit" class="btn-primary" wire:loading.attr="disabled">Être rappelé</button>
+            <p style="font-size: 12px; color: var(--color-text-secondary); margin: 10px 0 0 0; line-height: 1.4;">
+                Vos informations servent uniquement à vous rappeler.
+                Voir notre <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener">politique de confidentialité</a>.
+            </p>
         </form>
 
         <p style="text-align: center; font-size: 13px; color: var(--color-text-secondary); margin-top: 16px;">

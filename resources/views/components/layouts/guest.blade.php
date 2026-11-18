@@ -30,6 +30,7 @@
             background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06), transparent 45%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             margin: 0;
@@ -82,6 +83,10 @@
 <body>
     <div class="auth-card">
         {{ $slot }}
+    </div>
+    <div style="text-align: center; font-size: 12px; margin-top: 16px;">
+        <a href="{{ route('legal.terms') }}" style="color: rgba(255,255,255,0.75); text-decoration: none; margin: 0 8px;">Conditions d'utilisation</a>
+        <a href="{{ route('legal.privacy') }}" style="color: rgba(255,255,255,0.75); text-decoration: none; margin: 0 8px;">Confidentialité</a>
     </div>
     @livewireScripts
 </body>

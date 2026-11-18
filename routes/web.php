@@ -38,6 +38,11 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
 
+// Documents légaux (publics) et acceptation par le patron
+Route::view('/conditions', 'legal.terms')->name('legal.terms');
+Route::view('/confidentialite', 'legal.privacy')->name('legal.privacy');
+Route::get('/conditions/accepter', \App\Livewire\AcceptTerms::class)->middleware('auth')->name('terms.accept');
+
 // Choix du mot de passe (obligatoire après un mot de passe provisoire)
 Route::get('/mot-de-passe', ChangePassword::class)->middleware('auth')->name('password.change');
 

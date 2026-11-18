@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements et rapport WhatsApp automatique (253 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements, rapport WhatsApp automatique et documents légaux (262 tests).
 
 ---
 
@@ -397,6 +397,16 @@ Une fois l'API configurée, chaque clôture de caisse **envoie toute seule** un 
 6. Renseigner dans `.env.docker` : `WHATSAPP_TOKEN` (le jeton permanent) et `WHATSAPP_PHONE_NUMBER_ID` (l'identifiant du numéro, à ne pas confondre avec le numéro lui-même).
 
 Chaque message est **facturé par Meta**, en général quelques dizaines de FCFA par conversation pour la catégorie « Utilitaire ». C'est à prévoir dans le prix des formules.
+
+### Documents légaux
+- **`/conditions`** : les conditions d'utilisation, c'est-à-dire le contrat entre la plateforme et l'établissement. On y trouve les prix, le paiement à l'avance, les jours de grâce, la coupure le matin, les responsabilités et le droit ivoirien.
+- **`/confidentialite`** : la politique de confidentialité, selon la loi n° 2013-450 sur les données personnelles. Elle précise les données gardées, qui les voit, la durée de conservation, les droits des personnes et le recours à l'ARTCI.
+- **Les liens** sont en bas du site public, de la page de connexion et du menu de l'application, ainsi que sur le formulaire de demande de démo.
+- **Le patron doit accepter** les deux textes à sa première connexion (`AcceptTerms`). On enregistre la date et la version (`users.terms_accepted_at` et `terms_version`). Le personnel et le Super Admin ne sont pas concernés.
+- **Modifier les textes** : changer `config('maquis.terms_version')`. Chaque patron devra alors ré-accepter à sa prochaine connexion.
+- **Identité de l'éditeur** : raison sociale, forme, RCCM, adresse, e-mail, téléphone, hébergeur et référence ARTCI, dans `.env` (`PLATFORM_LEGAL_*` et `PLATFORM_ARTCI_REFERENCE`). Tant qu'un champ est vide, la page affiche « [à compléter] ».
+
+⚠️ **Il s'agit d'une première version, à faire relire par un juriste ivoirien avant le lancement.** Il faut aussi faire la **déclaration à l'ARTCI**. La politique annonce le HTTPS et des sauvegardes régulières : ils doivent être en place au moment de la mise en ligne.
 
 ### Crédit client (appelé « ardoise » dans le code)
 À l'écran, on dit toujours **« crédit »** : menu **Crédits**, boutons **« À crédit »**, rapport « À crédit » et « Crédits clients à récupérer ». Dans le code, la page garde le nom `Ardoise` et les tables `customers` et `credit_transactions`. L'ancienne adresse `/ardoise` redirige vers `/credits`.
