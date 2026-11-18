@@ -44,6 +44,14 @@
         .lp .trust span { display: inline-flex; align-items: center; gap: 7px; }
         .lp .trust span::before { content: ''; width: 18px; height: 18px; border-radius: 50%; background: rgba(94,191,160,.25) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235EBFA0' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/11px no-repeat; }
         .lp .pay-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+        .lp .app-dl { margin-top: 26px; max-width: 420px; }
+        .lp .app-dl-btn { display: inline-flex; align-items: center; gap: 12px; background: #0A0F0D; color: white; border: 1px solid rgba(255,255,255,.22); border-radius: 14px; padding: 10px 18px 10px 12px; cursor: pointer; font-family: inherit; transition: transform .15s, border-color .15s, background .15s; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
+        .lp .app-dl-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: #111A16; }
+        .lp .app-dl-ico { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .lp .app-dl-btn small { display: block; font-size: 11px; color: rgba(255,255,255,.65); font-weight: 600; letter-spacing: .02em; }
+        .lp .app-dl-btn strong { display: block; font-size: 15px; font-family: var(--font-display); }
+        .lp .app-dl-help { margin-top: 12px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.9); }
+        .lp .app-dl-help ol { margin: 6px 0 0; padding-left: 20px; }
         .lp .pay { font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.9); }
 
         /* Téléphone */
@@ -209,6 +217,20 @@
                 </div>
                 <div class="pay-row" aria-label="Moyens de paiement acceptés">
                     <span class="pay">Espèces</span><span class="pay">Wave</span><span class="pay">Orange Money</span><span class="pay">MTN MoMo</span><span class="pay">Moov Money</span>
+                </div>
+
+                {{-- Application mobile installable --}}
+                <div class="app-dl">
+                    <button type="button" id="installAppBtn" class="app-dl-btn">
+                        <span class="app-dl-ico">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>
+                        </span>
+                        <span style="text-align: left;">
+                            <small id="installAppSmall">Sur Android et iPhone</small>
+                            <strong id="installAppLabel">Installer l'application mobile</strong>
+                        </span>
+                    </button>
+                    <div id="installAppHelp" class="app-dl-help" hidden></div>
                 </div>
             </div>
 
@@ -510,6 +532,47 @@
                 lines.forEach(function (l, i) { setTimeout(function () { l.classList.add('on'); }, reduce ? 0 : i * 110); });
             }
             setTimeout(showReport, reduce ? 0 : 1300);
+
+            // 2 bis. Bouton « Installer l'application mobile »
+            (function () {
+                var btn = document.getElementById('installAppBtn');
+                var help = document.getElementById('installAppHelp');
+                if (!btn) return;
+
+                var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+                var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+
+                if (standalone) {
+                    document.getElementById('installAppSmall').textContent = 'C\'est fait';
+                    document.getElementById('installAppLabel').textContent = 'Application installée ✓';
+                    btn.disabled = true;
+                    return;
+                }
+
+                function showHelp(html) { help.innerHTML = html; help.hidden = false; }
+
+                btn.addEventListener('click', function () {
+                    if (window.__installPrompt) {
+                        window.__installPrompt.prompt();
+                        window.__installPrompt.userChoice.finally(function () { window.__installPrompt = null; });
+                        return;
+                    }
+                    if (!help.hidden) { help.hidden = true; return; }
+                    if (isIos) {
+                        showHelp('<strong>Sur iPhone, dans Safari :</strong><ol><li>Touchez <strong>Partager</strong> ⬆️ en bas de l\'écran.</li><li>Choisissez <strong>« Sur l\'écran d\'accueil »</strong>.</li><li>L\'icône Maquis Express apparaît sur votre téléphone.</li></ol>');
+                    } else if (isMobile) {
+                        showHelp('<strong>Sur Android, dans Chrome :</strong><ol><li>Touchez le menu <strong>⋮</strong> en haut à droite.</li><li>Choisissez <strong>« Installer l\'application »</strong> ou <strong>« Ajouter à l\'écran d\'accueil »</strong>.</li><li>L\'icône Maquis Express apparaît sur votre téléphone.</li></ol>');
+                    } else {
+                        showHelp('<strong>Ouvrez ce site sur votre téléphone</strong> (Chrome sur Android, Safari sur iPhone), puis touchez ce bouton : l\'application s\'installe comme une vraie application, avec son icône, sans passer par le Play Store.');
+                    }
+                });
+
+                window.addEventListener('appinstalled', function () {
+                    document.getElementById('installAppLabel').textContent = 'Application installée ✓';
+                    help.hidden = true;
+                });
+            })();
 
             // 3. Présentoir : onglets + défilement automatique
             var showcase = document.getElementById('showcase');
