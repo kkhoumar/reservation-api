@@ -132,7 +132,11 @@ class RegisterReport
             . ($r->closedByUser ? ' (clôturée par ' . $r->closedByUser->first_name . ')' : '');
         $lines[] = '';
         $lines[] = '*Ventes : ' . $f($this->totalSales()) . ' FCFA* (' . $this->totalBons() . ' bons)';
-        $lines[] = '• Encaissé : ' . $f($this->cashSales);
+        $sales = new SalesSummary($r->restaurant_id, $r->opened_at, $r->closed_at ?? now());
+        $lines[] = '• Espèces : ' . $f($sales->cash);
+        foreach ($sales->mobile as $method => $amount) {
+            $lines[] = '• ' . (Payment::METHODS[$method] ?? $method) . ' : ' . $f($amount);
+        }
         if ($this->creditSales > 0) {
             $lines[] = "• Sur l'ardoise : " . $f($this->creditSales);
         }

@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise et rapport du soir (165 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir et Mobile Money (176 tests).
 
 ---
 
@@ -252,6 +252,25 @@ Mis en place : colonnes `restaurants.service_mode` (`tables`, `quick`, `both` ; 
 - En mode `quick` : le plan des tables redirige vers la vente rapide, et le menu affiche « Vente rapide ». En mode `tables` : la vente sans table est refusée.
 - On ne peut pas passer en `quick` tant qu'une commande de table n'est pas payée.
 - On ne peut pas désactiver l'ardoise tant que des clients doivent de l'argent.
+
+### Moyens de paiement : espèces, Mobile Money, mixte
+À l'encaissement (au comptoir ou sur l'écran d'encaissement), on choisit **Espèces**, **Wave**, **Orange Money**, **MTN MoMo** ou **Moov Money**.
+- **Mobile Money** : le montant est pré-rempli avec le total et la référence de la transaction est facultative.
+- **Paiement mixte** : si le montant Mobile Money est inférieur au total, l'écran demande les espèces pour le reste et calcule la monnaie.
+
+Il y a **un seul paiement par bon**, ce qui évite de le compter deux fois :
+- `payment_method` vaut l'opérateur, ou `cash` ;
+- `mobile_amount` est la part payée en Mobile Money ;
+- `amount_received` et `change_given` concernent les espèces.
+
+**Seule la part en espèces entre dans la caisse** ou dans la sacoche. Le Mobile Money s'affiche à part dans le détail de la caisse (« pas dans le tiroir »), par opérateur, et doit être vérifié sur les téléphones du maquis.
+
+**Les ventes** (`App\Support\SalesSummary`, utilisé par le Tableau de bord, les Ventes du jour et le rapport du soir) comptent tout ce qui a été réglé :
+- les espèces ;
+- le Mobile Money, par opérateur ;
+- l'ardoise.
+
+Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du client.
 
 ### Rapport du soir
 Dès la clôture de la caisse, l'écran « Caisse clôturée » affiche le rapport de la session (`App\Support\RegisterReport`). On le retrouve ensuite dans **Historique caisse → Rapport**.
@@ -332,8 +351,9 @@ Corriger les problèmes ci-dessus. Sortir la logique métier des composants Live
 - Temps réel (tables, commandes envoyées au bar ou en cuisine) avec Laravel Reverb.
 
 ### 3. Paiements
-- Mobile Money : Wave, Orange Money, MTN MoMo, Moov. D'abord en saisie manuelle de la référence, puis via un agrégateur (CinetPay ou PayDunya).
-- Paiement mixte (espèces + Mobile Money).
+- [x] Mobile Money (Wave, Orange Money, MTN MoMo, Moov) en saisie manuelle, avec une référence facultative.
+- [x] Paiement mixte (espèces + Mobile Money).
+- [ ] Confirmation automatique via un agrégateur (CinetPay ou PayDunya).
 - Crédit client (ardoise) avec remboursements partiels et rappels.
 - Versement des serveuses au caissier en fin de service, avances sur salaire.
 

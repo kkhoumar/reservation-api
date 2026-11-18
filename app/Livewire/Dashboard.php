@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Expense;
-use App\Models\Payment;
+use App\Support\SalesSummary;
 use App\Models\Product;
 use App\Models\RestaurantTable;
 use App\Models\CashRegister;
@@ -32,20 +32,14 @@ class Dashboard extends Component
         };
     }
 
+    /**
+     * Chiffre d'affaires = tout ce qui a été réglé : espèces, Mobile Money et ardoise.
+     */
     protected function revenueAndOrderCount($restaurantId, $start, $end): array
     {
-        $payments = Payment::whereHas(
-                'order',
-                fn ($q) => $q->where('restaurant_id', $restaurantId)
-            )
-            ->where('status', 'completed')
-            ->whereBetween('paid_at', [$start, $end])
-            ->with('order')
-            ->get();
+        $sales = new SalesSummary($restaurantId, $start, $end);
 
-        $revenue = $payments->sum(fn ($p) => $p->order->total);
-
-        return [$revenue, $payments->count()];
+        return [$sales->total(), $sales->count(), $sales];
     }
 
     public function render()
@@ -69,7 +63,7 @@ class Dashboard extends Component
 
         [$start, $end] = $this->periodRange();
 
-        [$revenue, $orderCount] = $this->revenueAndOrderCount(
+        [$revenue, $orderCount, $sales] = $this->revenueAndOrderCount(
             $restaurantId,
             $start,
             $end
@@ -125,6 +119,7 @@ class Dashboard extends Component
         return view('livewire.dashboard', [
             'noRestaurant' => false,
             'revenue' => $revenue,
+            'sales' => $sales,
             'orderCount' => $orderCount,
             'expenses' => $expenses,
             'profit' => $profit,

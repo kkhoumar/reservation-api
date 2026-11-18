@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -124,14 +125,14 @@ class User extends Authenticatable
 
     /**
      * Argent liquide encaissé par la serveuse (monnaie déjà rendue).
+     * La part Mobile Money n'est pas dans sa sacoche.
      */
     public function sacocheCollected(): int
     {
         return (int) Payment::where('user_id', $this->id)
             ->where('in_sacoche', true)
             ->where('status', 'completed')
-            ->where('payment_method', 'cash')
-            ->sum('amount_due');
+            ->sum(DB::raw('amount_received - change_given'));
     }
 
     public function sacocheRemitted(): int

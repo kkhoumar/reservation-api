@@ -59,11 +59,34 @@ class CashRegister extends Model
      */
     protected function cashPaymentsQuery()
     {
-        return Payment::where('payment_method', 'cash')
-            ->where('status', 'completed')
+        // Part espèces des paiements (100 % espèces ou mixtes)
+        return $this->sessionPaymentsQuery()
             ->where('in_sacoche', false)
+            ->where('amount_received', '>', 0);
+    }
+
+    protected function sessionPaymentsQuery()
+    {
+        return Payment::where('status', 'completed')
             ->whereBetween('paid_at', [$this->opened_at, $this->closed_at ?? now()])
             ->whereHas('order', fn ($q) => $q->where('restaurant_id', $this->restaurant_id));
+    }
+
+    /**
+     * Mobile Money reçu pendant la session, par opérateur. Il n'est pas dans
+     * le tiroir : on le vérifie sur les téléphones du maquis.
+     *
+     * @return array<string, int>
+     */
+    public function mobileMoneyByMethod(): array
+    {
+        return $this->sessionPaymentsQuery()
+            ->where('mobile_amount', '>', 0)
+            ->selectRaw('payment_method, SUM(mobile_amount) as total')
+            ->groupBy('payment_method')
+            ->pluck('total', 'payment_method')
+            ->map(fn ($v) => (int) $v)
+            ->all();
     }
 
     public function calculateTheoreticalAmount(): int
@@ -97,6 +120,8 @@ class CashRegister extends Model
             'change_given' => $changeGiven,
             'remittances_count' => $remittancesCount,
             'remittances_total' => $remittancesTotal,
+            'mobile_money' => $mobile = $this->mobileMoneyByMethod(),
+            'mobile_total' => array_sum($mobile),
             'repayments_count' => $repaymentsCount,
             'repayments_total' => $repaymentsTotal,
             'expenses_count' => $expensesCount,

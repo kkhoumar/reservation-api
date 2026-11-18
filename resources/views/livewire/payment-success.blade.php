@@ -29,7 +29,23 @@
             <strong>{{ number_format($order->total, 0, ',', ' ') }} FCFA</strong>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 6px;">
-            <span>Reçu</span>
+            <span>Mode</span>
+            <span>{{ $order->payment->methodLabel() }}</span>
+        </div>
+        @if ($order->payment->isMobile())
+            <div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 6px;">
+                <span>{{ \App\Models\Payment::METHODS[$order->payment->payment_method] ?? 'Mobile Money' }}</span>
+                <span>{{ number_format($order->payment->mobile_amount, 0, ',', ' ') }} FCFA</span>
+            </div>
+            @if ($order->payment->reference)
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: var(--color-text-secondary);">
+                    <span>Référence</span>
+                    <span>{{ $order->payment->reference }}</span>
+                </div>
+            @endif
+        @endif
+        <div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 6px;">
+            <span>Espèces reçues</span>
             <span>{{ number_format($order->payment->amount_received, 0, ',', ' ') }} FCFA</span>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 20px; color: var(--color-accent); font-weight: 700;">

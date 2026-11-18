@@ -33,6 +33,15 @@
             <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin-top: 10px;">
                 {{ number_format($revenue, 0, ',', ' ') }} <span style="font-size: 14px; font-weight: 600; color: var(--color-text-secondary);">FCFA</span>
             </div>
+            @isset($sales)
+                @if ($sales->total() > 0)
+                    <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.6;">
+                        Espèces {{ number_format($sales->cash, 0, ',', ' ') }}
+                        @if ($sales->mobileTotal() > 0) · Mobile Money {{ number_format($sales->mobileTotal(), 0, ',', ' ') }} @endif
+                        @if ($sales->credit > 0) · <span style="color: var(--color-accent);">Ardoise {{ number_format($sales->credit, 0, ',', ' ') }}</span> @endif
+                    </div>
+                @endif
+            @endisset
         </div>
 
         <div class="card">

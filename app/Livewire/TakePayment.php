@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Exceptions\BusinessRuleException;
+use App\Livewire\Concerns\CollectsPayment;
 use App\Models\CreditTransaction;
 use App\Models\Customer;
 use App\Models\Order;
@@ -18,14 +19,18 @@ use Livewire\Component;
  */
 class TakePayment extends Component
 {
+    use CollectsPayment;
+
     #[Locked]
     public int $orderId;
-    public int $amountReceived = 0;
+    public ?int $amountReceived = null;
 
     public function mount($order)
     {
         // La commande doit appartenir au restaurant de l'utilisateur (sinon 404)
-        $this->orderId = Order::findOrFail($order)->id;
+        $found = Order::findOrFail($order);
+        $this->orderId = $found->id;
+        $this->amountReceived = $found->total;
 
         // Paiement avant service : la serveuse n'encaisse pas, elle apporte l'argent au comptoir
         if (auth()->user()->isServer() && auth()->user()->currentRestaurant()?->paysBeforeService()) {
@@ -39,9 +44,9 @@ class TakePayment extends Component
         return Order::with(['items.product', 'restaurantTable'])->findOrFail($this->orderId);
     }
 
-    public function getChangeProperty()
+    protected function paymentTotal(): int
     {
-        return max(0, $this->amountReceived - $this->order->total);
+        return (int) Order::whereKey($this->orderId)->value('total');
     }
 
     public function confirmPayment()
@@ -50,12 +55,10 @@ class TakePayment extends Component
             abort(403);
         }
 
-        $this->validate([
-            'amountReceived' => 'required|integer|min:0|max:100000000',
-        ]);
+        $this->validate($this->paymentRules(), $this->paymentMessages());
 
         try {
-            Payment::recordCashPayment($this->order, auth()->user(), $this->amountReceived);
+            $this->recordPaymentFor($this->order);
         } catch (BusinessRuleException $e) {
             session()->flash('error', $e->getMessage());
 

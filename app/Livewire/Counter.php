@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Exceptions\BusinessRuleException;
+use App\Livewire\Concerns\CollectsPayment;
 use App\Models\CashRegister;
 use App\Models\CreditTransaction;
 use App\Models\Customer;
@@ -23,6 +24,8 @@ use Livewire\Component;
  */
 class Counter extends Component
 {
+    use CollectsPayment;
+
     #[Locked]
     public ?int $orderId = null;
 
@@ -110,6 +113,7 @@ class Counter extends Component
         $order = $this->findPendingOrder($id);
 
         $this->reset(['creditOrderId', 'creditCustomerId']);
+        $this->resetPaymentFields();
         $this->orderId = $order->id;
         $this->amountReceived = $order->total;
         $this->resetValidation();
@@ -118,7 +122,15 @@ class Counter extends Component
     public function cancelPayment(): void
     {
         $this->reset(['orderId', 'amountReceived']);
+        $this->resetPaymentFields();
         $this->resetValidation();
+    }
+
+    protected function paymentTotal(): int
+    {
+        return $this->orderId
+            ? (int) Order::whereKey($this->orderId)->value('total')
+            : 0;
     }
 
     /**
@@ -130,13 +142,11 @@ class Counter extends Component
             return;
         }
 
-        $this->validate([
-            'amountReceived' => 'required|integer|min:0|max:100000000',
-        ]);
+        $this->validate($this->paymentRules(), $this->paymentMessages());
 
         try {
             $order = $this->findPendingOrder($this->orderId);
-            Payment::recordCashPayment($order, auth()->user(), $this->amountReceived);
+            $payment = $this->recordPaymentFor($order);
         } catch (BusinessRuleException $e) {
             $this->addError('amountReceived', $e->getMessage());
 
@@ -149,8 +159,8 @@ class Counter extends Component
             return;
         }
 
-        $change = $this->amountReceived - $order->total;
-        session()->flash('success', "{$order->order_number} encaissé : servez la commande."
+        $change = (int) $payment->change_given;
+        session()->flash('success', "{$order->order_number} encaissé ({$payment->methodLabel()}) : servez la commande."
             . ($change > 0 ? ' Monnaie à rendre : ' . number_format($change, 0, ',', ' ') . ' FCFA.' : ''));
 
         $this->cancelPayment();

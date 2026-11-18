@@ -68,6 +68,21 @@
                         <span>- Dépenses ({{ $breakdown['expenses_count'] }})</span>
                         <strong style="color: var(--color-danger);">-{{ number_format($breakdown['expenses_total'], 0, ',', ' ') }} FCFA</strong>
                     </div>
+                    @if ($breakdown['mobile_total'] > 0)
+                        <div style="padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 13px; color: var(--color-text-secondary);">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Mobile Money reçu <em>(pas dans le tiroir)</em></span>
+                                <strong>{{ number_format($breakdown['mobile_total'], 0, ',', ' ') }} FCFA</strong>
+                            </div>
+                            @foreach ($breakdown['mobile_money'] as $method => $amount)
+                                <div style="display: flex; justify-content: space-between; padding-left: 12px;">
+                                    <span>{{ \App\Models\Payment::METHODS[$method] ?? $method }}</span>
+                                    <span>{{ number_format($amount, 0, ',', ' ') }}</span>
+                                </div>
+                            @endforeach
+                            <div style="margin-top: 4px;">À vérifier sur les téléphones du maquis avant la clôture.</div>
+                        </div>
+                    @endif
                     <div style="display: flex; justify-content: space-between; padding: 12px 0 0 0; font-size: 16px;">
                         <span style="font-weight: 700;">= Solde théorique</span>
                         <strong style="color: var(--color-primary); font-size: 18px;">{{ number_format($breakdown['theoretical'], 0, ',', ' ') }} FCFA</strong>

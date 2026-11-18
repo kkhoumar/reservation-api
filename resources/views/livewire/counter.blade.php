@@ -52,15 +52,8 @@
                     </div>
 
                     @if ($selected?->id === $order->id)
-                        <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; padding-top: 12px; border-top: 1px dashed var(--color-border);">
-                            <div>
-                                <label style="font-size: 13px; font-weight: 600; display: block;">Montant reçu (FCFA)</label>
-                                <input type="number" wire:model.live.debounce.300ms="amountReceived" style="font-size: 18px; width: 170px; margin-top: 4px;" autofocus>
-                            </div>
-                            <div style="font-size: 14px; padding-bottom: 10px;">
-                                Monnaie à rendre :
-                                <strong style="color: var(--color-accent);">{{ number_format(max(0, (int) $amountReceived - $order->total), 0, ',', ' ') }} FCFA</strong>
-                            </div>
+                        <div style="padding-top: 12px; border-top: 1px dashed var(--color-border);">
+                            @include('livewire.partials.payment-fields', ['total' => $order->total])
                         </div>
                         @error('amountReceived') <div style="color: var(--color-danger); font-size: 13px; margin-top: 8px;">{{ $message }}</div> @enderror
                         <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">

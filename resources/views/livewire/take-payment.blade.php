@@ -30,19 +30,12 @@
         </div>
 
         <div class="card">
-            <h3 style="margin-top: 0;">Encaissement — Espèces</h3>
+            <h3 style="margin-top: 0;">Encaissement</h3>
 
-            <label>Montant reçu (FCFA)</label>
-            <input type="number" wire:model.live="amountReceived" style="width: 100%; margin: 8px 0 16px 0; font-size: 20px;">
-
-            @if ($amountReceived > 0)
-                <div style="display: flex; justify-content: space-between; font-size: 18px; margin-bottom: 16px;">
-                    <span>Monnaie à rendre</span>
-                    <strong style="color: {{ $this->change > 0 ? 'var(--color-accent)' : 'var(--color-text)' }};">
-                        {{ number_format($this->change, 0, ',', ' ') }} FCFA
-                    </strong>
-                </div>
-            @endif
+            <div style="margin-bottom: 16px;">
+                @include('livewire.partials.payment-fields', ['total' => $order->total])
+                @error('amountReceived') <div style="color: var(--color-danger); font-size: 13px; margin-top: 8px;">{{ $message }}</div> @enderror
+            </div>
 
             <button wire:click="confirmPayment" class="btn btn-primary" style="width: 100%;">
                 Valider le paiement
