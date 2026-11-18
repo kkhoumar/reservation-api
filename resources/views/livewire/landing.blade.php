@@ -46,16 +46,42 @@
         .lp .pay-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
         .lp .phone-col { display: flex; flex-direction: column; align-items: center; }
         .lp .phone-col .phone-zone { width: 100%; }
-        .lp .app-dl { margin-top: 26px; max-width: 420px; }
-        .lp .app-dl-under { margin-top: 30px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-        .lp .app-dl-under .app-dl-help { text-align: left; }
-        .lp .app-dl-btn { display: inline-flex; align-items: center; gap: 12px; background: #0A0F0D; color: white; border: 1px solid rgba(255,255,255,.22); border-radius: 14px; padding: 10px 18px 10px 12px; cursor: pointer; font-family: inherit; transition: transform .15s, border-color .15s, background .15s; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
-        .lp .app-dl-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.45); background: #111A16; }
-        .lp .app-dl-ico { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        /* ---- Bouton « Installer l'application mobile » (posé sur le bas du téléphone) ---- */
+        .lp .app-dl { max-width: 420px; }
+        .lp .app-dl-under { position: relative; z-index: 4; margin-top: -58px; display: flex; flex-direction: column; align-items: center; text-align: center; animation: dlIn .7s cubic-bezier(.2,.9,.3,1.2) .9s both; }
+        .lp .app-dl-under .app-dl-help { text-align: left; max-width: 340px; }
+        .lp .app-dl-btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 12px; background: #0A0F0D; color: white; border: 1px solid rgba(255,255,255,.22); border-radius: 16px; padding: 10px 20px 10px 10px; cursor: pointer; font-family: inherit; transition: transform .2s, border-color .2s, background .2s; box-shadow: 0 18px 40px rgba(0,0,0,.40), 0 0 0 6px rgba(255,255,255,.06); }
+        .lp .app-dl-btn:hover { transform: translateY(-3px) scale(1.02); border-color: rgba(255,255,255,.5); background: #111A16; }
+        .lp .app-dl-btn:disabled { cursor: default; transform: none; }
+        /* Reflet qui balaie le bouton */
+        .lp .app-dl-btn::before { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.22), transparent); transform: skewX(-20deg); animation: dlShine 4.5s ease-in-out 2s infinite; }
+        .lp .app-dl-ico { position: relative; width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #F07A3A, var(--color-accent-dark)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .lp .app-dl-ico svg { position: absolute; }
+        /* Halo qui pulse autour de l'icône */
+        .lp .app-dl-ico::after { content: ''; position: absolute; inset: 0; border-radius: 12px; box-shadow: 0 0 0 0 rgba(240,122,58,.7); animation: dlPulse 2.2s ease-out infinite; }
+        /* Flèche qui descend vers le « bac » */
+        .lp .dl-arrow { animation: dlBounce 1.6s ease-in-out infinite; }
         .lp .app-dl-btn small { display: block; font-size: 11px; color: rgba(255,255,255,.65); font-weight: 600; letter-spacing: .02em; }
         .lp .app-dl-btn strong { display: block; font-size: 15px; font-family: var(--font-display); }
-        .lp .app-dl-help { margin-top: 12px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.9); }
+        .lp .app-dl-help { margin-top: 12px; background: rgba(6,46,36,.92); border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.92); box-shadow: 0 18px 40px rgba(0,0,0,.35); }
         .lp .app-dl-help ol { margin: 6px 0 0; padding-left: 20px; }
+        @keyframes dlBounce { 0%, 100% { transform: translateY(-3px); opacity: 1; } 50% { transform: translateY(2px); opacity: .85; } 60% { transform: translateY(3px); } }
+        @keyframes dlPulse { 0% { box-shadow: 0 0 0 0 rgba(240,122,58,.65); } 70% { box-shadow: 0 0 0 14px rgba(240,122,58,0); } 100% { box-shadow: 0 0 0 0 rgba(240,122,58,0); } }
+        @keyframes dlShine { 0% { left: -60%; } 30%, 100% { left: 130%; } }
+        @keyframes dlIn { from { opacity: 0; transform: translateY(18px) scale(.95); } to { opacity: 1; transform: none; } }
+
+        /* ---- Barre d'installation fixe, sur téléphone uniquement ---- */
+        .lp .app-sticky { display: none; }
+        @media (max-width: 640px) {
+            .lp .app-dl-under { margin-top: 22px; }
+            .lp .app-sticky { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 60; display: flex; align-items: center; gap: 12px; background: #0A0F0D; color: white; border-radius: 18px; padding: 10px 10px 10px 12px; box-shadow: 0 18px 40px rgba(0,0,0,.4); transform: translateY(140%); transition: transform .45s cubic-bezier(.2,.9,.3,1.1); }
+            .lp .app-sticky.show { transform: none; }
+            .lp .app-sticky .txt { flex: 1; line-height: 1.25; }
+            .lp .app-sticky .txt strong { display: block; font-family: var(--font-display); font-size: 15px; }
+            .lp .app-sticky .txt small { color: rgba(255,255,255,.65); font-size: 12px; }
+            .lp .app-sticky .go { background: var(--color-accent); color: white; border: none; border-radius: 12px; padding: 10px 14px; font-weight: 800; font-size: 14px; font-family: inherit; }
+            .lp .app-sticky .close { background: none; border: none; color: rgba(255,255,255,.6); font-size: 20px; padding: 4px 6px; line-height: 1; }
+        }
         .lp .pay { font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.9); }
 
         /* Téléphone */
@@ -262,10 +288,12 @@
             <div class="app-dl app-dl-under">
                 <button type="button" id="installAppBtn" class="app-dl-btn">
                     <span class="app-dl-ico">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>
+                        {{-- Flèche de téléchargement animée --}}
+                        <svg class="dl-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/></svg>
+                        <svg class="dl-tray" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20h14"/></svg>
                     </span>
                     <span style="text-align: left;">
-                        <small id="installAppSmall">Sur Android et iPhone</small>
+                        <small id="installAppSmall">Gratuit · Android et iPhone</small>
                         <strong id="installAppLabel">Installer l'application mobile</strong>
                     </span>
                 </button>
@@ -513,6 +541,17 @@
         </div>
     </div>
 
+    {{-- Barre d'installation fixe (téléphone uniquement) --}}
+    <div class="app-sticky" id="installSticky" role="region" aria-label="Installer l'application">
+        <span class="app-dl-ico">
+            <svg class="dl-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/></svg>
+            <svg class="dl-tray" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 20h14"/></svg>
+        </span>
+        <span class="txt"><strong>Maquis Express sur votre téléphone</strong><small>Gratuit, sans Play Store</small></span>
+        <button type="button" class="go" id="installStickyGo">Installer</button>
+        <button type="button" class="close" id="installStickyClose" aria-label="Fermer">✕</button>
+    </div>
+
     <script>
         (function () {
             var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -574,9 +613,28 @@
                     }
                 });
 
+                // Barre fixe sur téléphone : apparaît après quelques secondes, se ferme avec ✕
+                var sticky = document.getElementById('installSticky');
+                function hideSticky() { if (sticky) sticky.classList.remove('show'); }
+                if (sticky) {
+                    var dismissed = false;
+                    try { dismissed = sessionStorage.getItem('me-sticky-off') === '1'; } catch (e) {}
+                    if (!dismissed) setTimeout(function () { sticky.classList.add('show'); }, 2500);
+                    document.getElementById('installStickyClose').addEventListener('click', function () {
+                        hideSticky();
+                        try { sessionStorage.setItem('me-sticky-off', '1'); } catch (e) {}
+                    });
+                    document.getElementById('installStickyGo').addEventListener('click', function () {
+                        hideSticky();
+                        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        btn.click();
+                    });
+                }
+
                 window.addEventListener('appinstalled', function () {
                     document.getElementById('installAppLabel').textContent = 'Application installée ✓';
                     help.hidden = true;
+                    hideSticky();
                 });
             })();
 
