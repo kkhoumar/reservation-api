@@ -3,6 +3,7 @@
 namespace App\Models\Concerns;
 
 use App\Models\Restaurant;
+use App\Support\ReadOnlyGuard;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,6 +52,11 @@ trait BelongsToRestaurant
                 $model->restaurant_id = $user->currentRestaurantId();
             }
         });
+
+        // Maquis verrouillé : lecture seule, aucune écriture possible
+        static::saving(fn () => ReadOnlyGuard::assertWritable());
+        static::updating(fn () => ReadOnlyGuard::assertWritable()); // increment(), decrement()
+        static::deleting(fn () => ReadOnlyGuard::assertWritable());
     }
 
     public function restaurant(): BelongsTo

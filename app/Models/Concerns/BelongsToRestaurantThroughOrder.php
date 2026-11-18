@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\ReadOnlyGuard;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,5 +22,10 @@ trait BelongsToRestaurantThroughOrder
                 $query->whereHas('order');
             }
         });
+
+        // Maquis verrouillé : lecture seule (paiements, lignes de commande)
+        static::saving(fn () => ReadOnlyGuard::assertWritable());
+        static::updating(fn () => ReadOnlyGuard::assertWritable()); // increment(), decrement()
+        static::deleting(fn () => ReadOnlyGuard::assertWritable());
     }
 }

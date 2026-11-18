@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\ReadOnlyGuard;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -62,9 +63,38 @@ class EnsureRestaurantAccess
         }
 
         if ($restaurant->isLocked()) {
-            return redirect()->route('account.locked');
+            // Patron et gérante : lecture seule (ils consultent leurs chiffres).
+            // Les autres n'ont rien à consulter : page « Accès suspendu ».
+            if (! in_array($user->role, ['owner', 'manager'], true)) {
+                return redirect()->route('account.locked');
+            }
+
+            // Les actions Livewire passent : toute écriture est de toute façon
+            // refusée par ReadOnlyGuard. On empêche seulement d'ouvrir les
+            // écrans qui servent à vendre.
+            $isPageLoad = ! $request->hasHeader('X-Livewire');
+
+            if ($isPageLoad && ! in_array($request->route()?->getName(), self::READ_ONLY_ROUTES, true)) {
+                return redirect()->route('dashboard.index')
+                    ->with('error', ReadOnlyGuard::MESSAGE);
+            }
         }
 
         return $next($request);
     }
+
+    /** Écrans consultables quand le maquis est en lecture seule. */
+    public const READ_ONLY_ROUTES = [
+        'dashboard.index',
+        'sales.today',
+        'cash-register.history',
+        'cash-register.closed',
+        'credits',
+        'expenses.index',
+        'stock.index',
+        'exports.index',
+        'exports.download',
+        'users.manage',
+        'settings',
+    ];
 }

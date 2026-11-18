@@ -83,6 +83,11 @@ class RestaurantsList extends Component
             'trialCount' => $restaurants->filter(fn (Restaurant $r) => $r->subscription_status === 'trial' && ! $r->isLocked())->count(),
             'toChaseCount' => $restaurants->filter(fn (Restaurant $r) => $r->subscription_status !== 'suspended'
                 && ($r->isSubscriptionExpired() || $r->isInGracePeriod() || ($r->subscription_status === 'active' && $r->needsRenewalReminder())))->count(),
+            // Rappels du jour non partis automatiquement (API WhatsApp absente ou refus)
+            'manualReminders' => \App\Models\SubscriptionReminder::with('restaurant')
+                ->where('status', '!=', 'sent')
+                ->where('created_at', '>=', today())
+                ->get(),
             'demoRequests' => DemoRequest::whereIn('status', ['new', 'contacted'])->latest()->get(),
         ]);
     }

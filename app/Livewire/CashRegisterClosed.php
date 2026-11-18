@@ -15,6 +15,8 @@ use Livewire\Component;
  */
 class CashRegisterClosed extends Component
 {
+    use \App\Livewire\Concerns\ShowsBusinessErrors;
+
     #[Locked]
     public int $registerId;
 

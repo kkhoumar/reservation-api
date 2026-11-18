@@ -15,7 +15,7 @@
                 Total dû au maquis : <strong style="color: var(--color-accent);">{{ number_format($totalDue, 0, ',', ' ') }} FCFA</strong>
             </p>
         </div>
-        @if ($canManage)
+        @if ($canManage && ! \App\Support\ReadOnlyGuard::isReadOnly())
             <button wire:click="$toggle('showCreate')" class="btn btn-primary">+ Nouveau client</button>
         @endif
     </div>
@@ -104,7 +104,7 @@
                     </a>
                 @endif
 
-                @if ($selectedBalance > 0)
+                @if ($selectedBalance > 0 && ! \App\Support\ReadOnlyGuard::isReadOnly())
                     <div style="border-top: 1px dashed var(--color-border); padding-top: 12px;">
                         <label style="font-size: 13px; font-weight: 600;">Remboursement reçu (FCFA)</label>
                         <input type="number" wire:model="repaymentAmount" placeholder="{{ $selectedBalance }}" style="width: 100%; margin: 4px 0 8px 0; font-size: 18px;">

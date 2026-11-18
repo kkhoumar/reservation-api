@@ -18,6 +18,8 @@ use Livewire\WithPagination;
  */
 class StockManage extends Component
 {
+    use \App\Livewire\Concerns\ShowsBusinessErrors;
+
     use WithPagination;
 
     public const TABS = [

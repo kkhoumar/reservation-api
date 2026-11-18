@@ -42,6 +42,7 @@ return [
         'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
         // Modèle de message validé par Meta (voir README)
         'report_template' => env('WHATSAPP_REPORT_TEMPLATE', 'rapport_caisse'),
+        'reminder_template' => env('WHATSAPP_REMINDER_TEMPLATE', 'rappel_abonnement'),
         'template_language' => env('WHATSAPP_TEMPLATE_LANGUAGE', 'fr'),
     ],
 

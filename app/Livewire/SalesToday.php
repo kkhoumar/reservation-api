@@ -13,6 +13,8 @@ use Livewire\Component;
  */
 class SalesToday extends Component
 {
+    use \App\Livewire\Concerns\ShowsBusinessErrors;
+
     public function render()
     {
         $restaurantId = auth()->user()->currentRestaurantId();

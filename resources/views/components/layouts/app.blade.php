@@ -310,13 +310,19 @@
             </div>
         </div>
 
-        @php $currentRestaurant = auth()->user()?->currentRestaurant(); @endphp
+        @php
+            $currentRestaurant = auth()->user()?->currentRestaurant();
+            // Maquis verrouillé : lecture seule, on cache les écrans qui servent à vendre
+            $readOnly = \App\Support\ReadOnlyGuard::isReadOnly();
+        @endphp
         <nav class="sidebar-nav">
             <a href="{{ route('dashboard.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
                 Tableau de bord
             </a>
-            @if ($currentRestaurant?->usesTables() ?? true)
+            @if ($readOnly)
+                {{-- rien pour vendre --}}
+            @elseif ($currentRestaurant?->usesTables() ?? true)
                 <a href="{{ route('tables.index') }}" class="sidebar-link {{ request()->routeIs('tables.index') || request()->routeIs('orders.new') ? 'active' : '' }}">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/><line x1="15" y1="9" x2="15" y2="21"/></svg>
                     Tables & commandes
@@ -336,7 +342,7 @@
                 $showSacoches = ! $paysBefore && $currentRestaurant
                     && ($hasServers || \App\Support\PeriodStats::sacochesOutstanding($currentRestaurant->id) > 0);
             @endphp
-            @if($showCounter && auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
+            @if(! $readOnly && $showCounter && auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
                 <a href="{{ route('counter') }}" class="sidebar-link {{ request()->routeIs('counter') ? 'active' : '' }}">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18v10H3z"/><path d="M7 10V6h10v4"/><path d="M12 14h.01"/></svg>
                     Comptoir
@@ -348,7 +354,7 @@
                     Crédits
                 </a>
             @endif
-            @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
+            @if(! $readOnly && auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
                 <a href="{{ route('cash-register.manage') }}" class="sidebar-link {{ request()->routeIs('cash-register.manage') ? 'active' : '' }}">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
                     Caisse
@@ -383,10 +389,12 @@
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     Utilisateurs
                 </a>
-                <a href="{{ route('products.manage') }}" class="sidebar-link {{ request()->routeIs('products.manage') ? 'active' : '' }}">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M8 21V9"/></svg>
-                    Menu & produits
-                </a>
+                @unless ($readOnly)
+                    <a href="{{ route('products.manage') }}" class="sidebar-link {{ request()->routeIs('products.manage') ? 'active' : '' }}">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M8 21V9"/></svg>
+                        Menu & produits
+                    </a>
+                @endunless
                 <a href="{{ route('stock.index') }}" class="sidebar-link {{ request()->routeIs('stock.index') ? 'active' : '' }}">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
                     Stock
@@ -467,6 +475,26 @@
                             </form>
                         @endif
                     </div>
+                </div>
+            @endif
+
+            {{-- Lecture seule : abonnement impayé, suspendu ou essai terminé --}}
+            @if ($readOnly)
+                <div class="card" style="border-left: 6px solid var(--color-danger); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px;">
+                    <span>
+                        <strong>Mode lecture seule.</strong>
+                        @if ($currentRestaurant->isTrialExpired())
+                            Votre essai gratuit est terminé.
+                        @elseif ($currentRestaurant->isSubscriptionExpired())
+                            Votre abonnement n'a pas été renouvelé (payé jusqu'au {{ $currentRestaurant->paid_until->format('d/m/Y') }}).
+                        @else
+                            L'accès de votre maquis est suspendu.
+                        @endif
+                        Vous pouvez consulter vos chiffres, mais plus vendre ni enregistrer. Vos données sont conservées.
+                    </span>
+                    @if (auth()->user()->role === 'owner')
+                        <a href="{{ route('settings') }}#abonnement" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">Payer l'abonnement</a>
+                    @endif
                 </div>
             @endif
 

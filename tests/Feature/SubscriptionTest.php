@@ -104,9 +104,10 @@ class SubscriptionTest extends TestCase
         $this->assertTrue($maquis->isSubscriptionExpired());
         $this->assertTrue($maquis->isLocked());
 
+        // Le patron passe en lecture seule : plus de vente
         $this->actingAs($this->patron)
             ->get(route('tables.index'))
-            ->assertRedirect(route('account.locked'));
+            ->assertRedirect(route('dashboard.index'));
     }
 
     public function test_payer_apres_un_impaye_debloque_et_repart_d_aujourd_hui(): void

@@ -16,6 +16,8 @@ use Livewire\Component;
  */
 class RestaurantSettings extends Component
 {
+    use \App\Livewire\Concerns\ShowsBusinessErrors;
+
     public string $serviceMode = 'both';
     public bool $creditEnabled = false;
     public string $paymentTiming = 'before';

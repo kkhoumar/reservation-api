@@ -18,6 +18,8 @@ use Livewire\Component;
  */
 class Ardoise extends Component
 {
+    use \App\Livewire\Concerns\ShowsBusinessErrors;
+
     public string $search = '';
 
     #[Locked]

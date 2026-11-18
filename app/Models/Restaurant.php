@@ -266,6 +266,85 @@ class Restaurant extends Model
         return $limit === null || $this->activeUsersCount() < $limit;
     }
 
+    /** Jours avant l'échéance où le patron reçoit un rappel. */
+    public const REMINDER_STEPS = [7, 3, 1, 0];
+
+    /**
+     * Étape de rappel du jour (null = pas de rappel aujourd'hui) :
+     * J-7, J-3, J-1, J0, retard (jours de grâce), coupe (accès coupé).
+     * Une suspension manuelle par le Super Admin n'envoie pas de rappel.
+     */
+    public function reminderKind(): ?string
+    {
+        if (! in_array($this->subscription_status, ['trial', 'active'], true) || ! $this->accessEndsAt()) {
+            return null;
+        }
+
+        if ($this->isLocked()) {
+            return 'coupe';
+        }
+
+        if ($this->isInGracePeriod()) {
+            return 'retard';
+        }
+
+        $days = $this->daysLeft();
+
+        return in_array($days, self::REMINDER_STEPS, true) ? ($days === 0 ? 'J0' : "J-{$days}") : null;
+    }
+
+    /** Comment payer, en une ligne (numéros de la plateforme). */
+    public static function howToPayLine(): string
+    {
+        $billing = array_filter(config('maquis.billing', []));
+        $labels = SubscriptionPayment::METHODS;
+
+        $line = collect(['wave', 'orange_money', 'mtn_momo', 'moov_money'])
+            ->filter(fn ($m) => ! empty($billing[$m]))
+            ->map(fn ($m) => "{$labels[$m]} {$billing[$m]}")
+            ->join(' · ');
+
+        return $line !== '' ? $line : 'contactez Maquis Express';
+    }
+
+    /** La situation, en une phrase, pour le rappel. */
+    public function reminderSituation(): string
+    {
+        $end = $this->accessEndsAt();
+        $what = $this->subscription_status === 'trial' ? 'Votre essai gratuit' : 'Votre abonnement';
+        $days = $this->daysLeft();
+
+        return match (true) {
+            $this->isLocked() => "{$what} est terminé depuis le {$end->format('d/m/Y')} : votre maquis est en lecture seule (vous voyez vos chiffres mais ne pouvez plus vendre)",
+            $this->isInGracePeriod() => "{$what} est terminé depuis le {$end->format('d/m/Y')} : l'accès sera coupé le {$this->lockAt()->format('d/m/Y')} à " . self::LOCK_HOUR . ' h',
+            $days === 0 => "{$what} se termine aujourd'hui ({$end->format('d/m/Y')})",
+            default => "{$what} se termine le {$end->format('d/m/Y')}, dans {$days} jour" . ($days > 1 ? 's' : ''),
+        };
+    }
+
+    public function ownerPhone(): ?string
+    {
+        return $this->users()->where('role', 'owner')->where('status', 'active')->whereNull('left_at')->orderBy('id')->value('phone');
+    }
+
+    /** Lien WhatsApp avec le rappel prêt à envoyer au patron (envoi manuel). */
+    public function reminderWhatsappUrl(): ?string
+    {
+        $phone = $this->ownerPhone();
+
+        return $phone ? 'https://wa.me/225' . User::normalizePhone($phone) . '?text=' . rawurlencode($this->reminderText()) : null;
+    }
+
+    /** Message complet du rappel (envoi manuel par le Super Admin). */
+    public function reminderText(): string
+    {
+        $plan = $this->plan;
+
+        return "Bonjour, ici Maquis Express. {$this->reminderSituation()}."
+            . ($plan ? " Formule {$plan->name} : " . number_format($plan->monthly_price, 0, ',', ' ') . ' FCFA/mois.' : '')
+            . " Pour payer : " . self::howToPayLine() . ", référence {$this->paymentReference()}. Merci !";
+    }
+
     /** Référence à indiquer par le maquis quand il paie (Wave, Orange…). */
     public function paymentReference(): string
     {

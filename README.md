@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements, rapport WhatsApp automatique, documents légaux, stock tracé, vrai bénéfice et exports Excel (288 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements, rapport WhatsApp automatique, documents légaux, stock tracé, vrai bénéfice, exports Excel, lecture seule et rappels d'échéance (305 tests).
 
 ---
 
@@ -299,7 +299,32 @@ Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du clie
 - **Super Admin** : la liste des maquis affiche le revenu mensuel, l'encaissé du mois, les maquis en essai et ceux **à relancer**, ainsi que la formule, l'échéance et la situation de chaque maquis.
 - Les numéros de paiement de la plateforme se règlent dans `.env` : `PLATFORM_WAVE_NUMBER`, `PLATFORM_ORANGE_NUMBER`, `PLATFORM_MTN_NUMBER`, `PLATFORM_MOOV_NUMBER` et `PLATFORM_WHATSAPP_NUMBER` (voir `config/maquis.php`).
 
-Pas encore fait : le paiement en ligne automatique (CinetPay ou PayDunya), qui demande un compte marchand, et le mode « lecture seule » pour un maquis suspendu.
+#### Maquis verrouillé : lecture seule
+Un maquis impayé, suspendu ou en fin d'essai n'est plus coupé complètement :
+- **Le patron et la gérante** consultent leurs chiffres : tableau de bord, ventes du jour, historique de caisse, crédits, dépenses, stock, exports, utilisateurs et paramètres (`EnsureRestaurantAccess::READ_ONLY_ROUTES`). Les écrans qui servent à vendre (tables, commande, comptoir, caisse, menu…) renvoient au tableau de bord. Un bandeau rouge « Mode lecture seule » propose de payer l'abonnement.
+- **La serveuse et la caissière** voient la page « Accès suspendu ».
+- **Filet de sécurité central** (`App\Support\ReadOnlyGuard`) : toute écriture sur les données du maquis (vente, paiement, dépense, crédit, stock, caisse…) est refusée au niveau des modèles, quel que soit l'écran ou le bouton. Les écrans affichent alors le message au lieu de planter (`ShowsBusinessErrors`).
+- **Le Super Admin** garde tous les droits pour dépanner. Un paiement enregistré débloque tout immédiatement.
+
+#### Rappels d'échéance au patron
+- **Chaque matin à 9 h** (`subscriptions:remind`, planifié dans `routes/console.php`), un rappel est envoyé au patron :
+  - **7, 3 et 1 jour(s) avant** l'échéance, puis **le jour J** ;
+  - **pendant les jours de grâce** (« l'accès sera coupé le … à 10 h ») ;
+  - **à la coupure** (« votre maquis est en lecture seule »).
+- **L'essai gratuit** est rappelé de la même façon. Une suspension manuelle n'envoie pas de rappel.
+- **Un rappel n'est jamais envoyé deux fois** pour la même étape et la même échéance (`subscription_reminders`, réservé avant l'envoi avec une contrainte unique).
+- **Avec l'API WhatsApp**, le modèle **`rappel_abonnement`** est à créer chez Meta (catégorie Utilitaire, français) :
+  ```
+  Maquis Express – {{1}}
+  {{2}}.
+  Formule {{3}}.
+  Référence de paiement : {{4}}
+  Pour payer : {{5}}
+  ```
+- **Sans l'API**, ou en cas de refus, le Super Admin voit « **Rappels du jour à envoyer à la main** » avec un bouton WhatsApp et le message prêt. La liste des maquis a aussi un bouton **« Relancer »** pour ceux qui arrivent à échéance.
+- **Le planificateur doit tourner** : le service `scheduler` le fait dans Docker. En local, lancer `php artisan schedule:work`.
+
+Pas encore fait : le paiement en ligne automatique (CinetPay ou PayDunya), qui demande un compte marchand.
 
 ### Départ d'un employé : « Retirer du maquis »
 Dans **Utilisateurs**, le bouton **« Retirer du maquis »** sert quand une serveuse, une caissière ou une gérante s'en va.

@@ -161,29 +161,46 @@ class SuperAdminTest extends TestCase
         $this->assertFalse($this->maquisA->fresh()->isLocked());
     }
 
-    public function test_le_personnel_d_un_maquis_verrouille_est_bloque(): void
+    public function test_un_maquis_verrouille_passe_en_lecture_seule_pour_le_patron(): void
     {
         $this->maquisA->update(['subscription_status' => 'suspended']);
 
-        foreach (['tables.index', 'dashboard.index', 'cash-register.manage', 'products.manage'] as $route) {
+        // Les écrans qui servent à vendre renvoient au tableau de bord
+        foreach (['tables.index', 'cash-register.manage', 'products.manage'] as $route) {
             $this->actingAs($this->ownerA)
                 ->get(route($route))
-                ->assertRedirect(route('account.locked'));
+                ->assertRedirect(route('dashboard.index'));
         }
 
+        // Les chiffres restent consultables
         $this->actingAs($this->ownerA)
+            ->get(route('dashboard.index'))
+            ->assertOk()
+            ->assertSee('Mode lecture seule');
+    }
+
+    public function test_le_personnel_d_un_maquis_verrouille_est_bloque(): void
+    {
+        $this->maquisA->update(['subscription_status' => 'suspended']);
+        $serveuse = User::factory()->server()->create(['restaurant_id' => $this->maquisA->id]);
+
+        $this->actingAs($serveuse)
+            ->get(route('tables.index'))
+            ->assertRedirect(route('account.locked'));
+
+        $this->actingAs($serveuse)
             ->get(route('account.locked'))
             ->assertOk()
             ->assertSee('Accès suspendu');
     }
 
-    public function test_un_maquis_dont_l_essai_est_termine_est_bloque(): void
+    public function test_un_maquis_dont_l_essai_est_termine_est_en_lecture_seule(): void
     {
         $this->maquisA->update(['subscription_status' => 'trial', 'trial_ends_at' => now()->subDay()]);
 
         $this->actingAs($this->ownerA)
             ->get(route('tables.index'))
-            ->assertRedirect(route('account.locked'));
+            ->assertRedirect(route('dashboard.index'));
     }
 
     public function test_un_maquis_en_essai_valide_fonctionne(): void

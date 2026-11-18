@@ -14,6 +14,12 @@
 
     <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; align-items: start;">
 
+        @if (\App\Support\ReadOnlyGuard::isReadOnly())
+        <div class="card" style="color: var(--color-text-secondary); font-size: 14px;">
+            <h3 style="margin-top: 0; color: var(--color-text);">Lecture seule</h3>
+            Les nouvelles dépenses ne peuvent pas être enregistrées tant que l'abonnement n'est pas réglé. L'historique reste consultable.
+        </div>
+        @else
         <div class="card">
             <h3 style="margin-top: 0;">Nouvelle dépense</h3>
 
@@ -35,6 +41,7 @@
                 Enregistrer la dépense
             </button>
         </div>
+        @endif
 
         <div class="card">
             @if ($canSeeHistory)

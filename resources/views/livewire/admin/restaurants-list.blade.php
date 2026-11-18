@@ -57,6 +57,23 @@
         </div>
     @endif
 
+    @if ($manualReminders->isNotEmpty())
+        <div class="card" style="border-left: 6px solid var(--color-accent); margin-bottom: 16px;">
+            <h3 style="margin: 0 0 6px 0;">Rappels du jour à envoyer à la main ({{ $manualReminders->count() }})</h3>
+            <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 8px 0;">Ils ne sont pas partis automatiquement (API WhatsApp non configurée, ou refus). Un clic ouvre WhatsApp avec le message prêt.</p>
+            @foreach ($manualReminders as $reminder)
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                    <span><strong>{{ $reminder->restaurant?->name }}</strong> · {{ $reminder->kind }} · échéance {{ $reminder->due_date->format('d/m/Y') }}
+                        @if ($reminder->error) <span style="font-size: 12px; color: var(--color-text-secondary);">({{ $reminder->error }})</span> @endif
+                    </span>
+                    @if ($url = $reminder->restaurant?->reminderWhatsappUrl())
+                        <a href="{{ $url }}" target="_blank" rel="noopener" class="btn btn-ghost" style="padding: 5px 12px; font-size: 13px; text-decoration: none;">Envoyer sur WhatsApp</a>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- Chiffres de la plateforme --}}
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
         <div class="card" style="padding: 14px 16px;">
@@ -121,6 +138,9 @@
                             @endif
                         </td>
                         <td style="padding: 14px 20px; text-align: right; white-space: nowrap;">
+                            @if ($restaurant->subscription_status !== 'suspended' && ($restaurant->needsRenewalReminder() || $restaurant->isLocked()) && ($remindUrl = $restaurant->reminderWhatsappUrl()))
+                                <a href="{{ $remindUrl }}" target="_blank" rel="noopener" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; text-decoration: none; margin-right: 6px;" title="Message de rappel prêt à envoyer au patron">Relancer</a>
+                            @endif
                             <a href="{{ route('admin.restaurants.subscription', $restaurant->id) }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none; margin-right: 6px;">Abonnement</a>
                             <button wire:click="enterRestaurant({{ $restaurant->id }})"
                                     class="btn btn-secondary"

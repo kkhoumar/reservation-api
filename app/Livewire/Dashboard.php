@@ -22,6 +22,8 @@ use Livewire\Component;
  */
 class Dashboard extends Component
 {
+    use \App\Livewire\Concerns\ShowsBusinessErrors;
+
     public string $period = 'today'; // today | week | month
 
     public const PERIODS = [

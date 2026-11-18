@@ -18,6 +18,7 @@
 
     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
         @foreach ($tabs as $key => $label)
+            @continue(\App\Support\ReadOnlyGuard::isReadOnly() && in_array($key, ['delivery', 'loss', 'inventory'], true))
             <button wire:click="setTab('{{ $key }}')" class="btn {{ $tab === $key ? 'btn-secondary' : 'btn-ghost' }}" style="padding: 8px 14px; font-size: 13px;">{{ $label }}</button>
         @endforeach
     </div>

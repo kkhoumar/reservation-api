@@ -17,6 +17,8 @@ use Livewire\Component;
  */
 class UsersManage extends Component
 {
+    use \App\Livewire\Concerns\ShowsBusinessErrors;
+
     public bool $showForm = false;
     #[Locked]
     public ?int $editingId = null;

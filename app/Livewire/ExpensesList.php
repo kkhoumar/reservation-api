@@ -19,6 +19,8 @@ use Livewire\WithPagination;
  */
 class ExpensesList extends Component
 {
+    use \App\Livewire\Concerns\ShowsBusinessErrors;
+
     use WithPagination;
 
     public string $category = 'goods_purchase';
