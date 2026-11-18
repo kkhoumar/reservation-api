@@ -61,6 +61,10 @@
                         <strong style="color: var(--color-primary-300);">+{{ number_format($breakdown['remittances_total'], 0, ',', ' ') }} FCFA</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
+                        <span>+ Remboursements d'ardoise ({{ $breakdown['repayments_count'] }})</span>
+                        <strong style="color: var(--color-primary-300);">+{{ number_format($breakdown['repayments_total'], 0, ',', ' ') }} FCFA</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
                         <span>- Dépenses ({{ $breakdown['expenses_count'] }})</span>
                         <strong style="color: var(--color-danger);">-{{ number_format($breakdown['expenses_total'], 0, ',', ' ') }} FCFA</strong>
                     </div>

@@ -6,6 +6,7 @@ use App\Livewire\ChangePassword;
 use App\Livewire\CashRegisterClosed;
 use App\Livewire\CashRegisterHistory;
 use App\Livewire\CashRegisterManage;
+use App\Livewire\Ardoise;
 use App\Livewire\Counter;
 use App\Livewire\Dashboard;
 use App\Livewire\ExpensesList;
@@ -55,6 +56,7 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/cash-register/history', CashRegisterHistory::class)->middleware('role:owner,manager')->name('cash-register.history');
     Route::get('/cash-register/{register}/closed', CashRegisterClosed::class)->middleware('role:owner,manager,cashier')->name('cash-register.closed');
     Route::get('/comptoir', Counter::class)->middleware('role:owner,manager,cashier')->name('counter');
+    Route::get('/ardoise', Ardoise::class)->middleware('role:owner,manager,cashier')->name('ardoise');
     Route::get('/sacoches', Sacoches::class)->middleware('role:owner,manager,cashier')->name('sacoches');
     Route::get('/expenses', ExpensesList::class)->middleware('role:owner,manager,cashier')->name('expenses.index');
     Route::get('/sales-today', SalesToday::class)->middleware('role:owner,manager,cashier')->name('sales.today');

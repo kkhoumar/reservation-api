@@ -53,6 +53,7 @@
                     </span>
                 </span>
             </label>
+            @error('creditEnabled') <div style="color: var(--color-danger); font-size: 13px; margin-top: 6px;">{{ $message }}</div> @enderror
         </div>
 
         <button type="submit" class="btn btn-primary">Enregistrer</button>

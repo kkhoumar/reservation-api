@@ -42,6 +42,20 @@ class RestaurantSettings extends Component
 
         $restaurant = $this->restaurant();
 
+        // Désactiver l'ardoise cacherait des dettes encore dues
+        if (! $this->creditEnabled && $restaurant->creditEnabled()) {
+            $due = (int) \App\Models\CreditTransaction::query()
+                ->selectRaw("COALESCE(SUM(CASE WHEN type = 'charge' THEN amount ELSE -amount END), 0) as due")
+                ->value('due');
+
+            if ($due > 0) {
+                $this->addError('creditEnabled', 'Impossible pour l\'instant : des clients doivent encore '
+                    . number_format($due, 0, ',', ' ') . ' FCFA sur l\'ardoise.');
+
+                return;
+            }
+        }
+
         // On ne change pas de fonctionnement avec des bons en attente au comptoir
         if ($this->paymentTiming !== $restaurant->payment_timing) {
             $pending = Order::where('status', 'awaiting_payment')->count();

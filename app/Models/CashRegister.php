@@ -82,6 +82,11 @@ class CashRegister extends Model
         $changeGiven = (int) $this->cashPaymentsQuery()->sum('change_given');
         $remittancesCount = $this->remittances()->count();
         $remittancesTotal = (int) $this->remittances()->sum('amount');
+        $repayments = CreditTransaction::withoutGlobalScopes()
+            ->where('cash_register_id', $this->id)
+            ->where('type', 'repayment');
+        $repaymentsCount = (clone $repayments)->count();
+        $repaymentsTotal = (int) (clone $repayments)->sum('amount');
         $expensesCount = $this->expenses()->count();
         $expensesTotal = (int) $this->expenses()->sum('amount');
 
@@ -92,9 +97,11 @@ class CashRegister extends Model
             'change_given' => $changeGiven,
             'remittances_count' => $remittancesCount,
             'remittances_total' => $remittancesTotal,
+            'repayments_count' => $repaymentsCount,
+            'repayments_total' => $repaymentsTotal,
             'expenses_count' => $expensesCount,
             'expenses_total' => $expensesTotal,
-            'theoretical' => $this->opening_amount + $received - $changeGiven + $remittancesTotal - $expensesTotal,
+            'theoretical' => $this->opening_amount + $received - $changeGiven + $remittancesTotal + $repaymentsTotal - $expensesTotal,
         ];
     }
 

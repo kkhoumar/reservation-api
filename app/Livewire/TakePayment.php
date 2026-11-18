@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use App\Exceptions\BusinessRuleException;
+use App\Models\CreditTransaction;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Payment;
 use Livewire\Attributes\Locked;
@@ -63,8 +65,52 @@ class TakePayment extends Component
         $this->redirect(route('payment.success', ['order' => $this->orderId]), navigate: false);
     }
 
+    public ?int $creditCustomerId = null;
+
+    protected function canCredit(): bool
+    {
+        return (bool) auth()->user()->currentRestaurant()?->creditEnabled()
+            && CreditTransaction::canAuthorizeCredit(auth()->user());
+    }
+
+    /**
+     * Le client ne paie pas maintenant : le bon va sur son ardoise.
+     */
+    public function chargeToCustomer()
+    {
+        abort_unless($this->canCredit(), 403);
+
+        $this->validate(['creditCustomerId' => 'required|integer'], [
+            'creditCustomerId.required' => 'Choisissez le client.',
+        ]);
+
+        $customer = Customer::find($this->creditCustomerId);
+
+        if (! $customer) {
+            $this->addError('creditCustomerId', 'Client introuvable.');
+
+            return;
+        }
+
+        try {
+            CreditTransaction::chargeOrder($this->order, $customer, auth()->user());
+        } catch (BusinessRuleException $e) {
+            $this->addError('creditCustomerId', $e->getMessage());
+
+            return;
+        }
+
+        session()->flash('success', "{$this->order->order_number} mis sur l'ardoise de {$customer->name}.");
+
+        $this->redirect(route('ardoise'), navigate: false);
+    }
+
     public function render()
     {
-        return view('livewire.take-payment', ['order' => $this->order]);
+        return view('livewire.take-payment', [
+            'order' => $this->order,
+            'canCredit' => $this->canCredit(),
+            'customers' => $this->canCredit() ? Customer::orderBy('name')->get() : collect(),
+        ]);
     }
 }

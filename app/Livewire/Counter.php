@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Exceptions\BusinessRuleException;
 use App\Models\CashRegister;
+use App\Models\CreditTransaction;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\RestaurantTable;
@@ -26,6 +28,70 @@ class Counter extends Component
 
     public ?int $amountReceived = null;
 
+    // Mettre un bon sur l'ardoise
+    #[Locked]
+    public ?int $creditOrderId = null;
+    public ?int $creditCustomerId = null;
+
+    protected function canCredit(): bool
+    {
+        return (bool) auth()->user()->currentRestaurant()?->creditEnabled()
+            && CreditTransaction::canAuthorizeCredit(auth()->user());
+    }
+
+    public function startCredit(int $id): void
+    {
+        abort_unless($this->canCredit(), 403);
+
+        $this->cancelPayment();
+        $this->creditOrderId = $this->findPendingOrder($id)->id;
+        $this->creditCustomerId = null;
+    }
+
+    public function confirmCredit(): void
+    {
+        abort_unless($this->canCredit(), 403);
+
+        if ($this->creditOrderId === null) {
+            return;
+        }
+
+        $this->validate(['creditCustomerId' => 'required|integer'], [
+            'creditCustomerId.required' => 'Choisissez le client.',
+        ]);
+
+        $customer = Customer::find($this->creditCustomerId);
+
+        if (! $customer) {
+            $this->addError('creditCustomerId', 'Client introuvable.');
+
+            return;
+        }
+
+        try {
+            $order = $this->findPendingOrder($this->creditOrderId);
+            CreditTransaction::chargeOrder($order, $customer, auth()->user());
+        } catch (BusinessRuleException $e) {
+            $this->addError('creditCustomerId', $e->getMessage());
+
+            return;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            $this->reset(['creditOrderId', 'creditCustomerId']);
+            session()->flash('error', 'Ce bon a déjà été traité.');
+
+            return;
+        }
+
+        session()->flash('success', "{$order->order_number} mis sur l'ardoise de {$customer->name} : servez la commande.");
+        $this->reset(['creditOrderId', 'creditCustomerId']);
+    }
+
+    public function cancelCredit(): void
+    {
+        $this->reset(['creditOrderId', 'creditCustomerId']);
+        $this->resetValidation();
+    }
+
     public function mount(): void
     {
         if (! auth()->user()->currentRestaurant()?->paysBeforeService()) {
@@ -43,6 +109,7 @@ class Counter extends Component
     {
         $order = $this->findPendingOrder($id);
 
+        $this->reset(['creditOrderId', 'creditCustomerId']);
         $this->orderId = $order->id;
         $this->amountReceived = $order->total;
         $this->resetValidation();
@@ -178,6 +245,8 @@ class Counter extends Component
             'tablesToRelease' => $tablesToRelease,
             'byServer' => $byServer,
             'registerOpen' => CashRegister::where('restaurant_id', $restaurantId)->whereNull('closed_at')->exists(),
+            'canCredit' => $this->canCredit(),
+            'customers' => $this->creditOrderId ? Customer::orderBy('name')->get() : collect(),
         ]);
     }
 }

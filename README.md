@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches et comptoir (139 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir et ardoise (156 tests).
 
 ---
 
@@ -251,7 +251,28 @@ Mis en place : colonnes `restaurants.service_mode` (`tables`, `quick`, `both` ; 
 - Choix à la création par le Super Admin, puis modifiables par le **propriétaire** dans **Paramètres** (`/parametres`).
 - En mode `quick` : le plan des tables redirige vers la vente rapide, et le menu affiche « Vente rapide ». En mode `tables` : la vente sans table est refusée.
 - On ne peut pas passer en `quick` tant qu'une commande de table n'est pas payée.
-- `credit_enabled` est enregistré ; il commandera l'écran ardoise (étape 3).
+- On ne peut pas désactiver l'ardoise tant que des clients doivent de l'argent.
+
+### Ardoise (crédit client)
+Visible seulement si `credit_enabled` est activé.
+
+**Mettre sur l'ardoise : patron et gérante uniquement.**
+- Le bouton **« Sur l'ardoise »** est au comptoir, et aussi sur l'écran d'encaissement en paiement à la fin.
+- Le bon est réglé sans argent en caisse : un mouvement `charge` est enregistré, avec la personne qui a autorisé le crédit.
+- **Plafond facultatif** par client : au-delà, le crédit est refusé.
+- **Refus** : la caissière, un bon déjà réglé ou annulé, un client d'un autre maquis.
+
+**Écran Ardoise** (`/ardoise`, réservé au patron, à la gérante et à la caissière) :
+- le total dû au maquis et les clients triés par dette, avec une recherche ;
+- la fiche du client avec son historique, qui affiche qui a fait chaque mouvement ;
+- **« Relancer sur WhatsApp »** avec un message poli déjà rédigé.
+
+**Remboursement** (patron, gérante ou caissière) :
+- il ne peut pas dépasser la dette ;
+- il est refusé si la caisse est fermée ;
+- l'argent entre dans la caisse ouverte (`credit_transactions.cash_register_id`), sur la ligne « + Remboursements d'ardoise ».
+
+**Clients** : seuls le patron et la gérante ajoutent un client et fixent son plafond. Le numéro est normalisé, sans doublon dans un même maquis.
 
 **Rôles :** une gérante de petit maquis peut tout faire, sauf ce qui est réservé au patron (bénéfice, marges et, au choix du patron, les prix). Le patron peut travailler seul.
 
