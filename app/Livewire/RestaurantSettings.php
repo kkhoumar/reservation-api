@@ -50,7 +50,7 @@ class RestaurantSettings extends Component
 
             if ($due > 0) {
                 $this->addError('creditEnabled', 'Impossible pour l\'instant : des clients doivent encore '
-                    . number_format($due, 0, ',', ' ') . ' FCFA sur l\'ardoise.');
+                    . number_format($due, 0, ',', ' ') . ' FCFA à crédit.');
 
                 return;
             }

@@ -30,7 +30,7 @@
         @endforeach
         @if ($summary->credit > 0)
             <div class="card" style="padding: 14px 16px;">
-                <div style="font-size: 12px; color: var(--color-text-secondary);">Sur l'ardoise</div>
+                <div style="font-size: 12px; color: var(--color-text-secondary);">À crédit</div>
                 <div style="font-size: 18px; font-weight: 700; color: var(--color-accent);">{{ number_format($summary->credit, 0, ',', ' ') }}</div>
             </div>
         @endif

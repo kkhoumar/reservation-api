@@ -192,7 +192,7 @@ class MobileMoneyTest extends TestCase
             ->assertSee('Espèces')
             ->assertSee('Wave')
             ->assertSee('TX-9')
-            ->assertSee('Ardoise')
+            ->assertSee('Crédit')
             ->assertSee('M. Konan');
     }
 
@@ -205,7 +205,7 @@ class MobileMoneyTest extends TestCase
             ->assertViewHas('revenue', 13000)
             ->assertViewHas('orderCount', 3)
             ->assertSee('Mobile Money 6 000')
-            ->assertSee('Ardoise 4 000');
+            ->assertSee('Crédit 4 000');
     }
 
     public function test_le_rapport_du_soir_detaille_le_mobile_money(): void
@@ -218,6 +218,6 @@ class MobileMoneyTest extends TestCase
         $this->assertStringContainsString('*Ventes : 13 000 FCFA* (3 bons)', $text);
         $this->assertStringContainsString('• Espèces : 3 000', $text);
         $this->assertStringContainsString('• Wave : 6 000', $text);
-        $this->assertStringContainsString("• Sur l'ardoise : 4 000", $text);
+        $this->assertStringContainsString('• À crédit : 4 000', $text);
     }
 }

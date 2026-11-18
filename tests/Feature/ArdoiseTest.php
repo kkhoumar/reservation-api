@@ -93,7 +93,7 @@ class ArdoiseTest extends TestCase
         $this->actingAs($this->caissier);
 
         Livewire::test(Counter::class)
-            ->assertDontSee("Sur l'ardoise")
+            ->assertDontSee('À crédit')
             ->call('startCredit', $order->id)
             ->assertForbidden();
 
@@ -273,7 +273,7 @@ class ArdoiseTest extends TestCase
         Livewire::test(TakePayment::class, ['order' => $order->id])
             ->set('creditCustomerId', $this->konan->id)
             ->call('chargeToCustomer')
-            ->assertRedirect(route('ardoise'));
+            ->assertRedirect(route('credits'));
 
         $this->assertSame(6000, $this->konan->balance());
         $this->assertSame('free', $table->fresh()->status);
@@ -297,14 +297,25 @@ class ArdoiseTest extends TestCase
         $this->maquis->update(['credit_enabled' => false]);
 
         $this->actingAs($this->patron)
-            ->get(route('ardoise'))
+            ->get(route('credits'))
             ->assertRedirect(route('tables.index'));
     }
 
     public function test_une_serveuse_n_a_pas_acces_a_l_ardoise(): void
     {
         $this->actingAs($this->aya)
-            ->get(route('ardoise'))
+            ->get(route('credits'))
             ->assertRedirect(route('tables.index'));
+    }
+
+    public function test_la_page_s_appelle_credits_et_l_ancienne_adresse_redirige(): void
+    {
+        $this->actingAs($this->gerante)
+            ->get(route('credits'))
+            ->assertOk()
+            ->assertSee('Crédits clients')
+            ->assertDontSee('Ardoise');
+
+        $this->get('/ardoise')->assertRedirect('/credits');
     }
 }

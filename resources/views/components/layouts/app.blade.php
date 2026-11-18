@@ -335,9 +335,9 @@
                 </a>
             @endif
             @if(($currentRestaurant?->creditEnabled() ?? false) && auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
-                <a href="{{ route('ardoise') }}" class="sidebar-link {{ request()->routeIs('ardoise') ? 'active' : '' }}">
+                <a href="{{ route('credits') }}" class="sidebar-link {{ request()->routeIs('credits') ? 'active' : '' }}">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-                    Ardoise
+                    Crédits
                 </a>
             @endif
             @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))

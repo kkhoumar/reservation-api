@@ -10,7 +10,7 @@
             <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
                 Crédit client
             </div>
-            <h1>Ardoise</h1>
+            <h1>Crédits clients</h1>
             <p style="color: var(--color-text-secondary); font-size: 14px; margin: 6px 0 0 0;">
                 Total dû au maquis : <strong style="color: var(--color-accent);">{{ number_format($totalDue, 0, ',', ' ') }} FCFA</strong>
             </p>
@@ -165,7 +165,7 @@
             @else
                 <h3 style="margin-top: 0;">Comment ça marche</h3>
                 <ol style="font-size: 13px; color: var(--color-text-secondary); padding-left: 18px; line-height: 1.6; margin: 0;">
-                    <li>Au comptoir, le patron ou la gérante met un bon <strong>« Sur l'ardoise »</strong> d'un client.</li>
+                    <li>Au comptoir, le patron ou la gérante met un bon <strong>« À crédit »</strong> d'un client.</li>
                     <li>La dette s'affiche ici, avec qui l'a autorisée.</li>
                     <li>Quand le client paie, « Encaisser le remboursement » : l'argent entre en caisse.</li>
                 </ol>

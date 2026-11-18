@@ -39,7 +39,7 @@ class SalesToday extends Component
             ->map(fn (CreditTransaction $t) => (object) [
                 'at' => $t->created_at,
                 'order' => $t->order,
-                'mode' => 'Ardoise',
+                'mode' => 'Crédit',
                 'detail' => $t->customer?->name,
                 'by' => $t->recordedBy?->first_name,
                 'amount' => (int) $t->amount,

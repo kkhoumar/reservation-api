@@ -49,7 +49,7 @@ class Customer extends Model
      */
     public function reminderMessage(string $restaurantName): string
     {
-        return "Bonjour {$this->name}, ici {$restaurantName}. Votre ardoise est de "
+        return "Bonjour {$this->name}, ici {$restaurantName}. Votre crédit chez nous est de "
             . number_format($this->balance(), 0, ',', ' ')
             . " FCFA. Merci de passer la régler quand vous pourrez. Bonne journée !";
     }

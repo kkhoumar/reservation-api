@@ -171,11 +171,11 @@ class RegisterReport
             $lines[] = '• ' . (Payment::METHODS[$method] ?? $method) . ' : ' . $f($amount);
         }
         if ($this->creditSales > 0) {
-            $lines[] = "• Sur l'ardoise : " . $f($this->creditSales);
+            $lines[] = '• À crédit : ' . $f($this->creditSales);
         }
         $lines[] = '• Dépenses : ' . $f($this->breakdown['expenses_total']);
         if ($this->breakdown['repayments_total'] > 0) {
-            $lines[] = "• Remboursements d'ardoise : " . $f($this->breakdown['repayments_total']);
+            $lines[] = '• Remboursements de crédits : ' . $f($this->breakdown['repayments_total']);
         }
 
         if ($r->closed_at) {
@@ -225,7 +225,7 @@ class RegisterReport
             $alerts[] = '• Sacoches non vidées : ' . $f($this->sacochesOutstanding) . ' FCFA';
         }
         if ($this->ardoiseDue > 0) {
-            $alerts[] = '• Ardoise totale due : ' . $f($this->ardoiseDue) . ' FCFA';
+            $alerts[] = '• Crédits clients à récupérer : ' . $f($this->ardoiseDue) . ' FCFA';
         }
         if ($alerts) {
             $lines[] = '';

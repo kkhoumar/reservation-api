@@ -43,13 +43,13 @@
         </div>
 
         <div class="card" style="margin-bottom: 16px;">
-            <h3 style="margin-top: 0;">Ardoise (crédit client)</h3>
+            <h3 style="margin-top: 0;">Crédit client</h3>
             <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer;">
                 <input type="checkbox" wire:model="creditEnabled" style="margin-top: 3px;">
                 <span>
                     <strong>Autoriser les clients à payer plus tard</strong>
                     <span style="display: block; font-size: 13px; color: var(--color-text-secondary);">
-                        Les sommes dues sont notées sur l'ardoise du client, avec qui a autorisé le crédit.
+                        Les sommes dues sont notées sur le compte du client, avec qui a autorisé le crédit.
                     </span>
                 </span>
             </label>

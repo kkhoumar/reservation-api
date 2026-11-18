@@ -63,7 +63,7 @@
 
             @if ($canCredit)
                 <div style="border-top: 1px dashed var(--color-border); margin-top: 16px; padding-top: 14px;">
-                    <label style="font-size: 13px; font-weight: 600;">Ou sur l'ardoise de :</label>
+                    <label style="font-size: 13px; font-weight: 600;">Ou à crédit pour :</label>
                     <select wire:model="creditCustomerId" style="width: 100%; margin: 6px 0 8px 0;">
                         <option value="">— Choisir le client —</option>
                         @foreach ($customers as $customer)
@@ -71,7 +71,7 @@
                         @endforeach
                     </select>
                     @error('creditCustomerId') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 8px;">{{ $message }}</div> @enderror
-                    <button wire:click="chargeToCustomer" class="btn btn-ghost" style="width: 100%; justify-content: center;">Mettre sur l'ardoise</button>
+                    <button wire:click="chargeToCustomer" class="btn btn-ghost" style="width: 100%; justify-content: center;">Mettre à crédit</button>
                 </div>
             @endif
         </div>

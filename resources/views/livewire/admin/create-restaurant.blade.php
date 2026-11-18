@@ -98,7 +98,7 @@
 
                 <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 14px; cursor: pointer;">
                     <input type="checkbox" wire:model="creditEnabled">
-                    Ardoise (crédit client) activée
+                    Crédit client activé
                 </label>
 
                 <div>

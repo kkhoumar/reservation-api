@@ -37,7 +37,7 @@ class Ardoise extends Component
     public function mount(): void
     {
         if (! auth()->user()->currentRestaurant()?->creditEnabled()) {
-            session()->flash('error', "L'ardoise n'est pas activée. Le patron peut l'activer dans Paramètres.");
+            session()->flash('error', "Le crédit client n'est pas activé. Le patron peut l'activer dans Paramètres.");
             $this->redirect(route('tables.index'), navigate: false);
         }
     }

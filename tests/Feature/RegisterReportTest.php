@@ -131,14 +131,14 @@ class RegisterReportTest extends TestCase
 
         $this->assertStringContainsString('*Maquis Chez Koffi*', $text);
         $this->assertStringContainsString('*Ventes : 19 000 FCFA* (4 bons)', $text);
-        $this->assertStringContainsString("• Sur l'ardoise : 4 000", $text);
+        $this->assertStringContainsString('• À crédit : 4 000', $text);
         $this->assertStringContainsString('• Dépenses : 2 500', $text);
         $this->assertStringContainsString('• Écart : -500 ⚠️', $text);
         $this->assertStringContainsString('• Note : Billet abîmé', $text);
         $this->assertStringContainsString('• Aya : 2 bons · 12 000', $text);
         $this->assertStringContainsString('Bière ×12', $text);
         $this->assertStringContainsString('• Bons annulés : 1 (2 000 FCFA)', $text);
-        $this->assertStringContainsString('• Ardoise totale due : 4 000 FCFA', $text);
+        $this->assertStringContainsString('• Crédits clients à récupérer : 4 000 FCFA', $text);
     }
 
     public function test_une_session_d_un_autre_jour_n_est_pas_melangee(): void

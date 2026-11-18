@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money et gestes commerciaux (190 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money et gestes commerciaux (191 tests).
 
 ---
 
@@ -300,7 +300,8 @@ Pour le partager :
 
 L'envoi demande un clic, et il est gratuit. Pour un envoi **automatique**, il faudra l'API WhatsApp Business, qui est payante et demande une validation par Meta. C'est prévu à l'étape 4.
 
-### Ardoise (crédit client)
+### Crédit client (appelé « ardoise » dans le code)
+À l'écran, on dit toujours **« crédit »** : menu **Crédits**, boutons **« À crédit »**, rapport « À crédit » et « Crédits clients à récupérer ». Dans le code, la page garde le nom `Ardoise` et les tables `customers` et `credit_transactions`. L'ancienne adresse `/ardoise` redirige vers `/credits`.
 Visible seulement si `credit_enabled` est activé.
 
 **Mettre sur l'ardoise : patron et gérante uniquement.**
@@ -309,7 +310,7 @@ Visible seulement si `credit_enabled` est activé.
 - **Plafond facultatif** par client : au-delà, le crédit est refusé.
 - **Refus** : la caissière, un bon déjà réglé ou annulé, un client d'un autre maquis.
 
-**Écran Ardoise** (`/ardoise`, réservé au patron, à la gérante et à la caissière) :
+**Écran Crédits** (`/credits`, réservé au patron, à la gérante et à la caissière) :
 - le total dû au maquis et les clients triés par dette, avec une recherche ;
 - la fiche du client avec son historique daté : le détail de chaque consommation (articles, table, serveuse, qui a autorisé le crédit) et chaque remboursement (montant, qui l'a encaissé, note) ;
 - **« Relancer sur WhatsApp »** avec un message poli déjà rédigé.

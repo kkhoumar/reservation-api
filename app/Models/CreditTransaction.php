@@ -53,7 +53,7 @@ class CreditTransaction extends Model
     public static function chargeOrder(Order $order, Customer $customer, User $by): self
     {
         if (! static::canAuthorizeCredit($by)) {
-            throw new BusinessRuleException('Seuls le patron et la gérante peuvent mettre un bon sur l\'ardoise.');
+            throw new BusinessRuleException('Seuls le patron et la gérante peuvent mettre un bon à crédit.');
         }
 
         return DB::transaction(function () use ($order, $customer, $by) {
@@ -61,7 +61,7 @@ class CreditTransaction extends Model
             $customer = Customer::whereKey($customer->id)->lockForUpdate()->firstOrFail();
 
             if (! $order->restaurant?->creditEnabled()) {
-                throw new BusinessRuleException('L\'ardoise n\'est pas activée pour ce maquis.');
+                throw new BusinessRuleException("Le crédit client n'est pas activé pour ce maquis.");
             }
 
             if ($customer->restaurant_id !== $order->restaurant_id) {
@@ -73,7 +73,7 @@ class CreditTransaction extends Model
             }
 
             if ($order->total <= 0) {
-                throw new BusinessRuleException('Impossible de mettre un bon vide sur l\'ardoise.');
+                throw new BusinessRuleException('Impossible de mettre un bon vide à crédit.');
             }
 
             $balance = $customer->balance();

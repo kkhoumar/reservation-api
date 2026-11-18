@@ -120,9 +120,9 @@ class TakePayment extends Component
             return;
         }
 
-        session()->flash('success', "{$this->order->order_number} mis sur l'ardoise de {$customer->name}.");
+        session()->flash('success', "{$this->order->order_number} mis à crédit pour {$customer->name}.");
 
-        $this->redirect(route('ardoise'), navigate: false);
+        $this->redirect(route('credits'), navigate: false);
     }
 
     public function render()

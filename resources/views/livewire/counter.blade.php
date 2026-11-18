@@ -70,10 +70,10 @@
                         </div>
                     @elseif ($creditOrderId === $order->id)
                         <div style="padding-top: 12px; border-top: 1px dashed var(--color-border);">
-                            <label style="font-size: 13px; font-weight: 600; display: block;">Sur l'ardoise de :</label>
+                            <label style="font-size: 13px; font-weight: 600; display: block;">À crédit pour :</label>
                             @if ($customers->isEmpty())
                                 <p style="font-size: 13px; color: var(--color-text-secondary);">
-                                    Aucun client. <a href="{{ route('ardoise') }}" style="color: var(--color-accent); font-weight: 600;">Ajoutez-le dans Ardoise</a>.
+                                    Aucun client. <a href="{{ route('credits') }}" style="color: var(--color-accent); font-weight: 600;">Ajoutez-le dans Crédits</a>.
                                 </p>
                             @else
                                 <select wire:model="creditCustomerId" style="min-width: 240px; margin-top: 4px;">
@@ -85,7 +85,7 @@
                             @endif
                             @error('creditCustomerId') <div style="color: var(--color-danger); font-size: 13px; margin-top: 8px;">{{ $message }}</div> @enderror
                             <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
-                                <button wire:click="confirmCredit" class="btn btn-primary">Mettre sur l'ardoise, servir</button>
+                                <button wire:click="confirmCredit" class="btn btn-primary">Mettre à crédit, servir</button>
                                 <button wire:click="cancelCredit" class="btn btn-ghost">Retour</button>
                             </div>
                         </div>
@@ -93,7 +93,7 @@
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button wire:click="startPayment({{ $order->id }})" class="btn btn-secondary">Encaisser</button>
                             @if ($canCredit)
-                                <button wire:click="startCredit({{ $order->id }})" class="btn btn-ghost">Sur l'ardoise</button>
+                                <button wire:click="startCredit({{ $order->id }})" class="btn btn-ghost">À crédit</button>
                             @endif
                             @if ($canGestures)
                                 <button wire:click="startGestures({{ $order->id }})" class="btn btn-ghost">Offrir / remise</button>

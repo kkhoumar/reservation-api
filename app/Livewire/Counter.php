@@ -115,7 +115,7 @@ class Counter extends Component
             return;
         }
 
-        session()->flash('success', "{$order->order_number} mis sur l'ardoise de {$customer->name} : servez la commande.");
+        session()->flash('success', "{$order->order_number} mis à crédit pour {$customer->name} : servez la commande.");
         $this->reset(['creditOrderId', 'creditCustomerId']);
     }
 

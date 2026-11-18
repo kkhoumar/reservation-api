@@ -38,7 +38,7 @@
                     <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.6;">
                         Espèces {{ number_format($sales->cash, 0, ',', ' ') }}
                         @if ($sales->mobileTotal() > 0) · Mobile Money {{ number_format($sales->mobileTotal(), 0, ',', ' ') }} @endif
-                        @if ($sales->credit > 0) · <span style="color: var(--color-accent);">Ardoise {{ number_format($sales->credit, 0, ',', ' ') }}</span> @endif
+                        @if ($sales->credit > 0) · <span style="color: var(--color-accent);">Crédit {{ number_format($sales->credit, 0, ',', ' ') }}</span> @endif
                     </div>
                 @endif
             @endisset
