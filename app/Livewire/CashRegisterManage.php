@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Models\CashRegister;
 use App\Models\Restaurant;
 use App\Models\User;
+use App\Jobs\SendRegisterReport;
+use App\Services\WhatsAppCloud;
 use App\Support\SalesSummary;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -120,6 +122,11 @@ class CashRegisterManage extends Component
             session()->flash('error', 'Cette caisse est déjà clôturée.');
 
             return;
+        }
+
+        // Rapport du soir envoyé automatiquement au patron (si WhatsApp est configuré)
+        if ($register->restaurant?->whatsapp_report_enabled && app(WhatsAppCloud::class)->isConfigured()) {
+            SendRegisterReport::queueFor($register->fresh());
         }
 
         $this->redirect(route('cash-register.closed', ['register' => $register->id]), navigate: false);

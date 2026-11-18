@@ -2,13 +2,16 @@
 
 namespace App\Livewire;
 
+use App\Jobs\SendRegisterReport;
 use App\Models\CashRegister;
+use App\Services\WhatsAppCloud;
 use App\Support\RegisterReport;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
- * Caisse clôturée + rapport du soir, prêt à partir chez le patron sur WhatsApp.
+ * Caisse clôturée + rapport du soir : envoi automatique au patron sur
+ * WhatsApp (si configuré), et boutons manuels toujours disponibles.
  */
 class CashRegisterClosed extends Component
 {
@@ -21,7 +24,20 @@ class CashRegisterClosed extends Component
         $this->registerId = CashRegister::findOrFail($register)->id;
     }
 
-    public function render()
+    /** Relancer l'envoi automatique (après un échec, ou s'il n'a pas eu lieu). */
+    public function resend(WhatsAppCloud $whatsapp): void
+    {
+        $register = CashRegister::findOrFail($this->registerId);
+
+        if (! $whatsapp->isConfigured() || $register->report_status === 'sent' || $register->report_status === 'pending') {
+            return;
+        }
+
+        SendRegisterReport::queueFor($register);
+        session()->flash('success', 'Envoi du rapport relancé.');
+    }
+
+    public function render(WhatsAppCloud $whatsapp)
     {
         $register = CashRegister::with(['openedByUser', 'closedByUser', 'restaurant'])->findOrFail($this->registerId);
         $report = new RegisterReport($register);
@@ -33,6 +49,7 @@ class CashRegisterClosed extends Component
             'ownerUrl' => $report->whatsappToOwnerUrl(),
             'shareUrl' => $report->whatsappShareUrl(),
             'isOwner' => auth()->user()->isOwner(),
+            'autoAvailable' => $whatsapp->isConfigured() && $register->restaurant?->whatsapp_report_enabled,
         ]);
     }
 }

@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    // API WhatsApp Business (Meta Cloud API) : rapport du soir automatique
+    'whatsapp' => [
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
+        // Modèle de message validé par Meta (voir README)
+        'report_template' => env('WHATSAPP_REPORT_TEMPLATE', 'rapport_caisse'),
+        'template_language' => env('WHATSAPP_TEMPLATE_LANGUAGE', 'fr'),
+    ],
+
 ];

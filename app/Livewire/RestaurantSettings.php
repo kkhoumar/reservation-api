@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Models\Order;
 use App\Models\Restaurant;
+use App\Models\User;
+use App\Services\WhatsAppCloud;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -17,6 +19,8 @@ class RestaurantSettings extends Component
     public string $serviceMode = 'both';
     public bool $creditEnabled = false;
     public string $paymentTiming = 'before';
+    public bool $whatsappReportEnabled = true;
+    public string $reportPhone = '';
 
     public function mount(): void
     {
@@ -25,6 +29,8 @@ class RestaurantSettings extends Component
         $this->serviceMode = $restaurant->service_mode;
         $this->creditEnabled = $restaurant->creditEnabled();
         $this->paymentTiming = $restaurant->payment_timing;
+        $this->whatsappReportEnabled = (bool) $restaurant->whatsapp_report_enabled;
+        $this->reportPhone = (string) $restaurant->report_phone;
     }
 
     private function restaurant(): Restaurant
@@ -34,10 +40,16 @@ class RestaurantSettings extends Component
 
     public function save()
     {
+        $this->reportPhone = trim($this->reportPhone) !== '' ? User::normalizePhone($this->reportPhone) : '';
+
         $this->validate([
             'serviceMode' => ['required', Rule::in(array_keys(Restaurant::SERVICE_MODES))],
             'creditEnabled' => 'boolean',
             'paymentTiming' => ['required', Rule::in(array_keys(Restaurant::PAYMENT_TIMINGS))],
+            'whatsappReportEnabled' => 'boolean',
+            'reportPhone' => ['nullable', 'regex:' . User::PHONE_REGEX],
+        ], [
+            'reportPhone.regex' => 'Numéro invalide : 10 chiffres, par exemple 07 11 22 33 44.',
         ]);
 
         $restaurant = $this->restaurant();
@@ -84,6 +96,8 @@ class RestaurantSettings extends Component
             'service_mode' => $this->serviceMode,
             'credit_enabled' => $this->creditEnabled,
             'payment_timing' => $this->paymentTiming,
+            'whatsapp_report_enabled' => $this->whatsappReportEnabled,
+            'report_phone' => $this->reportPhone ?: null,
         ]);
 
         Log::info('Réglages du maquis modifiés', [
@@ -106,6 +120,8 @@ class RestaurantSettings extends Component
             'subscriptionPayments' => $this->restaurant()->subscriptionPayments()->with('plan')->latest()->limit(12)->get(),
             'plans' => \App\Models\Plan::where('is_active', true)->orderBy('sort_order')->get(),
             'billing' => array_filter(config('maquis.billing', [])),
+            'whatsappConfigured' => app(WhatsAppCloud::class)->isConfigured(),
+            'ownerPhone' => $this->restaurant()->users()->where('role', 'owner')->where('status', 'active')->orderBy('id')->value('phone'),
         ]);
     }
 }

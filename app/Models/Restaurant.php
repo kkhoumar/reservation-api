@@ -19,24 +19,45 @@ class Restaurant extends Model
         'commune', 'city', 'opening_hours',
         'subscription_status', 'trial_ends_at',
         'service_mode', 'credit_enabled', 'payment_timing',
+        'whatsapp_report_enabled', 'report_phone',
     ];
 
     protected $casts = [
         'trial_ends_at' => 'datetime',
         'paid_until' => 'datetime',
         'credit_enabled' => 'boolean',
+        'whatsapp_report_enabled' => 'boolean',
     ];
 
     protected $attributes = [
         'service_mode' => 'both',
         'credit_enabled' => false,
         'payment_timing' => 'before',
+        'whatsapp_report_enabled' => true,
     ];
 
     public const PAYMENT_TIMINGS = [
         'before' => ['label' => 'Paiement avant service', 'hint' => 'La serveuse apporte l\'argent au comptoir, puis on sert. Pas d\'argent, pas de boisson.'],
         'after' => ['label' => 'Paiement à la fin', 'hint' => 'Le client consomme, puis paie l\'addition en partant.'],
     ];
+
+    /**
+     * Numéro qui reçoit le rapport du soir : celui choisi dans les
+     * paramètres, sinon celui du patron.
+     */
+    public function reportRecipientPhone(): ?string
+    {
+        if (filled($this->report_phone)) {
+            return $this->report_phone;
+        }
+
+        return $this->users()
+            ->where('role', 'owner')
+            ->where('status', 'active')
+            ->whereNull('left_at')
+            ->orderBy('id')
+            ->value('phone');
+    }
 
     /**
      * Le maquis a-t-il des serveuses actives ? Sinon, la personne qui prend

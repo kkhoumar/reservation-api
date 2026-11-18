@@ -57,6 +57,39 @@
             <strong style="font-size: 20px; color: var(--color-primary);">{{ number_format($report->totalSales(), 0, ',', ' ') }} FCFA</strong>
         </div>
 
+        {{-- Envoi automatique au patron --}}
+        @if ($register->report_status)
+            @php
+                $statusStyle = match ($register->report_status) {
+                    'sent' => ['var(--color-primary-300)', '✅'],
+                    'pending' => ['var(--color-accent)', '⏳'],
+                    default => ['var(--color-danger)', '⚠️'],
+                };
+            @endphp
+            <div @if ($register->report_status === 'pending') wire:poll.4s @endif
+                 style="border-left: 4px solid {{ $statusStyle[0] }}; background: var(--color-bg); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px;">
+                {{ $statusStyle[1] }}
+                @switch ($register->report_status)
+                    @case('sent')
+                        <strong>Envoyé automatiquement</strong> sur WhatsApp au {{ $register->report_phone }}
+                        à {{ $register->report_sent_at?->format('H:i') }}.
+                        @break
+                    @case('pending')
+                        <strong>Envoi automatique au patron en cours…</strong>
+                        @break
+                    @case('failed')
+                        <strong>L'envoi automatique a échoué.</strong> Utilisez le bouton WhatsApp ci-dessous.
+                        <span style="display: block; color: var(--color-text-secondary); font-size: 12px;">{{ $register->report_error }}</span>
+                        @break
+                    @default
+                        <strong>Pas d'envoi automatique :</strong> {{ $register->report_error }}
+                @endswitch
+                @if ($autoAvailable && in_array($register->report_status, ['failed', 'skipped'], true))
+                    <button wire:click="resend" class="btn btn-ghost" style="padding: 4px 10px; font-size: 12px; margin-top: 6px;">Réessayer l'envoi automatique</button>
+                @endif
+            </div>
+        @endif
+
         <div id="report-text" style="white-space: pre-wrap; font-size: 13px; line-height: 1.55; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 10px; padding: 14px; max-height: 360px; overflow-y: auto;">{{ $reportText }}</div>
 
         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">

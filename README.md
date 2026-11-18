@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé et abonnements (245 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé, abonnements et rapport WhatsApp automatique (253 tests).
 
 ---
 
@@ -371,7 +371,32 @@ Pour le partager :
 - **« Envoyer au patron sur WhatsApp »** ouvre WhatsApp avec le texte prêt, adressé au numéro du patron. Le bouton est masqué si c'est le patron lui-même qui clôture.
 - On peut aussi **partager** le texte vers n'importe quel contact, ou le **copier**.
 
-L'envoi demande un clic, et il est gratuit. Pour un envoi **automatique**, il faudra l'API WhatsApp Business, qui est payante et demande une validation par Meta. C'est prévu à l'étape 4.
+#### Envoi automatique au patron (API WhatsApp Business)
+Une fois l'API configurée, chaque clôture de caisse **envoie toute seule** un résumé au patron. L'envoi se fait en arrière-plan (`App\Jobs\SendRegisterReport`, avec 3 essais), donc la caissière n'attend pas.
+- **L'écran « Caisse clôturée »** affiche le résultat : ✅ envoyé (à quel numéro, à quelle heure), ⏳ en cours, ou ⚠️ échec avec un bouton « Réessayer ». Le rapport n'est jamais envoyé deux fois.
+- **Le patron règle l'envoi** dans **Paramètres → Rapport du soir sur WhatsApp** : il peut l'activer ou le couper, et choisir le numéro qui le reçoit (par défaut, le sien).
+- **Tant que l'API n'est pas configurée**, rien ne change : le bouton manuel reste disponible.
+- **Une file de tâches doit tourner** : le service `queue` le fait dans Docker. En local, lancer `php artisan queue:work`.
+
+**Mise en place chez Meta (une seule fois, par le propriétaire de la plateforme) :**
+1. Créer un compte **Meta Business** (business.facebook.com) et faire **vérifier l'entreprise**.
+2. Dans **developers.facebook.com**, créer une application de type « Business » et y ajouter le produit **WhatsApp**.
+3. Ajouter **un numéro de téléphone dédié** à Maquis Express. Il ne doit pas déjà être utilisé dans l'application WhatsApp.
+4. Créer un **utilisateur système** avec un **jeton permanent** (permissions `whatsapp_business_messaging` et `whatsapp_business_management`).
+5. Dans **WhatsApp Manager → Modèles de messages**, créer le modèle **`rapport_caisse`** : catégorie **Utilitaire**, langue **Français**, avec ce texte exact :
+   ```
+   Rapport de caisse – {{1}}
+   {{2}}
+   Ventes : {{3}} FCFA ({{4}} bons)
+   Espèces : {{5}} · Mobile Money : {{6}} · Crédit : {{7}}
+   Dépenses : {{8}} FCFA
+   Écart de caisse : {{9}}
+   À surveiller : {{10}}
+   ```
+   Puis attendre que Meta l'approuve (de quelques minutes à 48 h).
+6. Renseigner dans `.env.docker` : `WHATSAPP_TOKEN` (le jeton permanent) et `WHATSAPP_PHONE_NUMBER_ID` (l'identifiant du numéro, à ne pas confondre avec le numéro lui-même).
+
+Chaque message est **facturé par Meta**, en général quelques dizaines de FCFA par conversation pour la catégorie « Utilitaire ». C'est à prévoir dans le prix des formules.
 
 ### Crédit client (appelé « ardoise » dans le code)
 À l'écran, on dit toujours **« crédit »** : menu **Crédits**, boutons **« À crédit »**, rapport « À crédit » et « Crédits clients à récupérer ». Dans le code, la page garde le nom `Ardoise` et les tables `customers` et `credit_transactions`. L'ancienne adresse `/ardoise` redirige vers `/credits`.

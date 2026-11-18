@@ -69,6 +69,48 @@ class RegisterReport
     }
 
     /**
+     * Valeurs des variables {{1}} à {{10}} du modèle WhatsApp « rapport_caisse »
+     * (envoi automatique). Une seule ligne par variable : règle de Meta.
+     *
+     * @return list<string>
+     */
+    public function templateParameters(): array
+    {
+        $r = $this->register;
+        $f = fn (int $n) => number_format($n, 0, ',', ' ');
+        $sales = new SalesSummary($r->restaurant_id, $r->opened_at, $r->closed_at ?? now());
+
+        $session = ucfirst(Carbon::parse($r->closed_at ?? now())->locale('fr')->isoFormat('dddd D MMMM'))
+            . ', caisse ' . $r->opened_at->format('H:i') . ' → ' . ($r->closed_at?->format('H:i') ?? 'en cours')
+            . ($r->closedByUser ? ', clôturée par ' . $r->closedByUser->first_name : '');
+
+        $diff = (int) $r->discrepancy;
+        $gap = $r->closed_at
+            ? ($diff > 0 ? '+' : '') . $f($diff) . ' FCFA' . ($diff === 0 ? ' ✅' : ' ⚠️') . ($r->closing_note ? ' (' . $r->closing_note . ')' : '')
+            : '—';
+
+        $alerts = collect([
+            $this->cancelledCount > 0 ? $this->cancelledCount . ' bon(s) annulé(s) : ' . $f($this->cancelledTotal) . ' F' : null,
+            $this->gesturesTotal > 0 ? 'offerts et remises : ' . $f($this->gesturesTotal) . ' F' : null,
+            $this->sacochesOutstanding > 0 ? 'sacoches non versées : ' . $f($this->sacochesOutstanding) . ' F' : null,
+            $this->ardoiseDue > 0 ? 'crédits à récupérer : ' . $f($this->ardoiseDue) . ' F' : null,
+        ])->filter()->join(' · ');
+
+        return [
+            $r->restaurant->name,
+            $session,
+            $f($this->totalSales()),
+            (string) $this->totalBons(),
+            $f($sales->cash),
+            $f($sales->mobileTotal()),
+            $f($sales->credit),
+            $f((int) $this->breakdown['expenses_total']),
+            $gap,
+            $alerts !== '' ? $alerts : 'rien à signaler',
+        ];
+    }
+
+    /**
      * Le rapport en texte, mis en forme pour WhatsApp (*gras*).
      */
     public function toWhatsappText(): string

@@ -43,6 +43,29 @@
         </div>
 
         <div class="card" style="margin-bottom: 16px;">
+            <h3 style="margin-top: 0;">Rapport du soir sur WhatsApp</h3>
+            <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer;">
+                <input type="checkbox" wire:model.live="whatsappReportEnabled" style="margin-top: 3px;">
+                <span>
+                    <strong>Recevoir le rapport automatiquement à chaque clôture de caisse</strong>
+                    <span style="display: block; font-size: 13px; color: var(--color-text-secondary);">
+                        Ventes, espèces, Mobile Money, crédit, dépenses, écart de caisse et points à surveiller.
+                    </span>
+                </span>
+            </label>
+            @if ($whatsappReportEnabled)
+                <label style="font-size: 13px; font-weight: 600; display: block; margin-top: 12px;">Numéro qui reçoit le rapport</label>
+                <input type="tel" wire:model="reportPhone" placeholder="{{ $ownerPhone ? 'Vide = votre numéro (' . $ownerPhone . ')' : '07 XX XX XX XX' }}" style="width: 100%; margin-top: 4px;">
+                @error('reportPhone') <div style="color: var(--color-danger); font-size: 13px; margin-top: 6px;">{{ $message }}</div> @enderror
+            @endif
+            @unless ($whatsappConfigured)
+                <p style="font-size: 12px; color: var(--color-text-secondary); margin: 10px 0 0 0;">
+                    L'envoi automatique n'est pas encore en service sur Maquis Express. En attendant, la caissière envoie le rapport d'un clic à la clôture.
+                </p>
+            @endunless
+        </div>
+
+        <div class="card" style="margin-bottom: 16px;">
             <h3 style="margin-top: 0;">Crédit client</h3>
             <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer;">
                 <input type="checkbox" wire:model="creditEnabled" style="margin-top: 3px;">

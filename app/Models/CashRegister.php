@@ -22,6 +22,7 @@ class CashRegister extends Model
         'opened_at' => 'datetime',
         'closed_at' => 'datetime',
         'cash_count' => 'array',
+        'report_sent_at' => 'datetime',
     ];
 
     /**
