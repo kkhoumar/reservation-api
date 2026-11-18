@@ -122,6 +122,33 @@ class User extends Authenticatable
         return $id ? Restaurant::find($id) : null;
     }
 
+    /**
+     * Argent liquide encaissé par la serveuse (monnaie déjà rendue).
+     */
+    public function sacocheCollected(): int
+    {
+        return (int) Payment::where('user_id', $this->id)
+            ->where('in_sacoche', true)
+            ->where('status', 'completed')
+            ->where('payment_method', 'cash')
+            ->sum('amount_due');
+    }
+
+    public function sacocheRemitted(): int
+    {
+        return (int) CashRemittance::withoutGlobalScopes()
+            ->where('server_id', $this->id)
+            ->sum('amount');
+    }
+
+    /**
+     * Ce que la serveuse a encore sur elle et doit verser à la caisse.
+     */
+    public function sacocheBalance(): int
+    {
+        return $this->sacocheCollected() - $this->sacocheRemitted();
+    }
+
     public function canManagePricing(): bool
     {
         return in_array($this->role, ['owner', 'manager']);

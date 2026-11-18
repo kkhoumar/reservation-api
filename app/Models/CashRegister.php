@@ -43,26 +43,32 @@ class CashRegister extends Model
         return $this->hasMany(Expense::class);
     }
 
+    public function remittances(): HasMany
+    {
+        return $this->hasMany(CashRemittance::class);
+    }
+
     public function isOpen(): bool
     {
         return $this->closed_at === null;
     }
 
+    /**
+     * Paiements espèces encaissés directement à la caisse.
+     * Ceux encaissés par une serveuse (sacoche) n'y entrent qu'au versement.
+     */
     protected function cashPaymentsQuery()
     {
         return Payment::where('payment_method', 'cash')
             ->where('status', 'completed')
+            ->where('in_sacoche', false)
             ->whereBetween('paid_at', [$this->opened_at, $this->closed_at ?? now()])
             ->whereHas('order', fn ($q) => $q->where('restaurant_id', $this->restaurant_id));
     }
 
     public function calculateTheoreticalAmount(): int
     {
-        $received = $this->cashPaymentsQuery()->sum('amount_received');
-        $changeGiven = $this->cashPaymentsQuery()->sum('change_given');
-        $expensesTotal = $this->expenses()->sum('amount');
-
-        return $this->opening_amount + $received - $changeGiven - $expensesTotal;
+        return $this->breakdown()['theoretical'];
     }
 
     /**
@@ -72,19 +78,23 @@ class CashRegister extends Model
     public function breakdown(): array
     {
         $paymentsCount = $this->cashPaymentsQuery()->count();
-        $received = $this->cashPaymentsQuery()->sum('amount_received');
-        $changeGiven = $this->cashPaymentsQuery()->sum('change_given');
+        $received = (int) $this->cashPaymentsQuery()->sum('amount_received');
+        $changeGiven = (int) $this->cashPaymentsQuery()->sum('change_given');
+        $remittancesCount = $this->remittances()->count();
+        $remittancesTotal = (int) $this->remittances()->sum('amount');
         $expensesCount = $this->expenses()->count();
-        $expensesTotal = $this->expenses()->sum('amount');
+        $expensesTotal = (int) $this->expenses()->sum('amount');
 
         return [
             'opening_amount' => $this->opening_amount,
             'payments_count' => $paymentsCount,
             'received' => $received,
             'change_given' => $changeGiven,
+            'remittances_count' => $remittancesCount,
+            'remittances_total' => $remittancesTotal,
             'expenses_count' => $expensesCount,
             'expenses_total' => $expensesTotal,
-            'theoretical' => $this->opening_amount + $received - $changeGiven - $expensesTotal,
+            'theoretical' => $this->opening_amount + $received - $changeGiven + $remittancesTotal - $expensesTotal,
         ];
     }
 

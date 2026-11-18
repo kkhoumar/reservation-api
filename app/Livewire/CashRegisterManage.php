@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\CashRegister;
 use App\Models\Restaurant;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -115,8 +116,20 @@ class CashRegisterManage extends Component
             ->limit(5)
             ->get();
 
+        // Serveuses qui ont encore de l'argent sur elles (rappel avant clôture)
+        $outstanding = $register
+            ? User::where('restaurant_id', auth()->user()->currentRestaurantId())
+                ->where('role', 'server')
+                ->orderBy('first_name')
+                ->get()
+                ->each(fn (User $s) => $s->balance = $s->sacocheBalance())
+                ->filter(fn (User $s) => $s->balance > 0)
+                ->values()
+            : collect();
+
         return view('livewire.cash-register-manage', [
             'register' => $register,
+            'outstanding' => $outstanding,
             'breakdown' => $breakdown,
             'history' => $history,
             'threshold' => self::DISCREPANCY_THRESHOLD,

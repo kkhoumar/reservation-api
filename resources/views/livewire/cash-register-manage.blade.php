@@ -49,12 +49,16 @@
                         <strong>{{ number_format($breakdown['opening_amount'], 0, ',', ' ') }} FCFA</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
-                        <span>+ Encaissements ({{ $breakdown['payments_count'] }} paiement{{ $breakdown['payments_count'] > 1 ? 's' : '' }})</span>
+                        <span>+ Encaissé à la caisse ({{ $breakdown['payments_count'] }} paiement{{ $breakdown['payments_count'] > 1 ? 's' : '' }})</span>
                         <strong style="color: var(--color-primary-300);">+{{ number_format($breakdown['received'], 0, ',', ' ') }} FCFA</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
                         <span>- Monnaie rendue</span>
                         <strong style="color: var(--color-danger);">-{{ number_format($breakdown['change_given'], 0, ',', ' ') }} FCFA</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
+                        <span>+ Versements des serveuses ({{ $breakdown['remittances_count'] }})</span>
+                        <strong style="color: var(--color-primary-300);">+{{ number_format($breakdown['remittances_total'], 0, ',', ' ') }} FCFA</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
                         <span>- Dépenses ({{ $breakdown['expenses_count'] }})</span>
@@ -92,6 +96,18 @@
             </div>
 
             <div class="card">
+                @if ($outstanding->isNotEmpty())
+                    <div style="border-left: 4px solid var(--color-accent); background: var(--color-bg); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 13px;">
+                        <strong>Sacoches non vidées</strong>
+                        @foreach ($outstanding as $server)
+                            <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                <span>{{ $server->first_name }}</span>
+                                <strong>{{ number_format($server->balance, 0, ',', ' ') }} FCFA</strong>
+                            </div>
+                        @endforeach
+                        <a href="{{ route('sacoches') }}" style="display: inline-block; margin-top: 8px; color: var(--color-accent); font-weight: 600;">Recevoir les versements →</a>
+                    </div>
+                @endif
                 @if (!$showCloseForm)
                     <h3 style="margin-top: 0;">Clôture</h3>
                     <p style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px;">

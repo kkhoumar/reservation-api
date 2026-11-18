@@ -16,11 +16,12 @@ class Payment extends Model
     protected $fillable = [
         'order_id', 'user_id', 'payment_method',
         'amount_due', 'amount_received', 'change_given',
-        'reference', 'status', 'paid_at',
+        'reference', 'status', 'in_sacoche', 'paid_at',
     ];
 
     protected $casts = [
         'paid_at' => 'datetime',
+        'in_sacoche' => 'boolean',
     ];
 
     public function order(): BelongsTo
@@ -75,6 +76,9 @@ class Payment extends Model
                 'amount_received' => $amountReceived,
                 'change_given' => $amountReceived - $order->total,
                 'status' => 'completed',
+                // Encaissé par une serveuse : l'argent reste dans sa sacoche
+                // jusqu'au versement à la caisse
+                'in_sacoche' => $cashier->isServer(),
                 'paid_at' => now(),
             ]);
 

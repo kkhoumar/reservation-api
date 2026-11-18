@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages et données de démo (108 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo et sacoches (122 tests).
 
 ---
 
@@ -210,6 +210,15 @@ L'appli ne repose pas sur des profils ni sur de nombreux réglages : chaque rég
 - **Caisse attendue** = fonds de départ + ventes encaissées directement + versements reçus + remboursements d'ardoise − dépenses.
 - **Petit maquis** (patron + gérante) : une seule sacoche, celle de la gérante, aucun versement.
 - **Grand maquis** : une sacoche par serveuse, et l'écran montre qui doit encore reverser combien.
+
+Mis en place :
+- Un paiement encaissé par une **serveuse** est marqué `payments.in_sacoche`. Ce marqueur est figé au moment du paiement : changer son rôle plus tard ne réécrit pas l'historique. L'argent n'entre pas dans la caisse.
+- **Sacoches** (`/sacoches`, réservé au patron, à la gérante et à la caissière) : ce que chaque serveuse a encaissé, versé et a encore sur elle. Le bouton « Recevoir » enregistre un versement (`cash_remittances`), complet ou partiel. Le versement est rattaché à la caisse ouverte.
+- **Refus** : un versement supérieur au contenu de la sacoche, un montant nul, une personne qui n'est pas serveuse de ce maquis, ou une caisse fermée.
+- **Caisse** : le détail affiche « + Versements des serveuses », et la clôture rappelle les **sacoches non vidées**.
+- La serveuse voit **« Ma sacoche : X FCFA »** en haut de l'écran.
+- Le solde d'une sacoche se reporte d'un jour à l'autre : ce qui n'est pas versé reste dû.
+- Petit maquis : tant que personne n'a le rôle de serveuse, rien ne change. Tout va directement en caisse.
 
 **Seulement 2 choix par maquis :**
 - **Vente rapide (comptoir)** et/ou **service à table** ;
