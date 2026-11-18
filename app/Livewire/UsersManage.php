@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -74,6 +75,20 @@ class UsersManage extends Component
         $target ? Gate::authorize('update', $target) : Gate::authorize('create', User::class);
 
         $this->phone = User::normalizePhone($this->phone);
+
+        // Le numéro appartient à un ancien employé du maquis : on le réintègre plutôt
+        $former = User::where('phone', $this->phone)
+            ->where('restaurant_id', auth()->user()->currentRestaurantId())
+            ->whereNotNull('left_at')
+            ->when($this->editingId, fn ($q) => $q->whereKeyNot($this->editingId))
+            ->first();
+
+        if ($former) {
+            $this->addError('phone', "Ce numéro est celui de {$former->first_name} {$former->last_name}, ancien employé : réintégrez-le dans « Anciens employés ».");
+
+            return;
+        }
+
         $this->validate(messages: [
             'phone.regex' => 'Numéro invalide : 10 chiffres, par exemple 07 11 22 33 44.',
             'phone.unique' => 'Ce numéro est déjà utilisé par un autre compte.',
@@ -122,19 +137,71 @@ class UsersManage extends Component
 
         Gate::authorize('toggleStatus', $user);
 
+        if ($user->hasLeft()) {
+            return;
+        }
+
         $user->update(['status' => $user->status === 'active' ? 'inactive' : 'active']);
+    }
+
+    /**
+     * Départ d'un employé : il ne peut plus se connecter et sort de la liste,
+     * mais son historique (ventes, caisse, crédits) reste intact.
+     */
+    public function removeUser($userId)
+    {
+        $user = $this->findStaff((int) $userId);
+        Gate::authorize('remove', $user);
+
+        if ($user->hasLeft()) {
+            return;
+        }
+
+        if ($user->isServer() && ($balance = $user->sacocheBalance()) > 0) {
+            session()->flash('error', "{$user->first_name} doit encore verser " . number_format($balance, 0, ',', ' ')
+                . ' FCFA de sa sacoche. Recevez son versement avant de la retirer.');
+
+            return;
+        }
+
+        $user->forceFill(['status' => 'inactive', 'left_at' => now()])->save();
+
+        Log::info('Employé retiré du maquis', [
+            'by' => auth()->id(),
+            'user_id' => $user->id,
+            'role' => $user->role,
+            'restaurant_id' => $user->restaurant_id,
+        ]);
+
+        if ($this->editingId === $user->id) {
+            $this->showForm = false;
+        }
+
+        session()->flash('success', "{$user->first_name} {$user->last_name} a été retiré(e) du maquis. Son historique est conservé.");
+    }
+
+    /** Un ancien employé revient : il retrouve son compte et son historique. */
+    public function restoreUser($userId)
+    {
+        $user = $this->findStaff((int) $userId);
+        Gate::authorize('remove', $user);
+
+        $user->forceFill(['status' => 'active', 'left_at' => null])->save();
+
+        session()->flash('success', "{$user->first_name} {$user->last_name} fait de nouveau partie de l'équipe.");
     }
 
     public function render()
     {
         $actor = auth()->user();
-        $users = User::where('restaurant_id', $actor->currentRestaurantId())
+        $all = User::where('restaurant_id', $actor->currentRestaurantId())
             ->orderBy('role')
             ->orderBy('first_name')
             ->get();
 
         return view('livewire.users-manage', [
-            'users' => $users,
+            'users' => $all->whereNull('left_at')->values(),
+            'formerUsers' => $all->whereNotNull('left_at')->sortByDesc('left_at')->values(),
             'assignableRoles' => UserPolicy::assignableRoles($actor),
         ]);
     }

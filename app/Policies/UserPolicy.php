@@ -61,4 +61,13 @@ class UserPolicy
         // Personne ne se désactive soi-même
         return $actor->id !== $target->id && $this->update($actor, $target);
     }
+
+    /**
+     * Retirer quelqu'un du maquis (départ). Jamais soi-même, jamais le
+     * propriétaire ; une gérante ne retire que des caissiers et des serveurs.
+     */
+    public function remove(User $actor, User $target): bool
+    {
+        return $target->role !== 'owner' && $this->toggleStatus($actor, $target);
+    }
 }

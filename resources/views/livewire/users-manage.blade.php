@@ -106,10 +106,19 @@
                             @endcan
                             @can('toggleStatus', $user)
                                 <button wire:click="toggleStatus({{ $user->id }})"
-                                        wire:confirm="Confirmer ?"
-                                        class="btn {{ $user->status === 'active' ? 'btn-danger' : 'btn-primary' }}"
-                                        style="padding: 6px 12px; font-size: 12px;">
+                                        wire:confirm="{{ $user->status === 'active' ? 'Désactiver ' . $user->first_name . ' pour un temps (congé, absence) ? Il ne pourra plus se connecter.' : 'Réactiver ' . $user->first_name . ' ?' }}"
+                                        title="Pour une absence temporaire : congé, maladie…"
+                                        class="btn btn-ghost"
+                                        style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">
                                     {{ $user->status === 'active' ? 'Désactiver' : 'Réactiver' }}
+                                </button>
+                            @endcan
+                            @can('remove', $user)
+                                <button wire:click="removeUser({{ $user->id }})"
+                                        wire:confirm="{{ $user->first_name }} quitte le maquis ? Il ne pourra plus se connecter et sortira de la liste. Ses ventes et son historique sont conservés. Vous pourrez le réintégrer s'il revient."
+                                        class="btn btn-danger"
+                                        style="padding: 6px 12px; font-size: 12px;">
+                                    Retirer du maquis
                                 </button>
                             @endcan
                         </td>
@@ -118,4 +127,42 @@
             </tbody>
         </table>
     </div>
+
+    <p style="font-size: 12px; color: var(--color-text-secondary); margin-top: 10px;">
+        <strong>Désactiver</strong> : absence temporaire (congé, maladie). <strong>Retirer du maquis</strong> : la personne est partie.
+        Dans les deux cas, ses ventes et son historique sont conservés.
+    </p>
+
+    @if ($formerUsers->isNotEmpty())
+        <details style="margin-top: 20px;">
+            <summary style="cursor: pointer; font-weight: 700; font-size: 15px;">Anciens employés ({{ $formerUsers->count() }})</summary>
+            <div class="card" style="padding: 0; overflow: hidden; margin-top: 10px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tbody>
+                        @foreach ($formerUsers as $former)
+                            @php $roleLabels = ['owner' => 'Propriétaire', 'manager' => 'Gérant', 'server' => 'Serveur', 'cashier' => 'Caissier']; @endphp
+                            <tr style="border-bottom: 1px solid var(--color-border);">
+                                <td style="padding: 12px 20px;">
+                                    <strong>{{ $former->first_name }} {{ $former->last_name }}</strong>
+                                    <span style="display: block; font-size: 12px; color: var(--color-text-secondary);">{{ $roleLabels[$former->role] ?? $former->role }} · {{ $former->phone }}</span>
+                                </td>
+                                <td style="padding: 12px 20px; color: var(--color-text-secondary); font-size: 13px;">
+                                    Parti(e) le {{ $former->left_at->format('d/m/Y') }}
+                                </td>
+                                <td style="padding: 12px 20px; text-align: right;">
+                                    @can('remove', $former)
+                                        <button wire:click="restoreUser({{ $former->id }})"
+                                                wire:confirm="Réintégrer {{ $former->first_name }} dans l'équipe ?"
+                                                class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">
+                                            Réintégrer
+                                        </button>
+                                    @endcan
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    @endif
 </div>

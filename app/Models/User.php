@@ -26,7 +26,40 @@ class User extends Authenticatable
         'password' => 'hashed',
         'is_platform_admin' => 'boolean',
         'must_change_password' => 'boolean',
+        'left_at' => 'datetime',
     ];
+
+    /**
+     * Garde-fou : on n'efface jamais quelqu'un qui a un historique.
+     * Les ventes, paiements, caisses, dépenses et crédits sont liés à leur
+     * auteur en suppression « en cascade » : effacer la personne effacerait
+     * aussi tout cet argent. On la retire du maquis à la place (left_at).
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            if ($user->hasHistory()) {
+                throw new \App\Exceptions\BusinessRuleException(
+                    "{$user->first_name} a un historique (ventes, caisse ou crédits) : retirez-le du maquis au lieu de l'effacer."
+                );
+            }
+        });
+    }
+
+    public function hasHistory(): bool
+    {
+        return Order::withoutGlobalScopes()->where('user_id', $this->id)->exists()
+            || Payment::withoutGlobalScopes()->where('user_id', $this->id)->exists()
+            || CashRegister::withoutGlobalScopes()->where('opened_by', $this->id)->exists()
+            || Expense::withoutGlobalScopes()->where('user_id', $this->id)->exists()
+            || CreditTransaction::withoutGlobalScopes()->where('user_id', $this->id)->exists()
+            || CashRemittance::withoutGlobalScopes()->where('server_id', $this->id)->orWhere('received_by', $this->id)->exists();
+    }
+
+    public function hasLeft(): bool
+    {
+        return $this->left_at !== null;
+    }
 
     /**
      * Met un numéro ivoirien au format unique « 0711223344 » :

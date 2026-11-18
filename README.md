@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord et petit maquis à une personne (219 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne et départ d'un employé (229 tests).
 
 ---
 
@@ -271,6 +271,16 @@ Il y a **un seul paiement par bon**, ce qui évite de le compter deux fois :
 - l'ardoise.
 
 Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du client.
+
+### Départ d'un employé : « Retirer du maquis »
+Dans **Utilisateurs**, le bouton **« Retirer du maquis »** sert quand une serveuse, une caissière ou une gérante s'en va.
+- La personne **ne peut plus se connecter** et passe dans **« Anciens employés »**, avec sa date de départ. On peut la **réintégrer** si elle revient.
+- **Rien n'est effacé** : ses ventes, ses paiements, ses caisses et ses crédits gardent son nom.
+- **« Désactiver »** reste là pour une absence temporaire (congé, maladie).
+- **Qui peut retirer qui** : le patron retire gérants, caissiers et serveurs ; la gérante retire caissiers et serveurs. Personne ne se retire soi-même, et le propriétaire ne peut pas être retiré.
+- **Une serveuse qui a encore de l'argent dans sa sacoche** ne peut pas être retirée avant d'avoir versé.
+- **Recréer un ancien employé** avec le même numéro est refusé, avec un message qui propose de le réintégrer.
+- **Garde-fou dans le code** (`User::booted`) : effacer pour de bon quelqu'un qui a un historique est **interdit**. Sinon, à cause des suppressions « en cascade » de la base, ses ventes, paiements et caisses disparaîtraient avec lui.
 
 ### Petit maquis : une seule personne fait tout
 L'écran s'adapte au personnel créé, sans aucun réglage (`Restaurant::hasActiveServers()`).
