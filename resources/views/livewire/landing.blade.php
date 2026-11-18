@@ -6,7 +6,7 @@
         .lp section { padding: 88px 0; scroll-margin-top: 70px; }
         .lp .alt { background: var(--color-mint); }
         .lp .eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(210,98,42,0.10); color: var(--color-accent); font-size: 12px; font-weight: 800; padding: 7px 14px; border-radius: 999px; letter-spacing: .04em; text-transform: uppercase; }
-        .lp h2 { font-size: 40px; font-weight: 800; text-align: center; margin: 16px auto 12px; line-height: 1.12; max-width: 760px; }
+        .lp h2 { font-size: 34px; font-weight: 800; text-align: center; margin: 16px auto 12px; line-height: 1.12; max-width: 760px; }
         .lp .lead { text-align: center; color: var(--color-text-secondary); font-size: 18px; margin: 0 auto 48px; max-width: 640px; line-height: 1.6; }
         .lp .center { text-align: center; }
         .lp .card { background: white; border: 1px solid var(--color-border); border-radius: 20px; padding: 26px; box-shadow: var(--shadow-sm); transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
@@ -34,9 +34,9 @@
             mask-image: linear-gradient(to bottom, black, transparent 85%); -webkit-mask-image: linear-gradient(to bottom, black, transparent 85%); }
         .lp .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.08fr .92fr; gap: 56px; align-items: center; padding-top: 76px; padding-bottom: 92px; }
         .lp .hero .eyebrow { background: rgba(255,255,255,.12); color: #FFD7BF; }
-        .lp .hero h1 { font-size: 58px; font-weight: 800; line-height: 1.04; margin: 22px 0 22px; letter-spacing: -0.035em; }
+        .lp .hero h1 { font-size: 46px; font-weight: 800; line-height: 1.1; margin: 22px 0 22px; letter-spacing: -0.035em; }
         .lp .hero h1 .hl { background: linear-gradient(90deg, #FFB37F, #F07A3A); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .lp .hero p.sub { font-size: 19px; color: rgba(255,255,255,.78); line-height: 1.6; margin: 0 0 32px; max-width: 540px; }
+        .lp .hero p.sub { font-size: 17px; color: rgba(255,255,255,.78); line-height: 1.6; margin: 0 0 32px; max-width: 540px; }
         .lp .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
         .lp .hero .btn-ghost-light { display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; font-weight: 700; font-size: 15px; padding: 15px 22px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.28); transition: background .15s, transform .15s; }
         .lp .hero .btn-ghost-light:hover { background: rgba(255,255,255,.08); transform: translateY(-2px); }
@@ -163,7 +163,7 @@
         /* ====== Écrans ====== */
         @media (max-width: 1000px) {
             .lp .hero-grid, .lp .showcase { grid-template-columns: 1fr; }
-            .lp .hero h1 { font-size: 44px; }
+            .lp .hero h1 { font-size: 38px; }
             .lp .grid-4, .lp .steps, .lp .facts { grid-template-columns: repeat(2, 1fr); }
             .lp .fact:nth-child(2) { border-right: none; }
             .lp .fact:nth-child(-n+2) { border-bottom: 1px solid var(--color-border); }
@@ -173,10 +173,10 @@
         @media (max-width: 640px) {
             .lp .wrap { padding: 0 16px; }
             .lp section { padding: 64px 0; }
-            .lp h2 { font-size: 30px; }
+            .lp h2 { font-size: 26px; }
             .lp .lead { font-size: 16px; }
             .lp .hero-grid { padding-top: 44px; padding-bottom: 80px; gap: 40px; }
-            .lp .hero h1 { font-size: 36px; }
+            .lp .hero h1 { font-size: 30px; }
             .lp .grid-3, .lp .grid-4, .lp .steps { grid-template-columns: 1fr; }
             .lp .phone { width: 280px; transform: none; }
             .lp .float { display: none; }
@@ -193,7 +193,7 @@
         <div class="wrap hero-grid">
             <div>
                 <span class="eyebrow"><span aria-hidden="true" style="display: inline-flex; width: 18px; height: 12px; border-radius: 2px; overflow: hidden;"><i style="flex: 1; background: #F77F00;"></i><i style="flex: 1; background: #fff;"></i><i style="flex: 1; background: #009E60;"></i></span> Fait pour les maquis de Côte d'Ivoire</span>
-                <h1>Votre maquis tourne.<br><span class="hl">Votre argent rentre.</span><br>Même quand vous n'êtes pas là.</h1>
+                <h1>Votre maquis tourne.<br><span class="hl">Votre argent rentre.</span><br>Même quand vous n'êtes&nbsp;pas&nbsp;là.</h1>
                 <p class="sub">
                     Commandes, comptoir, caisse, stock et crédits clients sur un simple téléphone.
                     Et chaque soir, le rapport de la journée arrive sur votre WhatsApp.
