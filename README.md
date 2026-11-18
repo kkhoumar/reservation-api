@@ -332,6 +332,16 @@ Un maquis impayé, suspendu ou en fin d'essai n'est plus coupé complètement :
 
 Pas encore fait : le paiement en ligne automatique (CinetPay ou PayDunya), qui demande un compte marchand.
 
+### Super Admin : vider ou supprimer un maquis
+Dans **Établissements → Gérer**, la **zone dangereuse** (`App\Actions\RestaurantDataManager`) propose deux actions. Il faut retaper le nom exact du maquis pour confirmer, et chaque action est journalisée.
+- **Vider les données de test**, avant de remettre le maquis au client :
+  - **efface** les commandes, paiements, caisses, dépenses, mouvements de crédit, versements de sacoche, mouvements de stock et inventaires ;
+  - **garde** les réglages, l'équipe, le menu, les tables et l'abonnement ;
+  - **options** : effacer aussi les clients à crédit, remettre le stock à zéro ;
+  - toutes les tables redeviennent libres.
+- **Supprimer le maquis** : efface tout ce qui lui appartient, équipe et historique d'abonnement compris, grâce aux suppressions en cascade de la base. Un avertissement s'affiche si le maquis a déjà payé un abonnement.
+- Les autres maquis ne sont jamais touchés.
+
 ### Départ d'un employé : « Retirer du maquis »
 Dans **Utilisateurs**, le bouton **« Retirer du maquis »** sert quand une serveuse, une caissière ou une gérante s'en va.
 - La personne **ne peut plus se connecter** et passe dans **« Anciens employés »**, avec sa date de départ. On peut la **réintégrer** si elle revient.

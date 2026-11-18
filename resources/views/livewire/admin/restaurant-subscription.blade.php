@@ -9,7 +9,7 @@
     <div style="margin-bottom: 20px;">
         <a href="{{ route('admin.restaurants') }}" style="font-size: 13px; color: var(--color-text-secondary); text-decoration: none;">← Tous les maquis</a>
         <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin: 8px 0 4px 0;">
-            Abonnement
+            Gérer le maquis
         </div>
         <h1>{{ $restaurant->name }}</h1>
         <div style="font-size: 13px; color: var(--color-text-secondary);">Référence de paiement : <strong>{{ $restaurant->paymentReference() }}</strong></div>
@@ -119,6 +119,55 @@
             @empty
                 <p style="font-size: 13px; color: var(--color-text-secondary);">Aucun paiement enregistré.</p>
             @endforelse
+        </div>
+    </div>
+
+    {{-- ================= Zone dangereuse ================= --}}
+    <div style="margin-top: 32px;">
+        <h3 style="margin: 0 0 4px; color: var(--color-danger);">Zone dangereuse</h3>
+        <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 14px;">Ces actions sont <strong>définitives</strong>. Pour confirmer, tapez le nom exact du maquis : <strong>{{ $restaurant->name }}</strong></p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;">
+            {{-- Vider les données de test --}}
+            <div class="card" style="border: 1.5px solid #F3DDB8;">
+                <h3 style="margin-top: 0;">Vider les données de test</h3>
+                <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: 0; line-height: 1.55;">
+                    Avant de remettre le maquis au client : efface les ventes, paiements, caisses, dépenses, crédits, versements, mouvements de stock et inventaires.
+                    <strong>Garde</strong> les réglages, l'équipe, le menu, les tables et l'abonnement.
+                </p>
+                <div style="background: var(--color-bg); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px;">
+                    Actuellement : {{ $activity['orders'] }} commande(s) · {{ $activity['registers'] }} caisse(s) · {{ $activity['expenses'] }} dépense(s) · {{ $activity['customers'] }} client(s) à crédit
+                </div>
+                <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 6px; cursor: pointer;">
+                    <input type="checkbox" wire:model="resetCustomers"> Effacer aussi les clients à crédit
+                </label>
+                <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 12px; cursor: pointer;">
+                    <input type="checkbox" wire:model="resetStock"> Remettre le stock de tous les produits à zéro
+                </label>
+                <input type="text" wire:model="resetConfirm" placeholder="Nom du maquis pour confirmer" autocomplete="off" style="width: 100%; margin-bottom: 6px;">
+                @error('resetConfirm') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 6px;">{{ $message }}</div> @enderror
+                <button wire:click="resetData" wire:confirm="Vider les données de test de {{ $restaurant->name }} ? C'est définitif." class="btn btn-ghost" style="width: 100%; justify-content: center; color: var(--color-warning); border-color: #F3DDB8; margin-top: 6px;">
+                    Vider les données de test
+                </button>
+            </div>
+
+            {{-- Supprimer le maquis --}}
+            <div class="card" style="border: 1.5px solid #F6C9C9;">
+                <h3 style="margin-top: 0;">Supprimer le maquis</h3>
+                <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: 0; line-height: 1.55;">
+                    Supprime le maquis et <strong>tout</strong> ce qui lui appartient : {{ $activity['users'] }} compte(s) de l'équipe, le menu, les tables, les ventes, la caisse et l'historique d'abonnement.
+                </p>
+                @if ($activity['paid'] > 0)
+                    <div style="background: var(--color-danger-bg); color: #8E2222; border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px;">
+                        ⚠️ Ce maquis a déjà payé {{ $fcfa($activity['paid']) }} FCFA d'abonnement. Vérifiez qu'il s'agit bien d'un maquis de test.
+                    </div>
+                @endif
+                <input type="text" wire:model="deleteConfirm" placeholder="Nom du maquis pour confirmer" autocomplete="off" style="width: 100%; margin-bottom: 6px;">
+                @error('deleteConfirm') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 6px;">{{ $message }}</div> @enderror
+                <button wire:click="deleteRestaurant" wire:confirm="Supprimer définitivement {{ $restaurant->name }} et toutes ses données ?" class="btn btn-danger" style="width: 100%; justify-content: center; margin-top: 6px;">
+                    Supprimer définitivement le maquis
+                </button>
+            </div>
         </div>
     </div>
 </div>

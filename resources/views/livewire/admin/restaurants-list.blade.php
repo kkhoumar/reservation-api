@@ -141,7 +141,7 @@
                             @if ($restaurant->subscription_status !== 'suspended' && ($restaurant->needsRenewalReminder() || $restaurant->isLocked()) && ($remindUrl = $restaurant->reminderWhatsappUrl()))
                                 <a href="{{ $remindUrl }}" target="_blank" rel="noopener" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; text-decoration: none; margin-right: 6px;" title="Message de rappel prêt à envoyer au patron">Relancer</a>
                             @endif
-                            <a href="{{ route('admin.restaurants.subscription', $restaurant->id) }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none; margin-right: 6px;">Abonnement</a>
+                            <a href="{{ route('admin.restaurants.subscription', $restaurant->id) }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none; margin-right: 6px;">Gérer</a>
                             <button wire:click="enterRestaurant({{ $restaurant->id }})"
                                     class="btn btn-secondary"
                                     style="padding: 7px 14px; font-size: 13px;">

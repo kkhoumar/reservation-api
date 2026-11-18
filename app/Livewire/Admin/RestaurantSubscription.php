@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Actions\RecordSubscriptionPayment;
+use App\Actions\RestaurantDataManager;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Plan;
 use App\Models\Restaurant;
@@ -108,6 +109,58 @@ class RestaurantSubscription extends Component
         session()->flash('success', 'Formule enregistrée.');
     }
 
+    // ---------- Zone dangereuse ----------
+
+    public string $resetConfirm = '';
+    public bool $resetCustomers = false;
+    public bool $resetStock = false;
+    public string $deleteConfirm = '';
+
+    /** Il faut retaper le nom exact du maquis (sans tenir compte des majuscules ni des espaces autour). */
+    protected function confirms(string $typed): bool
+    {
+        return mb_strtolower(trim($typed)) === mb_strtolower(trim($this->restaurant()->name));
+    }
+
+    public function resetData(RestaurantDataManager $manager): void
+    {
+        if (! $this->confirms($this->resetConfirm)) {
+            $this->addError('resetConfirm', 'Tapez exactement le nom du maquis pour confirmer.');
+
+            return;
+        }
+
+        $counts = $manager->resetTestData($this->restaurant(), auth()->user(), $this->resetCustomers, $this->resetStock);
+
+        $this->reset(['resetConfirm', 'resetCustomers', 'resetStock']);
+        $total = array_sum($counts);
+        session()->flash('success', "Données de test vidées ({$total} lignes effacées : "
+            . collect($counts)->filter()->map(fn ($n, $k) => "{$n} {$k}")->join(', ')
+            . "). Le menu, les tables, l'équipe et les réglages sont conservés.");
+    }
+
+    public function deleteRestaurant(RestaurantDataManager $manager)
+    {
+        $restaurant = $this->restaurant();
+
+        if (! $this->confirms($this->deleteConfirm)) {
+            $this->addError('deleteConfirm', 'Tapez exactement le nom du maquis pour confirmer.');
+
+            return;
+        }
+
+        $manager->deleteRestaurant($restaurant, auth()->user());
+
+        // Le Super Admin était peut-être « entré » dans ce maquis
+        if ((int) session(\App\Models\User::ADMIN_RESTAURANT_SESSION_KEY) === $restaurant->id) {
+            session()->forget(\App\Models\User::ADMIN_RESTAURANT_SESSION_KEY);
+        }
+
+        session()->flash('success', "Le maquis « {$restaurant->name} » et toutes ses données ont été supprimés.");
+
+        return $this->redirect(route('admin.restaurants'), navigate: false);
+    }
+
     public function render()
     {
         $restaurant = $this->restaurant();
@@ -119,6 +172,14 @@ class RestaurantSubscription extends Component
             'methods' => SubscriptionPayment::METHODS,
             'allowedMonths' => RecordSubscriptionPayment::ALLOWED_MONTHS,
             'activeUsers' => $restaurant->activeUsersCount(),
+            'activity' => [
+                'orders' => \Illuminate\Support\Facades\DB::table('orders')->where('restaurant_id', $restaurant->id)->count(),
+                'registers' => \Illuminate\Support\Facades\DB::table('cash_registers')->where('restaurant_id', $restaurant->id)->count(),
+                'expenses' => \Illuminate\Support\Facades\DB::table('expenses')->where('restaurant_id', $restaurant->id)->count(),
+                'customers' => \Illuminate\Support\Facades\DB::table('customers')->where('restaurant_id', $restaurant->id)->count(),
+                'users' => \Illuminate\Support\Facades\DB::table('users')->where('restaurant_id', $restaurant->id)->count(),
+                'paid' => (int) \Illuminate\Support\Facades\DB::table('subscription_payments')->where('restaurant_id', $restaurant->id)->sum('amount'),
+            ],
         ]);
     }
 }
