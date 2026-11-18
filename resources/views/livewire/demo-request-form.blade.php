@@ -1,6 +1,6 @@
 <div class="demo">
     <style>
-        .demo { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 48px; align-items: start; padding: 48px 0 24px; }
+        .demo { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 48px; align-items: start; padding: 48px 0 72px; }
         .demo .eyebrow { display: inline-block; background: rgba(193,84,30,0.1); color: var(--color-accent); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 999px; }
         .demo h1 { font-size: 36px; font-weight: 900; line-height: 1.1; margin: 16px 0 14px; letter-spacing: -0.03em; }
         .demo .intro { font-size: 16px; color: var(--color-text-secondary); line-height: 1.6; margin: 0 0 28px; }
