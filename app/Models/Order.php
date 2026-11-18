@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Concerns\BelongsToRestaurant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -84,9 +86,45 @@ class Order extends Model
         $this->update(['subtotal' => $subtotal, 'total' => $subtotal]);
     }
 
+    /** Statuts d'une commande pas encore réglée (la table ne peut pas être libérée). */
+    public const OPEN_STATUSES = ['created', 'in_preparation', 'served', 'awaiting_payment'];
+
     public function markAsPaid(): void
     {
         $this->update(['status' => 'paid']);
-        $this->restaurantTable?->update(['status' => 'free']);
+
+        // Paiement avant service : les clients restent et recommandent,
+        // c'est le comptoir qui libère la table quand ils partent
+        if (! $this->restaurant?->paysBeforeService()) {
+            $this->restaurantTable?->update(['status' => 'free']);
+        }
+    }
+
+    /**
+     * Annule une commande non payée et remet ses articles en stock,
+     * en « tout ou rien ».
+     *
+     * @throws BusinessRuleException
+     */
+    public function cancel(): void
+    {
+        DB::transaction(function () {
+            $order = static::whereKey($this->id)->lockForUpdate()->firstOrFail();
+
+            if ($order->isPaid()) {
+                throw new BusinessRuleException('Cette commande est déjà payée : elle ne peut plus être annulée.');
+            }
+
+            if ($order->status === 'cancelled') {
+                throw new BusinessRuleException('Cette commande est déjà annulée.');
+            }
+
+            foreach ($order->items as $item) {
+                Product::whereKey($item->product_id)->increment('stock_quantity', $item->quantity);
+            }
+
+            $order->update(['status' => 'cancelled']);
+            $this->status = 'cancelled';
+        });
     }
 }

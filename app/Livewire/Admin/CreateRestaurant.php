@@ -31,6 +31,7 @@ class CreateRestaurant extends Component
     public int $trialDays = 14;
     public string $serviceMode = 'both';
     public bool $creditEnabled = false;
+    public string $paymentTiming = 'before';
 
     // Propriétaire
     public string $ownerFirstName = '';
@@ -78,6 +79,7 @@ class CreateRestaurant extends Component
             'trialDays' => 'required|integer|min:0|max:90',
             'serviceMode' => ['required', Rule::in(array_keys(\App\Models\Restaurant::SERVICE_MODES))],
             'creditEnabled' => 'boolean',
+            'paymentTiming' => ['required', Rule::in(array_keys(\App\Models\Restaurant::PAYMENT_TIMINGS))],
             'ownerFirstName' => 'required|string|max:80',
             'ownerLastName' => 'required|string|max:80',
             'ownerPhone' => ['required', 'regex:' . User::PHONE_REGEX, Rule::unique('users', 'phone')],
@@ -111,6 +113,7 @@ class CreateRestaurant extends Component
                 'trial_days' => $this->trialDays,
                 'service_mode' => $this->serviceMode,
                 'credit_enabled' => $this->creditEnabled,
+                'payment_timing' => $this->paymentTiming,
             ],
             [
                 'first_name' => trim($this->ownerFirstName),
@@ -165,6 +168,7 @@ class CreateRestaurant extends Component
         return view('livewire.admin.create-restaurant', [
             'types' => self::TYPES,
             'modes' => \App\Models\Restaurant::SERVICE_MODES,
+            'timings' => \App\Models\Restaurant::PAYMENT_TIMINGS,
             'whatsapp' => $this->whatsappMessage(),
         ]);
     }

@@ -82,6 +82,16 @@
                 </div>
 
                 <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+                @if ($paysBefore)
+                    {{-- Paiement avant service : l'argent va au comptoir, puis on sert --}}
+                    <button wire:click="sendToCounter" class="btn btn-primary" style="justify-content: center;">Envoyer au comptoir</button>
+                    @if ($canCollect)
+                        <button wire:click="goToPayment" class="btn btn-ghost" style="justify-content: center;">Encaisser tout de suite</button>
+                    @endif
+                    <div style="font-size: 12px; color: var(--color-text-secondary);">
+                        Apporte l'argent au comptoir : le bon est servi une fois encaissé.
+                    </div>
+                @else
                     @if ($order->status === 'created')
                         <button wire:click="sendToKitchen" class="btn btn-secondary">Envoyer en cuisine</button>
                     @elseif ($order->status === 'in_preparation')
@@ -91,6 +101,7 @@
                     @if (in_array($order->status, ['served', 'in_preparation', 'created']))
                         <button wire:click="goToPayment" class="btn btn-primary">Passer au paiement</button>
                     @endif
+                @endif
                 </div>
             @endif
         </div>

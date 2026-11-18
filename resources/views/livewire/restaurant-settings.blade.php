@@ -29,6 +29,20 @@
         </div>
 
         <div class="card" style="margin-bottom: 16px;">
+            <h3 style="margin-top: 0;">Moment du paiement</h3>
+            @foreach ($timings as $value => $timing)
+                <label style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid {{ $paymentTiming === $value ? 'var(--color-primary)' : 'var(--color-border)' }}; border-radius: 10px; margin-bottom: 8px; cursor: pointer;">
+                    <input type="radio" wire:model.live="paymentTiming" value="{{ $value }}" style="margin-top: 3px;">
+                    <span>
+                        <strong>{{ $timing['label'] }}</strong>
+                        <span style="display: block; font-size: 13px; color: var(--color-text-secondary);">{{ $timing['hint'] }}</span>
+                    </span>
+                </label>
+            @endforeach
+            @error('paymentTiming') <div style="color: var(--color-danger); font-size: 13px; margin-top: 6px;">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="card" style="margin-bottom: 16px;">
             <h3 style="margin-top: 0;">Ardoise (crédit client)</h3>
             <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer;">
                 <input type="checkbox" wire:model="creditEnabled" style="margin-top: 3px;">

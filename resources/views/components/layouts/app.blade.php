@@ -327,15 +327,24 @@
                     Vente rapide
                 </a>
             @endif
+            @php $paysBefore = $currentRestaurant?->paysBeforeService() ?? false; @endphp
+            @if($paysBefore && auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
+                <a href="{{ route('counter') }}" class="sidebar-link {{ request()->routeIs('counter') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18v10H3z"/><path d="M7 10V6h10v4"/><path d="M12 14h.01"/></svg>
+                    Comptoir
+                </a>
+            @endif
             @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager', 'cashier'])))
                 <a href="{{ route('cash-register.manage') }}" class="sidebar-link {{ request()->routeIs('cash-register.manage') ? 'active' : '' }}">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3v4M8 3v4"/></svg>
                     Caisse
                 </a>
-                <a href="{{ route('sacoches') }}" class="sidebar-link {{ request()->routeIs('sacoches') ? 'active' : '' }}">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12H5L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
-                    Sacoches
-                </a>
+                @unless ($paysBefore)
+                    <a href="{{ route('sacoches') }}" class="sidebar-link {{ request()->routeIs('sacoches') ? 'active' : '' }}">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12H5L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+                        Sacoches
+                    </a>
+                @endunless
             @endif
             @if(auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager'])))
                 <a href="{{ route('cash-register.history') }}" class="sidebar-link {{ request()->routeIs('cash-register.history') ? 'active' : '' }}">
@@ -393,8 +402,8 @@
             <div class="date">{{ ucfirst(\Carbon\Carbon::now()->locale('fr')->isoFormat('dddd D MMMM YYYY')) }}</div>
             <div class="acting-user">
                 @auth
-                    @if (auth()->user()->isServer())
-                        @php $sacoche = auth()->user()->sacocheBalance(); @endphp
+                    @php $sacoche = auth()->user()->isServer() ? auth()->user()->sacocheBalance() : 0; @endphp
+                    @if (auth()->user()->isServer() && (! $paysBefore || $sacoche > 0))
                         <div title="Argent encaissé à verser à la caisse" style="margin-right: 8px; padding: 5px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: {{ $sacoche > 0 ? 'rgba(193,84,30,0.12)' : 'rgba(94,191,160,0.15)' }}; color: {{ $sacoche > 0 ? 'var(--color-accent)' : 'var(--color-primary)' }};">
                             Ma sacoche : {{ number_format($sacoche, 0, ',', ' ') }} FCFA
                         </div>

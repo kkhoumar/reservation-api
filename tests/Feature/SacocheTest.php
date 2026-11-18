@@ -31,7 +31,8 @@ class SacocheTest extends TestCase
     {
         parent::setUp();
 
-        $this->maquis = Restaurant::factory()->create();
+        // La sacoche sert aux maquis où la serveuse encaisse elle-même (paiement à la fin)
+        $this->maquis = Restaurant::factory()->create(['payment_timing' => 'after']);
         $this->caissier = User::factory()->cashier()->create(['restaurant_id' => $this->maquis->id]);
         $this->aya = User::factory()->server()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Aya']);
 

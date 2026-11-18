@@ -1,4 +1,10 @@
 <div>
+    @if (session('success'))
+        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
+            {{ session('success') }}
+        </div>
+    @endif
+
     <h1 style="color: var(--color-primary);">Plan des tables</h1>
 
     @foreach ($zones as $zone)
@@ -23,6 +29,11 @@
                         <div style="font-size: 12px; color: var(--color-text-secondary);">
                             {{ $table->capacity }} places
                         </div>
+                        @if ($atCounter[$table->id] ?? 0)
+                            <div style="margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--color-accent);">
+                                {{ $atCounter[$table->id] }} bon{{ $atCounter[$table->id] > 1 ? 's' : '' }} au comptoir
+                            </div>
+                        @endif
                     </div>
                 </a>
             @endforeach

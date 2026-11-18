@@ -21,8 +21,16 @@ class TablesBoard extends Component
             ->where('restaurant_id', auth()->user()->currentRestaurantId())
             ->get();
 
+        // Bons envoyés au comptoir et pas encore encaissés, par table
+        $atCounter = \App\Models\Order::where('status', 'awaiting_payment')
+            ->whereNotNull('table_id')
+            ->selectRaw('table_id, count(*) as bons')
+            ->groupBy('table_id')
+            ->pluck('bons', 'table_id');
+
         return view('livewire.tables-board', [
             'zones' => $zones,
+            'atCounter' => $atCounter,
             'quickSale' => (bool) auth()->user()->currentRestaurant()?->usesQuickSale(),
         ]);
     }

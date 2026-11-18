@@ -14,7 +14,7 @@ class Restaurant extends Model
         'name', 'logo', 'type', 'phone', 'email', 'address',
         'commune', 'city', 'opening_hours',
         'subscription_status', 'trial_ends_at',
-        'service_mode', 'credit_enabled',
+        'service_mode', 'credit_enabled', 'payment_timing',
     ];
 
     protected $casts = [
@@ -25,7 +25,18 @@ class Restaurant extends Model
     protected $attributes = [
         'service_mode' => 'both',
         'credit_enabled' => false,
+        'payment_timing' => 'before',
     ];
+
+    public const PAYMENT_TIMINGS = [
+        'before' => ['label' => 'Paiement avant service', 'hint' => 'La serveuse apporte l\'argent au comptoir, puis on sert. Pas d\'argent, pas de boisson.'],
+        'after' => ['label' => 'Paiement à la fin', 'hint' => 'Le client consomme, puis paie l\'addition en partant.'],
+    ];
+
+    public function paysBeforeService(): bool
+    {
+        return $this->payment_timing !== 'after';
+    }
 
     public const SERVICE_MODES = [
         'both' => ['label' => 'Tables et vente rapide', 'hint' => 'Service à table, et vente directe au comptoir.'],

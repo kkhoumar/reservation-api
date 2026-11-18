@@ -24,6 +24,12 @@ class TakePayment extends Component
     {
         // La commande doit appartenir au restaurant de l'utilisateur (sinon 404)
         $this->orderId = Order::findOrFail($order)->id;
+
+        // Paiement avant service : la serveuse n'encaisse pas, elle apporte l'argent au comptoir
+        if (auth()->user()->isServer() && auth()->user()->currentRestaurant()?->paysBeforeService()) {
+            session()->flash('error', "C'est le comptoir qui encaisse.");
+            $this->redirect(route('tables.index'), navigate: false);
+        }
     }
 
     public function getOrderProperty()
@@ -38,6 +44,10 @@ class TakePayment extends Component
 
     public function confirmPayment()
     {
+        if (auth()->user()->isServer() && auth()->user()->currentRestaurant()?->paysBeforeService()) {
+            abort(403);
+        }
+
         $this->validate([
             'amountReceived' => 'required|integer|min:0|max:100000000',
         ]);

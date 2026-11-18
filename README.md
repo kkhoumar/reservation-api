@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo et sacoches (122 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches et comptoir (139 tests).
 
 ---
 
@@ -219,9 +219,30 @@ Mis en place :
 - La serveuse voit **« Ma sacoche : X FCFA »** en haut de l'écran.
 - Le solde d'une sacoche se reporte d'un jour à l'autre : ce qui n'est pas versé reste dû.
 - Petit maquis : tant que personne n'a le rôle de serveuse, rien ne change. Tout va directement en caisse.
+- La sacoche ne concerne que le **paiement à la fin**. En paiement avant service, la serveuse n'encaisse pas : le menu Sacoches est masqué.
 
-**Seulement 2 choix par maquis :**
+### Paiement avant service : le bon de comptoir (par défaut)
+C'est l'habitude des maquis : la serveuse apporte l'argent au comptoir, puis on sert. **Pas d'argent, pas de boisson.**
+1. **La serveuse** prend la tournée et clique sur **« Envoyer au comptoir »**. Le bon passe en `awaiting_payment` et la table reste occupée.
+2. **Le comptoir** (`/comptoir`, réservé au patron, à la gérante et à la caissière) voit les bons arriver, rafraîchis toutes les 5 secondes : table, serveuse, articles, total.
+3. **« Encaisser »**, puis on saisit le montant reçu et la monnaie s'affiche. **« Encaissé, servir »** fait entrer l'argent directement en caisse.
+4. **Chaque tournée est un nouveau bon** sur la même table.
+5. **Quand les clients partent**, « Libérer » remet la table à libre. C'est refusé tant qu'un bon n'est pas réglé.
+6. **Annuler le bon** (le client renonce) remet les articles en stock. Un bon payé ne s'annule pas.
+7. **« Apporté aujourd'hui »** : le nombre de bons et le montant apporté par chaque serveuse.
+
+Protections :
+- **La serveuse ne peut pas encaisser**, ni par le bouton ni par l'adresse de la page.
+- **Un bon ne s'encaisse qu'une fois**, même si deux personnes cliquent en même temps.
+- **On ne change pas de mode** tant que des bons attendent au comptoir.
+
+Le patron, la gérante et la caissière peuvent aussi **« Encaisser tout de suite »** une vente qu'ils prennent eux-mêmes.
+
+**Le stock** est réservé dès que l'article est ajouté au bon, ce qui évite de vendre deux fois la dernière bouteille. Il est rendu si le bon est annulé.
+
+**Seulement 3 choix par maquis :**
 - **Vente rapide (comptoir)** et/ou **service à table** ;
+- **Paiement avant service** (par défaut) ou **à la fin** (`restaurants.payment_timing`) ;
 - **Ardoise** activée ou non.
 
 Le reste se déduit automatiquement : pas de compte cuisine, pas de ticket cuisine ; pas de serveuses, pas d'écran de versement ; pas de tables, vente au comptoir. C'est la plateforme qui configure le maquis à l'installation.

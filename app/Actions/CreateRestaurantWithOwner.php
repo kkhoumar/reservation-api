@@ -36,6 +36,7 @@ class CreateRestaurantWithOwner
                 'city' => $restaurant['city'] ?: null,
                 'service_mode' => $restaurant['service_mode'] ?? 'both',
                 'credit_enabled' => $restaurant['credit_enabled'] ?? false,
+                'payment_timing' => $restaurant['payment_timing'] ?? 'before',
                 'subscription_status' => $trialDays > 0 ? 'trial' : 'active',
                 'trial_ends_at' => $trialDays > 0 ? now()->addDays($trialDays)->endOfDay() : null,
             ]);

@@ -219,11 +219,20 @@ class NewOrder extends Component
      */
     public function goToPayment()
     {
+        $paysBefore = $this->paysBeforeService();
+
+        // Paiement avant service : seul le comptoir encaisse
+        if ($paysBefore && auth()->user()->isServer()) {
+            session()->flash('error', "C'est le comptoir qui encaisse : envoie le bon au comptoir.");
+
+            return;
+        }
+
         if (!$this->changeStatus('awaiting_payment')) {
             return;
         }
 
-        if ($this->tableId) {
+        if ($this->tableId && ! $paysBefore) {
             RestaurantTable::find($this->tableId)?->update([
                 'status' => 'awaiting_payment'
             ]);
@@ -233,6 +242,35 @@ class NewOrder extends Component
             'payment.take',
             ['order' => $this->orderId]
         );
+    }
+
+    /**
+     * Paiement avant service : la serveuse envoie le bon au comptoir.
+     * Le comptoir encaisse l'argent qu'elle apporte, puis on sert.
+     * La table reste occupée : la tournée suivante fera un nouveau bon.
+     */
+    public function sendToCounter()
+    {
+        if (! $this->paysBeforeService()) {
+            return;
+        }
+
+        if (!$this->changeStatus('awaiting_payment')) {
+            return;
+        }
+
+        $order = $this->order;
+        session()->flash('success', "Bon {$order->order_number} envoyé au comptoir : "
+            . number_format($order->total, 0, ',', ' ') . ' FCFA à encaisser.');
+
+        return $this->tableId
+            ? redirect()->route('tables.index')
+            : redirect()->route('orders.new');
+    }
+
+    protected function paysBeforeService(): bool
+    {
+        return (bool) auth()->user()->currentRestaurant()?->paysBeforeService();
     }
 
     /**
@@ -301,6 +339,8 @@ class NewOrder extends Component
         return view('livewire.new-order', [
             'categories' => $this->categories,
             'order' => $this->order,
+            'paysBefore' => $this->paysBeforeService(),
+            'canCollect' => ! auth()->user()->isServer(),
         ]);
     }
 }
