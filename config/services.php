@@ -43,6 +43,7 @@ return [
         // Modèle de message validé par Meta (voir README)
         'report_template' => env('WHATSAPP_REPORT_TEMPLATE', 'rapport_caisse'),
         'reminder_template' => env('WHATSAPP_REMINDER_TEMPLATE', 'rappel_abonnement'),
+        'demo_template' => env('WHATSAPP_DEMO_TEMPLATE', 'nouvelle_demande'),
         'template_language' => env('WHATSAPP_TEMPLATE_LANGUAGE', 'fr'),
     ],
 

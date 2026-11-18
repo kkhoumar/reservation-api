@@ -420,6 +420,12 @@
                         @endif
                     </div>
                     <div style="display: flex; gap: 8px;">
+                        @php $newDemos = \App\Models\DemoRequest::where('status', 'new')->count(); @endphp
+                        @if ($newDemos > 0)
+                            <a href="{{ route('admin.restaurants') }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">
+                                🔔 {{ $newDemos }} nouvelle{{ $newDemos > 1 ? 's' : '' }} demande{{ $newDemos > 1 ? 's' : '' }} de démo
+                            </a>
+                        @endif
                         <a href="{{ route('admin.restaurants') }}" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">Tous les maquis</a>
                         @if ($currentRestaurant)
                             <form method="POST" action="{{ route('admin.leave-restaurant') }}" style="margin: 0;">

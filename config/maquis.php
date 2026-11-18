@@ -15,6 +15,12 @@ return [
         'whatsapp' => env('PLATFORM_WHATSAPP_NUMBER'),
     ],
 
+    // Alerte au Super Admin à chaque nouvelle demande de démo
+    'alerts' => [
+        'email' => env('PLATFORM_ALERT_EMAIL'),
+        'whatsapp' => env('PLATFORM_ALERT_WHATSAPP'), // format 0700000000
+    ],
+
     // Identité de l'éditeur, affichée dans les conditions et la politique de
     // confidentialité. Vide = « [à compléter] » à l'écran.
     'legal' => [

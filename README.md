@@ -196,6 +196,10 @@ Pas d'inscription libre.
 3. Le patron crée son personnel selon ses besoins : personne, une seule gérante, ou une équipe complète. Seul le patron crée des gérants. Un gérant ne crée que des serveurs et des caissiers.
 
 Mis en place :
+- **Alerte au Super Admin** à chaque nouvelle demande (`App\Jobs\AlertNewDemoRequest`, en arrière-plan), une seule fois par prospect, jamais pour un robot :
+  - **par e-mail** si `PLATFORM_ALERT_EMAIL` est rempli et qu'un serveur d'envoi est configuré (`MAIL_*`) ;
+  - **par WhatsApp** si `PLATFORM_ALERT_WHATSAPP` est rempli et l'API Meta configurée. Modèle **`nouvelle_demande`** (catégorie Utilitaire) : `Nouvelle demande de démo : {{1}} ({{2}}). Téléphone : {{3}} · Commune : {{4}} · Message : {{5}}` ;
+  - **dans l'application** : un bouton « 🔔 N nouvelles demandes de démo » dans le bandeau Super Admin, sans aucune configuration.
 - **`/demande-demo`** : le prospect laisse son nom, son maquis, son numéro et sa commune. Protections : champ piège anti-robot, 3 demandes par heure et par IP, pas de doublon pour un même numéro. `/register` redirige vers cette page.
 - **Super Admin → Établissements** : les demandes en attente s'affichent en haut (appel, WhatsApp, « Contacté », « Sans suite »). « Créer le maquis » ouvre le formulaire pré-rempli.
 - **Super Admin → + Nouveau maquis** : le maquis et le patron sont créés ensemble, avec un mot de passe provisoire facile à dicter (`Kp7m-Wx3r`) et un message WhatsApp prêt à envoyer.

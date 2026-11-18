@@ -100,6 +100,9 @@ class DemoRequestForm extends Component
             ]);
 
             Log::info('Nouvelle demande de démo', ['demo_request_id' => $request->id]);
+
+            // Prévenir le Super Admin (en arrière-plan : le prospect n'attend pas)
+            \App\Jobs\AlertNewDemoRequest::dispatch($request->id)->afterCommit();
         }
 
         $this->sent = true;
