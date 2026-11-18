@@ -16,6 +16,11 @@
                 Équipe
             </div>
             <h1>Utilisateurs</h1>
+            @if ($restaurant?->userLimit())
+                <div style="font-size: 13px; color: var(--color-text-secondary); margin-top: 4px;">
+                    Formule {{ $restaurant->plan->name }} : {{ $restaurant->activeUsersCount() }} / {{ $restaurant->userLimit() }} utilisateurs actifs
+                </div>
+            @endif
         </div>
         <button wire:click="openCreateForm" class="btn btn-primary">+ Ajouter un utilisateur</button>
     </div>

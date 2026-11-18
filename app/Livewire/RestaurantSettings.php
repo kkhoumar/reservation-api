@@ -102,6 +102,10 @@ class RestaurantSettings extends Component
         return view('livewire.restaurant-settings', [
             'modes' => Restaurant::SERVICE_MODES,
             'timings' => Restaurant::PAYMENT_TIMINGS,
+            'restaurant' => $this->restaurant()->loadMissing('plan'),
+            'subscriptionPayments' => $this->restaurant()->subscriptionPayments()->with('plan')->latest()->limit(12)->get(),
+            'plans' => \App\Models\Plan::where('is_active', true)->orderBy('sort_order')->get(),
+            'billing' => array_filter(config('maquis.billing', [])),
         ]);
     }
 }

@@ -41,6 +41,10 @@ class CreateRestaurantWithOwner
                 'trial_ends_at' => $trialDays > 0 ? now()->addDays($trialDays)->endOfDay() : null,
             ]);
 
+            if (! empty($restaurant['plan_id'])) {
+                $newRestaurant->forceFill(['plan_id' => $restaurant['plan_id']])->save();
+            }
+
             $newOwner = new User([
                 'first_name' => $owner['first_name'],
                 'last_name' => $owner['last_name'],

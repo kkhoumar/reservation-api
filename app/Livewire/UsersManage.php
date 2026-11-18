@@ -94,6 +94,10 @@ class UsersManage extends Component
             'phone.unique' => 'Ce numéro est déjà utilisé par un autre compte.',
         ]);
 
+        if (! $target && ! $this->ensureUserLimit()) {
+            return;
+        }
+
         $data = [
             'first_name' => $this->firstName,
             'last_name' => $this->lastName,
@@ -141,7 +145,32 @@ class UsersManage extends Component
             return;
         }
 
+        if ($user->status !== 'active' && ! $this->ensureUserLimit()) {
+            return;
+        }
+
         $user->update(['status' => $user->status === 'active' ? 'inactive' : 'active']);
+    }
+
+    /**
+     * La formule limite le nombre d'utilisateurs actifs (patron compris).
+     * Désactiver ou retirer quelqu'un libère une place.
+     */
+    protected function ensureUserLimit(): bool
+    {
+        $restaurant = auth()->user()->currentRestaurant();
+
+        if (! $restaurant || $restaurant->canAddActiveUser()) {
+            return true;
+        }
+
+        $message = "Votre formule {$restaurant->plan->name} permet {$restaurant->userLimit()} utilisateurs actifs, et ils sont tous pris. "
+            . 'Désactivez ou retirez quelqu\'un, ou passez à une formule supérieure.';
+
+        $this->addError('limit', $message);
+        session()->flash('error', $message);
+
+        return false;
     }
 
     /**
@@ -186,6 +215,10 @@ class UsersManage extends Component
         $user = $this->findStaff((int) $userId);
         Gate::authorize('remove', $user);
 
+        if (! $this->ensureUserLimit()) {
+            return;
+        }
+
         $user->forceFill(['status' => 'active', 'left_at' => null])->save();
 
         session()->flash('success', "{$user->first_name} {$user->last_name} fait de nouveau partie de l'équipe.");
@@ -203,6 +236,7 @@ class UsersManage extends Component
             'users' => $all->whereNull('left_at')->values(),
             'formerUsers' => $all->whereNotNull('left_at')->sortByDesc('left_at')->values(),
             'assignableRoles' => UserPolicy::assignableRoles($actor),
+            'restaurant' => $actor->currentRestaurant()?->loadMissing('plan'),
         ]);
     }
 }

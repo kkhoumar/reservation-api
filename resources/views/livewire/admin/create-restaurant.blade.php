@@ -96,6 +96,16 @@
                     @error('paymentTiming') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
                 </div>
 
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 13px; font-weight: 600;">Formule</label>
+                    <select wire:model="planId" style="width: 100%; margin-top: 6px;">
+                        @foreach ($plans as $plan)
+                            <option value="{{ $plan->id }}">{{ $plan->name }} : {{ number_format($plan->monthly_price, 0, ',', ' ') }} F/mois · {{ $plan->usersLabel() }}</option>
+                        @endforeach
+                    </select>
+                    @error('planId') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                </div>
+
                 <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 14px; cursor: pointer;">
                     <input type="checkbox" wire:model="creditEnabled">
                     Crédit client activé

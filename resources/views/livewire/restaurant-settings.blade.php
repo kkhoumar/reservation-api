@@ -58,4 +58,95 @@
 
         <button type="submit" class="btn btn-primary">Enregistrer</button>
     </form>
+
+    {{-- ===== Mon abonnement ===== --}}
+    @php
+        [$badge, $color] = $restaurant->subscriptionBadge();
+        $end = $restaurant->accessEndsAt();
+        $days = $restaurant->daysLeft();
+        $methodLabels = \App\Models\SubscriptionPayment::METHODS;
+    @endphp
+    <div id="abonnement" class="card" style="max-width: 560px; margin-top: 28px; border-left: 6px solid var(--color-{{ $color }});">
+        <h3 style="margin-top: 0;">Mon abonnement Maquis Express</h3>
+
+        <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 14px;">
+            <div>
+                <div style="color: var(--color-text-secondary); font-size: 12px;">Formule</div>
+                <strong>{{ $restaurant->plan?->name ?? 'Non choisie' }}</strong>
+                @if ($restaurant->plan)
+                    <span style="color: var(--color-text-secondary);"> · {{ number_format($restaurant->plan->monthly_price, 0, ',', ' ') }} FCFA / mois</span>
+                @endif
+            </div>
+            <div>
+                <div style="color: var(--color-text-secondary); font-size: 12px;">Situation</div>
+                <strong style="color: var(--color-{{ $color }});">{{ $badge }}</strong>
+            </div>
+        </div>
+
+        @if ($end)
+            <p style="font-size: 14px; margin: 12px 0 0 0;">
+                @if ($restaurant->subscription_status === 'trial')
+                    Essai gratuit jusqu'au <strong>{{ $end->format('d/m/Y') }}</strong>
+                @else
+                    Accès payé jusqu'au <strong>{{ $end->format('d/m/Y') }}</strong>
+                @endif
+                @if ($days !== null && $days >= 0)
+                    ({{ $days === 0 ? "aujourd'hui" : 'encore ' . $days . ' jour' . ($days > 1 ? 's' : '') }}).
+                @elseif ($restaurant->isInGracePeriod())
+                    : <strong style="color: var(--color-danger);">l'échéance est passée.</strong> L'accès sera coupé le {{ $restaurant->lockAt()->format('d/m/Y') }} à {{ \App\Models\Restaurant::LOCK_HOUR }} h.
+                @endif
+            </p>
+        @endif
+
+        @if ($restaurant->plan?->max_users)
+            <p style="font-size: 13px; color: var(--color-text-secondary); margin: 6px 0 0 0;">
+                {{ $restaurant->activeUsersCount() }} / {{ $restaurant->plan->max_users }} utilisateurs actifs.
+            </p>
+        @endif
+
+        <div style="background: var(--color-bg); border-radius: 10px; padding: 12px 14px; margin-top: 14px; font-size: 14px;">
+            <strong>Comment payer</strong>
+            @if ($billing !== [])
+                <div style="margin-top: 6px;">Envoyez le montant de votre formule à :</div>
+                @foreach (['wave', 'orange_money', 'mtn_momo', 'moov_money'] as $method)
+                    @if (! empty($billing[$method]))
+                        <div>• {{ $methodLabels[$method] }} : <strong>{{ $billing[$method] }}</strong></div>
+                    @endif
+                @endforeach
+            @else
+                <div style="margin-top: 6px;">Contactez Maquis Express pour régler votre abonnement.</div>
+            @endif
+            <div style="margin-top: 6px;">Indiquez la référence <strong>{{ $restaurant->paymentReference() }}</strong>. Votre accès est prolongé dès réception.</div>
+            @if (! empty($billing['whatsapp']))
+                <a href="https://wa.me/225{{ \App\Models\User::normalizePhone($billing['whatsapp']) }}?text={{ rawurlencode('Bonjour, je viens de payer l\'abonnement de ' . $restaurant->name . ' (réf. ' . $restaurant->paymentReference() . ').') }}"
+                   target="_blank" rel="noopener" class="btn btn-ghost" style="margin-top: 10px; text-decoration: none;">
+                    Prévenir Maquis Express sur WhatsApp
+                </a>
+            @endif
+        </div>
+
+        @if ($plans->isNotEmpty())
+            <details style="margin-top: 14px;">
+                <summary style="cursor: pointer; font-size: 14px; font-weight: 600;">Voir les formules</summary>
+                @foreach ($plans as $plan)
+                    <div style="display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                        <span><strong>{{ $plan->name }}</strong>
+                            <span style="display: block; font-size: 12px; color: var(--color-text-secondary);">{{ $plan->usersLabel() }}{{ $plan->description ? ' · ' . $plan->description : '' }}</span>
+                        </span>
+                        <strong style="white-space: nowrap;">{{ number_format($plan->monthly_price, 0, ',', ' ') }} F/mois</strong>
+                    </div>
+                @endforeach
+            </details>
+        @endif
+
+        @if ($subscriptionPayments->isNotEmpty())
+            <h3 style="margin: 16px 0 6px 0; font-size: 14px;">Mes paiements</h3>
+            @foreach ($subscriptionPayments as $p)
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--color-border); font-size: 13px;">
+                    <span>{{ $p->created_at->format('d/m/Y') }} · {{ $p->plan?->name }} · {{ $p->months }} mois <span style="color: var(--color-text-secondary);">({{ $methodLabels[$p->method] ?? $p->method }})</span></span>
+                    <strong>{{ number_format($p->amount, 0, ',', ' ') }} F</strong>
+                </div>
+            @endforeach
+        @endif
+    </div>
 </div>

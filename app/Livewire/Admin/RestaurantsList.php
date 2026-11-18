@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\DemoRequest;
 use App\Models\Restaurant;
+use App\Models\SubscriptionPayment;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
@@ -33,10 +34,16 @@ class RestaurantsList extends Component
     {
         $restaurant = Restaurant::findOrFail($restaurantId);
 
-        // Bloqué (suspendu ou essai terminé) → réactivé ; sinon → suspendu
+        // Bloqué (suspendu, essai terminé ou impayé) → réactivé ; sinon → suspendu
         $newStatus = $restaurant->isLocked() ? 'active' : 'suspended';
 
         $restaurant->update(['subscription_status' => $newStatus]);
+
+        // Réactivation manuelle d'un impayé : sans échéance, sinon il resterait bloqué.
+        // Pour un vrai paiement, utiliser l'écran Abonnement (qui fixe la date payée).
+        if ($newStatus === 'active' && $restaurant->isSubscriptionExpired()) {
+            $restaurant->forceFill(['paid_until' => null])->save();
+        }
 
         Log::info('Super Admin : statut de maquis modifié', [
             'admin_id' => auth()->id(),
@@ -61,8 +68,21 @@ class RestaurantsList extends Component
 
     public function render()
     {
+        $restaurants = Restaurant::with('plan')
+            ->withCount(['users as active_users_count' => fn ($q) => $q->where('status', 'active')->whereNull('left_at')])
+            ->orderBy('name')
+            ->get();
+
+        $paying = $restaurants->filter(fn (Restaurant $r) => $r->subscription_status === 'active' && $r->plan && ! $r->isLocked());
+
         return view('livewire.admin.restaurants-list', [
-            'restaurants' => Restaurant::withCount('users')->orderBy('name')->get(),
+            'restaurants' => $restaurants,
+            'monthlyRevenue' => (int) $paying->sum(fn (Restaurant $r) => $r->plan->monthly_price),
+            'payingCount' => $paying->count(),
+            'collectedThisMonth' => (int) SubscriptionPayment::where('created_at', '>=', now()->startOfMonth())->sum('amount'),
+            'trialCount' => $restaurants->filter(fn (Restaurant $r) => $r->subscription_status === 'trial' && ! $r->isLocked())->count(),
+            'toChaseCount' => $restaurants->filter(fn (Restaurant $r) => $r->subscription_status !== 'suspended'
+                && ($r->isSubscriptionExpired() || $r->isInGracePeriod() || ($r->subscription_status === 'active' && $r->needsRenewalReminder())))->count(),
             'demoRequests' => DemoRequest::whereIn('status', ['new', 'contacted'])->latest()->get(),
         ]);
     }

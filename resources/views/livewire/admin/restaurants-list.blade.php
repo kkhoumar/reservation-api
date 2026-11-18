@@ -6,7 +6,10 @@
             </div>
             <h1>Établissements</h1>
         </div>
-        <a href="{{ route('admin.restaurants.create') }}" class="btn btn-primary" style="text-decoration: none;">+ Nouveau maquis</a>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ route('admin.plans') }}" class="btn btn-ghost" style="text-decoration: none;">Formules et prix</a>
+            <a href="{{ route('admin.restaurants.create') }}" class="btn btn-primary" style="text-decoration: none;">+ Nouveau maquis</a>
+        </div>
     </div>
 
     @if (session('success'))
@@ -54,46 +57,71 @@
         </div>
     @endif
 
+    {{-- Chiffres de la plateforme --}}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <div class="card" style="padding: 14px 16px;">
+            <div style="font-size: 12px; color: var(--color-text-secondary);">Revenu mensuel</div>
+            <div style="font-size: 22px; font-weight: 800; color: var(--color-primary);">{{ number_format($monthlyRevenue, 0, ',', ' ') }} FCFA</div>
+            <div style="font-size: 12px; color: var(--color-text-secondary);">{{ $payingCount }} maquis payant{{ $payingCount > 1 ? 's' : '' }} à jour</div>
+        </div>
+        <div class="card" style="padding: 14px 16px;">
+            <div style="font-size: 12px; color: var(--color-text-secondary);">Encaissé ce mois</div>
+            <div style="font-size: 22px; font-weight: 800;">{{ number_format($collectedThisMonth, 0, ',', ' ') }} FCFA</div>
+        </div>
+        <div class="card" style="padding: 14px 16px;">
+            <div style="font-size: 12px; color: var(--color-text-secondary);">En essai</div>
+            <div style="font-size: 22px; font-weight: 800;">{{ $trialCount }}</div>
+        </div>
+        <div class="card" style="padding: 14px 16px; border-left: 4px solid {{ $toChaseCount > 0 ? 'var(--color-accent)' : 'var(--color-border)' }};">
+            <div style="font-size: 12px; color: var(--color-text-secondary);">À relancer</div>
+            <div style="font-size: 22px; font-weight: 800; color: {{ $toChaseCount > 0 ? 'var(--color-accent)' : 'inherit' }};">{{ $toChaseCount }}</div>
+            <div style="font-size: 12px; color: var(--color-text-secondary);">expire bientôt, en retard ou impayé</div>
+        </div>
+    </div>
+
     <div class="card" style="padding: 0; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr style="border-bottom: 1px solid var(--color-border); text-align: left;">
                     <th style="padding: 14px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600;">Établissement</th>
-                    <th style="padding: 14px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600;">Ville</th>
+                    <th style="padding: 14px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600;">Formule</th>
                     <th style="padding: 14px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600;">Utilisateurs</th>
-                    <th style="padding: 14px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600;">Statut</th>
+                    <th style="padding: 14px 20px; font-size: 12px; color: var(--color-text-secondary); font-weight: 600;">Situation</th>
                     <th style="padding: 14px 20px;"></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($restaurants as $restaurant)
+                    @php
+                        [$badge, $color] = $restaurant->subscriptionBadge();
+                        $end = $restaurant->accessEndsAt();
+                    @endphp
                     <tr style="border-bottom: 1px solid var(--color-border);">
-                        <td style="padding: 14px 20px; font-weight: 600;">{{ $restaurant->name }}</td>
-                        <td style="padding: 14px 20px; color: var(--color-text-secondary);">{{ $restaurant->city ?? '—' }}</td>
-                        <td style="padding: 14px 20px;">{{ $restaurant->users_count }}</td>
                         <td style="padding: 14px 20px;">
-                            @php
-                                $statusColors = [
-                                    'trial' => ['bg' => 'rgba(255,166,43,0.15)', 'text' => '#B36200', 'label' => 'Essai'],
-                                    'active' => ['bg' => 'rgba(101,185,110,0.15)', 'text' => '#0B5D3B', 'label' => 'Actif'],
-                                    'suspended' => ['bg' => 'rgba(232,74,58,0.12)', 'text' => '#E84A3A', 'label' => 'Suspendu'],
-                                ];
-                                $s = $statusColors[$restaurant->subscription_status] ?? $statusColors['trial'];
-                                if ($restaurant->isTrialExpired()) {
-                                    $s = $statusColors['suspended'];
-                                    $s['label'] = 'Essai terminé';
-                                }
-                            @endphp
-                            <span style="background: {{ $s['bg'] }}; color: {{ $s['text'] }}; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
-                                {{ $s['label'] }}
+                            <strong>{{ $restaurant->name }}</strong>
+                            <span style="display: block; font-size: 12px; color: var(--color-text-secondary);">{{ collect([$restaurant->commune, $restaurant->city])->filter()->join(', ') ?: '—' }} · {{ $restaurant->paymentReference() }}</span>
+                        </td>
+                        <td style="padding: 14px 20px;">
+                            {{ $restaurant->plan?->name ?? '—' }}
+                            @if ($restaurant->plan)
+                                <span style="display: block; font-size: 12px; color: var(--color-text-secondary);">{{ number_format($restaurant->plan->monthly_price, 0, ',', ' ') }} F/mois</span>
+                            @endif
+                        </td>
+                        <td style="padding: 14px 20px;">
+                            {{ $restaurant->active_users_count }}{{ $restaurant->plan?->max_users ? ' / ' . $restaurant->plan->max_users : '' }}
+                        </td>
+                        <td style="padding: 14px 20px;">
+                            <span style="background: color-mix(in srgb, var(--color-{{ $color }}) 14%, transparent); color: var(--color-{{ $color }}); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                                {{ $badge }}
                             </span>
-                            @if ($restaurant->subscription_status === 'trial' && $restaurant->trial_ends_at)
+                            @if ($end)
                                 <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">
-                                    jusqu'au {{ $restaurant->trial_ends_at->format('d/m/Y') }}
+                                    {{ $restaurant->subscription_status === 'trial' ? 'essai' : 'payé' }} jusqu'au {{ $end->format('d/m/Y') }}
                                 </div>
                             @endif
                         </td>
                         <td style="padding: 14px 20px; text-align: right; white-space: nowrap;">
+                            <a href="{{ route('admin.restaurants.subscription', $restaurant->id) }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none; margin-right: 6px;">Abonnement</a>
                             <button wire:click="enterRestaurant({{ $restaurant->id }})"
                                     class="btn btn-secondary"
                                     style="padding: 7px 14px; font-size: 13px;">

@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne et départ d'un employé (229 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse, tableau de bord, petit maquis à une personne, départ d'un employé et abonnements (245 tests).
 
 ---
 
@@ -271,6 +271,35 @@ Il y a **un seul paiement par bon**, ce qui évite de le compter deux fois :
 - l'ardoise.
 
 Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du client.
+
+### Abonnements des maquis (le business de la plateforme)
+**Formules** (table `plans`) : Basic, Pro et Premium. Le prix mensuel et le nombre maximum d'utilisateurs actifs se modifient dans **Super Admin → Formules et prix**.
+
+| Formule | Prix de départ (à valider) | Utilisateurs actifs |
+|---|---|---|
+| Basic | 5 000 FCFA / mois | 3 |
+| Pro | 10 000 FCFA / mois | 8 |
+| Premium | 20 000 FCFA / mois | illimité |
+
+**Paiement** (`App\Actions\RecordSubscriptionPayment`) :
+- Le maquis paie par Wave, Orange Money, MTN, Moov, en espèces ou par virement, en indiquant sa référence `ME-0012`.
+- Le Super Admin enregistre le paiement dans **Abonnement** : formule, 1, 3, 6 ou 12 mois, montant (modifiable en cas de remise) et référence. Chaque paiement est conservé dans `subscription_payments`.
+- **Abonnement en cours** : l'accès est prolongé à partir de la date déjà payée, donc aucun jour n'est perdu. **Essai ou impayé** : on repart d'aujourd'hui.
+
+**Échéance** (`restaurants.paid_until`) :
+- **7 jours avant**, le patron et la gérante voient un bandeau « Votre abonnement se termine dans X jours ».
+- Ensuite, **3 jours de grâce** (`Restaurant::GRACE_DAYS`).
+- L'accès est coupé **le matin à 10 h**, jamais en plein service. Les données sont conservées.
+- Un paiement débloque tout de suite.
+
+**Limite d'utilisateurs** : le patron compte dans la limite. Désactiver ou retirer quelqu'un libère une place.
+
+**Écrans** :
+- **Patron** : Paramètres → « Mon abonnement » (formule, échéance, comment payer, ses paiements). La page « Accès suspendu » explique aussi comment payer.
+- **Super Admin** : la liste des maquis affiche le revenu mensuel, l'encaissé du mois, les maquis en essai et ceux **à relancer**, ainsi que la formule, l'échéance et la situation de chaque maquis.
+- Les numéros de paiement de la plateforme se règlent dans `.env` : `PLATFORM_WAVE_NUMBER`, `PLATFORM_ORANGE_NUMBER`, `PLATFORM_MTN_NUMBER`, `PLATFORM_MOOV_NUMBER` et `PLATFORM_WHATSAPP_NUMBER` (voir `config/maquis.php`).
+
+Pas encore fait : le paiement en ligne automatique (CinetPay ou PayDunya), qui demande un compte marchand, et le mode « lecture seule » pour un maquis suspendu.
 
 ### Départ d'un employé : « Retirer du maquis »
 Dans **Utilisateurs**, le bouton **« Retirer du maquis »** sert quand une serveuse, une caissière ou une gérante s'en va.
@@ -414,8 +443,9 @@ Corriger les problèmes ci-dessus. Sortir la logique métier des composants Live
 - Versement des serveuses au caissier en fin de service, avances sur salaire.
 
 ### 4. Abonnement SaaS et suspension
-- Tables `plans`, `subscriptions` et `subscription_payments`. Paiement par Mobile Money avec un webhook signé et sans doublon.
-- Parcours : essai de 14 jours → rappels à J-3 et J-1 → **5 jours de grâce** → suspension.
+- [x] Tables `plans` et `subscription_payments`, plus `restaurants.plan_id` et `paid_until`. Le Super Admin enregistre les paiements.
+- [x] Parcours : essai → rappel dès 7 jours avant → **3 jours de grâce** → coupure le matin à 10 h.
+- [ ] Paiement en ligne par Mobile Money (agrégateur), avec un webhook signé et sans doublon.
 - Une fois suspendu, le compte passe en **lecture seule** : on ne coupe jamais en plein service et aucune donnée n'est supprimée.
 - Commande quotidienne `subscriptions:check`, et un middleware appliqué au web comme à l'API.
 

@@ -458,6 +458,28 @@
                 </div>
             @endif
 
+            {{-- Rappel d'abonnement : échéance proche ou dépassée (patron et gérante) --}}
+            @if ($currentRestaurant && in_array(auth()->user()?->role, ['owner', 'manager'], true) && $currentRestaurant->needsRenewalReminder())
+                @php $daysLeft = $currentRestaurant->daysLeft(); @endphp
+                <div class="card" style="border-left: 6px solid {{ $currentRestaurant->isInGracePeriod() ? 'var(--color-danger)' : 'var(--color-accent)' }}; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px;">
+                    <span>
+                        @if ($currentRestaurant->isInGracePeriod())
+                            <strong>Abonnement à renouveler :</strong> l'échéance est passée. L'accès sera coupé le
+                            {{ $currentRestaurant->lockAt()->format('d/m/Y') }} à {{ \App\Models\Restaurant::LOCK_HOUR }} h.
+                        @elseif ($currentRestaurant->subscription_status === 'trial')
+                            <strong>Votre essai gratuit se termine {{ $daysLeft === 0 ? "aujourd'hui" : 'dans ' . $daysLeft . ' jour' . ($daysLeft > 1 ? 's' : '') }}</strong>
+                            ({{ $currentRestaurant->trial_ends_at->format('d/m/Y') }}).
+                        @else
+                            <strong>Votre abonnement se termine {{ $daysLeft === 0 ? "aujourd'hui" : 'dans ' . $daysLeft . ' jour' . ($daysLeft > 1 ? 's' : '') }}</strong>
+                            ({{ $currentRestaurant->paid_until->format('d/m/Y') }}).
+                        @endif
+                    </span>
+                    @if (auth()->user()->role === 'owner')
+                        <a href="{{ route('settings') }}#abonnement" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">Renouveler</a>
+                    @endif
+                </div>
+            @endif
+
             @if (session('error'))
                 <div class="card" style="border-left: 6px solid var(--color-danger); margin-bottom: 16px;">
                     {{ session('error') }}

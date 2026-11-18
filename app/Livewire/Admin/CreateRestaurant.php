@@ -32,6 +32,7 @@ class CreateRestaurant extends Component
     public string $serviceMode = 'both';
     public bool $creditEnabled = false;
     public string $paymentTiming = 'before';
+    public ?int $planId = null;
 
     // Propriétaire
     public string $ownerFirstName = '';
@@ -48,6 +49,8 @@ class CreateRestaurant extends Component
 
     public function mount(): void
     {
+        $this->planId = \App\Models\Plan::where('is_active', true)->orderBy('sort_order')->value('id');
+
         $demo = request()->integer('demande')
             ? DemoRequest::whereIn('status', ['new', 'contacted'])->find(request()->integer('demande'))
             : null;
@@ -80,6 +83,7 @@ class CreateRestaurant extends Component
             'serviceMode' => ['required', Rule::in(array_keys(\App\Models\Restaurant::SERVICE_MODES))],
             'creditEnabled' => 'boolean',
             'paymentTiming' => ['required', Rule::in(array_keys(\App\Models\Restaurant::PAYMENT_TIMINGS))],
+            'planId' => ['nullable', Rule::exists('plans', 'id')->where('is_active', true)],
             'ownerFirstName' => 'required|string|max:80',
             'ownerLastName' => 'required|string|max:80',
             'ownerPhone' => ['required', 'regex:' . User::PHONE_REGEX, Rule::unique('users', 'phone')],
@@ -114,6 +118,7 @@ class CreateRestaurant extends Component
                 'service_mode' => $this->serviceMode,
                 'credit_enabled' => $this->creditEnabled,
                 'payment_timing' => $this->paymentTiming,
+                'plan_id' => $this->planId,
             ],
             [
                 'first_name' => trim($this->ownerFirstName),
@@ -169,6 +174,7 @@ class CreateRestaurant extends Component
             'types' => self::TYPES,
             'modes' => \App\Models\Restaurant::SERVICE_MODES,
             'timings' => \App\Models\Restaurant::PAYMENT_TIMINGS,
+            'plans' => \App\Models\Plan::where('is_active', true)->orderBy('sort_order')->get(),
             'whatsapp' => $this->whatsappMessage(),
         ]);
     }
