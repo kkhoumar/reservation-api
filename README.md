@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money et gestes commerciaux (191 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux et historique des dépenses (197 tests).
 
 ---
 
@@ -271,6 +271,11 @@ Il y a **un seul paiement par bon**, ce qui évite de le compter deux fois :
 - l'ardoise.
 
 Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du client.
+
+### Dépenses : saisie et historique
+- **Saisie** : catégorie, montant et description. La dépense est rattachée à la caisse ouverte, donc déduite du solde théorique. Si aucune caisse n'est ouverte, elle est marquée « hors caisse ».
+- **Historique** (patron et gérante) : aujourd'hui, 7 derniers jours, ce mois, mois dernier ou dates choisies, avec un filtre par catégorie. On voit le total, le total par catégorie, et la liste groupée par jour avec qui a saisi chaque dépense (30 par page).
+- **Caissière** : elle saisit et ne voit que les dépenses du jour.
 
 ### Gestes commerciaux : offert et remise
 Le bouton **« Offrir / remise »** est au comptoir, et sur l'écran d'encaissement en paiement à la fin. Il est réservé au **patron et à la gérante**.
