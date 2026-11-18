@@ -13,7 +13,27 @@ class OrderItem extends Model
 
     protected $fillable = [
         'order_id', 'product_id', 'quantity', 'unit_price', 'total', 'note',
+        'is_offered', 'offered_reason', 'offered_by',
     ];
+
+    protected $casts = [
+        'is_offered' => 'boolean',
+    ];
+
+    protected $attributes = [
+        'is_offered' => false,
+    ];
+
+    public function offeredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'offered_by');
+    }
+
+    /** Valeur au prix normal (ce que l'article aurait coûté). */
+    public function fullValue(): int
+    {
+        return (int) $this->unit_price * (int) $this->quantity;
+    }
 
     public function order(): BelongsTo
     {

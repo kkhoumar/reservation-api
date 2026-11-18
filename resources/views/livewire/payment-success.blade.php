@@ -18,10 +18,16 @@
 
             @foreach ($order->items as $item)
                 <div style="display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0;">
-                    <span>{{ $item->quantity }} × {{ $item->product->name }}</span>
+                    <span>{{ $item->quantity }} × {{ $item->product->name }}@if ($item->is_offered) <strong style="font-size: 12px; color: var(--color-primary);">offert</strong>@endif</span>
                     <span>{{ number_format($item->total, 0, ',', ' ') }}</span>
                 </div>
             @endforeach
+            @if ($order->discount_amount > 0)
+                <div style="display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; color: var(--color-primary);">
+                    <span>Remise</span>
+                    <span>−{{ number_format($order->discount_amount, 0, ',', ' ') }}</span>
+                </div>
+            @endif
         </div>
 
         <div style="display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 6px;">

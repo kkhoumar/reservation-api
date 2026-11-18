@@ -128,7 +128,8 @@ class Payment extends Model
                 throw new BusinessRuleException('Cette commande a été annulée.');
             }
 
-            if ($order->total <= 0) {
+            // Un bon à 0 F n'est accepté que s'il est entièrement offert ou remisé
+            if ($order->total <= 0 && ! $order->hasCommercialGesture()) {
                 throw new BusinessRuleException('Impossible d\'encaisser une commande vide.');
             }
 

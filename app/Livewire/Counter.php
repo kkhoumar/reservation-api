@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Exceptions\BusinessRuleException;
 use App\Livewire\Concerns\CollectsPayment;
+use App\Livewire\Concerns\GivesGestures;
 use App\Models\CashRegister;
 use App\Models\CreditTransaction;
 use App\Models\Customer;
@@ -24,7 +25,36 @@ use Livewire\Component;
  */
 class Counter extends Component
 {
-    use CollectsPayment;
+    use CollectsPayment, GivesGestures;
+
+    // Offrir / remise sur un bon
+    #[Locked]
+    public ?int $gestureOrderId = null;
+
+    public function startGestures(int $id): void
+    {
+        abort_unless($this->canGiveGestures(), 403);
+
+        $order = $this->findPendingOrder($id);
+        $this->cancelPayment();
+        $this->reset(['creditOrderId', 'creditCustomerId']);
+        $this->resetGestureFields();
+        $this->gestureOrderId = $order->id;
+    }
+
+    public function closeGestures(): void
+    {
+        $this->gestureOrderId = null;
+        $this->resetGestureFields();
+        $this->resetValidation();
+    }
+
+    protected function gestureOrder(): ?Order
+    {
+        return $this->gestureOrderId
+            ? Order::where('status', 'awaiting_payment')->find($this->gestureOrderId)
+            : null;
+    }
 
     #[Locked]
     public ?int $orderId = null;
@@ -112,7 +142,7 @@ class Counter extends Component
     {
         $order = $this->findPendingOrder($id);
 
-        $this->reset(['creditOrderId', 'creditCustomerId']);
+        $this->reset(['creditOrderId', 'creditCustomerId', 'gestureOrderId']);
         $this->resetPaymentFields();
         $this->orderId = $order->id;
         $this->amountReceived = $order->total;
@@ -229,7 +259,7 @@ class Counter extends Component
     {
         $restaurantId = auth()->user()->currentRestaurantId();
 
-        $pending = Order::with(['items.product', 'restaurantTable', 'server'])
+        $pending = Order::with(['items.product', 'items.offeredBy', 'discountedBy', 'restaurantTable', 'server'])
             ->where('status', 'awaiting_payment')
             ->oldest('updated_at')
             ->get();
@@ -256,6 +286,7 @@ class Counter extends Component
             'byServer' => $byServer,
             'registerOpen' => CashRegister::where('restaurant_id', $restaurantId)->whereNull('closed_at')->exists(),
             'canCredit' => $this->canCredit(),
+            'canGestures' => $this->canGiveGestures(),
             'customers' => $this->creditOrderId ? Customer::orderBy('name')->get() : collect(),
         ]);
     }

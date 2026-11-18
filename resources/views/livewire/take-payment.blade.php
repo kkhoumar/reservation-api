@@ -18,15 +18,35 @@
 
             @foreach ($order->items as $item)
                 <div style="display: flex; justify-content: space-between; padding: 6px 0;">
-                    <span>{{ $item->quantity }} × {{ $item->product->name }}</span>
+                    <span>{{ $item->quantity }} × {{ $item->product->name }} @if ($item->is_offered)<strong style="font-size: 12px; color: var(--color-primary);">OFFERT</strong>@endif</span>
                     <span>{{ number_format($item->total, 0, ',', ' ') }} FCFA</span>
                 </div>
             @endforeach
+
+            @if ($order->discount_amount > 0)
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; color: var(--color-primary);">
+                    <span>Remise ({{ $order->discount_reason }})</span>
+                    <span>−{{ number_format($order->discount_amount, 0, ',', ' ') }} FCFA</span>
+                </div>
+            @endif
 
             <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 20px; margin-top: 12px; border-top: 1px solid var(--color-border); padding-top: 12px;">
                 <span>Total</span>
                 <span style="color: var(--color-accent);">{{ number_format($order->total, 0, ',', ' ') }} FCFA</span>
             </div>
+
+            @if ($canGestures && ! $order->isPaid())
+                <div style="margin-top: 14px;">
+                    <button wire:click="$toggle('showGestures')" class="btn btn-ghost" style="width: 100%; justify-content: center;">
+                        {{ $showGestures ? 'Fermer' : 'Offrir / remise' }}
+                    </button>
+                </div>
+                @if ($showGestures)
+                    <div style="margin-top: 12px;">
+                        @include('livewire.partials.gesture-panel', ['order' => $order])
+                    </div>
+                @endif
+            @endif
         </div>
 
         <div class="card">

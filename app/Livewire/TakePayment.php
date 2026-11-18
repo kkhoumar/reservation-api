@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Exceptions\BusinessRuleException;
 use App\Livewire\Concerns\CollectsPayment;
+use App\Livewire\Concerns\GivesGestures;
 use App\Models\CreditTransaction;
 use App\Models\Customer;
 use App\Models\Order;
@@ -19,7 +20,23 @@ use Livewire\Component;
  */
 class TakePayment extends Component
 {
-    use CollectsPayment;
+    use CollectsPayment, GivesGestures;
+
+    public bool $showGestures = false;
+
+    protected function gestureOrder(): ?Order
+    {
+        $order = Order::find($this->orderId);
+
+        return $order && ! $order->isPaid() && $order->status !== 'cancelled' ? $order : null;
+    }
+
+    /** Le total a changé : on remet le montant à encaisser à jour. */
+    protected function afterGesture(Order $order): void
+    {
+        $this->resetPaymentFields();
+        $this->amountReceived = $order->total;
+    }
 
     #[Locked]
     public int $orderId;
@@ -41,7 +58,7 @@ class TakePayment extends Component
 
     public function getOrderProperty()
     {
-        return Order::with(['items.product', 'restaurantTable'])->findOrFail($this->orderId);
+        return Order::with(['items.product', 'items.offeredBy', 'discountedBy', 'restaurantTable'])->findOrFail($this->orderId);
     }
 
     protected function paymentTotal(): int
@@ -113,6 +130,7 @@ class TakePayment extends Component
         return view('livewire.take-payment', [
             'order' => $this->order,
             'canCredit' => $this->canCredit(),
+            'canGestures' => $this->canGiveGestures(),
             'customers' => $this->canCredit() ? Customer::orderBy('name')->get() : collect(),
         ]);
     }

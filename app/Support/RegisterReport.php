@@ -24,6 +24,9 @@ class RegisterReport
     public readonly int $cashSales;
     public readonly int $creditSalesCount;
     public readonly int $creditSales;
+    /** @var Collection<int, object{label: string, by: string, reason: ?string, where: ?string, amount: int}> */
+    public readonly Collection $gestures;
+    public readonly int $gesturesTotal;
     public readonly int $cancelledCount;
     public readonly int $cancelledTotal;
     public readonly int $ardoiseDue;
@@ -85,6 +88,36 @@ class RegisterReport
                 'quantity' => (int) $row->qty,
                 'amount' => (int) $row->amount,
             ]);
+
+        // Gestes commerciaux sur les bons réglés pendant la session
+        $offered = OrderItem::query()
+            ->with(['product:id,name', 'offeredBy:id,first_name', 'order.restaurantTable'])
+            ->whereIn('order_id', $settledIds)
+            ->where('is_offered', true)
+            ->get()
+            ->map(fn (OrderItem $i) => (object) [
+                'label' => "{$i->quantity} × " . ($i->product?->name ?? '—') . ' offert' . ($i->quantity > 1 ? 's' : ''),
+                'by' => $i->offeredBy?->first_name ?? '—',
+                'reason' => $i->offered_reason,
+                'where' => $i->order?->restaurantTable?->label,
+                'amount' => $i->fullValue(),
+            ]);
+
+        $discounts = Order::query()
+            ->with(['discountedBy:id,first_name', 'restaurantTable'])
+            ->whereIn('id', $settledIds)
+            ->where('discount_amount', '>', 0)
+            ->get()
+            ->map(fn (Order $o) => (object) [
+                'label' => 'Remise de ' . number_format($o->discount_amount, 0, ',', ' '),
+                'by' => $o->discountedBy?->first_name ?? '—',
+                'reason' => $o->discount_reason,
+                'where' => $o->restaurantTable?->label,
+                'amount' => (int) $o->discount_amount,
+            ]);
+
+        $this->gestures = $offered->concat($discounts)->sortByDesc('amount')->values();
+        $this->gesturesTotal = (int) $this->gestures->sum('amount');
 
         $cancelled = Order::query()
             ->where('restaurant_id', $restaurantId)
@@ -170,6 +203,18 @@ class RegisterReport
             $lines[] = '*Meilleures ventes* : ' . $this->topProducts
                 ->map(fn ($p) => "{$p->name} ×{$p->quantity}")
                 ->join(', ');
+        }
+
+        if ($this->gestures->isNotEmpty()) {
+            $lines[] = '';
+            $lines[] = '*Offerts et remises : ' . $f($this->gesturesTotal) . ' FCFA*';
+            foreach ($this->gestures->take(5) as $g) {
+                $lines[] = "• {$g->label} par {$g->by}"
+                    . ' (' . collect([$g->reason, $g->where])->filter()->join(', ') . ')';
+            }
+            if ($this->gestures->count() > 5) {
+                $lines[] = '• … et ' . ($this->gestures->count() - 5) . ' autre(s)';
+            }
         }
 
         $alerts = [];

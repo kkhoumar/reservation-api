@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir et Mobile Money (176 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money et gestes commerciaux (190 tests).
 
 ---
 
@@ -271,6 +271,17 @@ Il y a **un seul paiement par bon**, ce qui évite de le compter deux fois :
 - l'ardoise.
 
 Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du client.
+
+### Gestes commerciaux : offert et remise
+Le bouton **« Offrir / remise »** est au comptoir, et sur l'écran d'encaissement en paiement à la fin. Il est réservé au **patron et à la gérante**.
+- **Offrir un article**, en entier ou en partie (1 bière sur 5) : la ligne est coupée en deux et la partie offerte passe à 0 F (`order_items.is_offered`). On garde **qui** l'a offert et **pourquoi**. Des motifs rapides sont proposés : bon client, tournée du patron, erreur de service, fidélité.
+- **Remise** en FCFA sur le bon (`orders.discount_amount`), avec un motif. Elle ne peut pas dépasser le bon, et on peut la retirer.
+- **Le stock ne bouge pas** : l'article a bien été consommé.
+- **Un bon entièrement offert** se valide à 0 F. Un bon vide reste refusé.
+- **Refus** : la caissière, la serveuse, un motif vide, un bon déjà réglé ou annulé.
+- **Rapport du soir** : la rubrique « *Offerts et remises* » donne le total et le détail de chaque geste (qui, motif, table). Le reçu affiche les articles offerts et la remise.
+
+Les bons **annulés** ne servent plus qu'aux clients partis sans consommer. Dans le rapport, ils restent un signal à surveiller.
 
 ### Rapport du soir
 Dès la clôture de la caisse, l'écran « Caisse clôturée » affiche le rapport de la session (`App\Support\RegisterReport`). On le retrouve ensuite dans **Historique caisse → Rapport**.

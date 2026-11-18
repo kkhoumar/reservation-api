@@ -47,11 +47,19 @@
 
                     <div style="margin: 8px 0 12px 0; font-size: 14px;">
                         @foreach ($order->items as $item)
-                            <span style="display: inline-block; margin: 0 12px 4px 0;">{{ $item->quantity }} × {{ $item->product->name }}@if ($item->note) <span style="color: var(--color-text-secondary);">({{ $item->note }})</span>@endif</span>
+                            <span style="display: inline-block; margin: 0 12px 4px 0;">{{ $item->quantity }} × {{ $item->product->name }}@if ($item->note) <span style="color: var(--color-text-secondary);">({{ $item->note }})</span>@endif @if ($item->is_offered)<strong style="font-size: 12px; color: var(--color-primary);">OFFERT</strong>@endif</span>
                         @endforeach
+                        @if ($order->discount_amount > 0)
+                            <span style="display: inline-block; font-size: 13px; color: var(--color-primary); font-weight: 600;">Remise −{{ number_format($order->discount_amount, 0, ',', ' ') }}</span>
+                        @endif
                     </div>
 
-                    @if ($selected?->id === $order->id)
+                    @if ($gestureOrderId === $order->id)
+                        @include('livewire.partials.gesture-panel', ['order' => $order])
+                        <div style="margin-top: 12px;">
+                            <button wire:click="closeGestures" class="btn btn-ghost">Terminé</button>
+                        </div>
+                    @elseif ($selected?->id === $order->id)
                         <div style="padding-top: 12px; border-top: 1px dashed var(--color-border);">
                             @include('livewire.partials.payment-fields', ['total' => $order->total])
                         </div>
@@ -86,6 +94,9 @@
                             <button wire:click="startPayment({{ $order->id }})" class="btn btn-secondary">Encaisser</button>
                             @if ($canCredit)
                                 <button wire:click="startCredit({{ $order->id }})" class="btn btn-ghost">Sur l'ardoise</button>
+                            @endif
+                            @if ($canGestures)
+                                <button wire:click="startGestures({{ $order->id }})" class="btn btn-ghost">Offrir / remise</button>
                             @endif
                             <button wire:click="cancelOrder({{ $order->id }})" wire:confirm="Annuler ce bon ? Les articles seront remis en stock." class="btn btn-ghost" style="color: var(--color-danger);">Annuler le bon</button>
                         </div>
