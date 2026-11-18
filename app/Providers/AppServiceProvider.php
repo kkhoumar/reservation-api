@@ -23,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($proxies = config('app.trusted_proxies')) {
+            \Illuminate\Http\Middleware\TrustProxies::at(
+                $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies))
+            );
+        }
+
         // Les actions Livewire (clics, formulaires) passent par /livewire/update.
         // Ces middlewares y sont réappliqués avec les paramètres de la route
         // d'origine : un maquis verrouillé ou un rôle insuffisant reste bloqué

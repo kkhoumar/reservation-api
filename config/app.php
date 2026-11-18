@@ -68,6 +68,13 @@ return [
     'timezone' => 'UTC',
 
     /*
+    | Derrière un tunnel ou un proxy HTTPS (Cloudflare, Nginx…) : mettre
+    | TRUSTED_PROXIES=* pour que les liens soient générés en https.
+    | Vide par défaut : aucun proxy n'est cru sur parole.
+    */
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
