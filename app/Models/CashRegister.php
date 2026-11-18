@@ -14,14 +14,151 @@ class CashRegister extends Model
 
     protected $fillable = [
         'restaurant_id', 'opened_by', 'closed_by',
-        'opening_amount', 'theoretical_amount', 'counted_amount', 'discrepancy',
+        'opening_amount', 'theoretical_amount', 'counted_amount', 'cash_count', 'discrepancy',
         'closing_note', 'opened_at', 'closed_at',
     ];
 
     protected $casts = [
         'opened_at' => 'datetime',
         'closed_at' => 'datetime',
+        'cash_count' => 'array',
     ];
+
+    /**
+     * Billets et pièces en circulation (FCFA), pour le billetage.
+     * Clé => [valeur, libellé].
+     */
+    public const DENOMINATIONS = [
+        'b10000' => [10000, 'Billet 10 000'],
+        'b5000' => [5000, 'Billet 5 000'],
+        'b2000' => [2000, 'Billet 2 000'],
+        'b1000' => [1000, 'Billet 1 000'],
+        'b500' => [500, 'Billet 500'],
+        'p500' => [500, 'Pièce 500'],
+        'p250' => [250, 'Pièce 250'],
+        'p200' => [200, 'Pièce 200'],
+        'p100' => [100, 'Pièce 100'],
+        'p50' => [50, 'Pièce 50'],
+        'p25' => [25, 'Pièce 25'],
+        'p10' => [10, 'Pièce 10'],
+        'p5' => [5, 'Pièce 5'],
+    ];
+
+    /**
+     * Total d'un billetage (les clés inconnues et les nombres négatifs sont ignorés).
+     *
+     * @param  array<string, int|string|null>  $counts
+     */
+    public static function countTotal(array $counts): int
+    {
+        $total = 0;
+
+        foreach (self::DENOMINATIONS as $key => [$value]) {
+            $total += max(0, (int) ($counts[$key] ?? 0)) * $value;
+        }
+
+        return $total;
+    }
+
+    /**
+     * Journal de la session : chaque mouvement, du plus récent au plus ancien.
+     * « drawer » indique si l'argent est passé par le tiroir.
+     *
+     * @return \Illuminate\Support\Collection<int, object>
+     */
+    public function journal(): \Illuminate\Support\Collection
+    {
+        $from = $this->opened_at;
+        $to = $this->closed_at ?? now();
+        $rows = collect();
+        $row = fn (array $data) => (object) $data;
+
+        $payments = $this->sessionPaymentsQuery()
+            ->with(['order.restaurantTable', 'order.server', 'cashier'])
+            ->get();
+
+        foreach ($payments as $p) {
+            $detail = collect([
+                $p->order?->order_number,
+                $p->order?->restaurantTable?->label ?? 'À emporter',
+                $p->order?->server ? 'servi par ' . $p->order->server->first_name : null,
+            ])->filter()->join(' · ');
+
+            $cash = $p->cashPart();
+
+            if ($cash > 0 && ! $p->in_sacoche) {
+                $rows->push($row([
+                    'at' => $p->paid_at, 'kind' => 'sale',
+                    'label' => $p->isMixed() ? 'Vente (part espèces)' : 'Vente en espèces',
+                    'detail' => $detail . ($p->change_given > 0 ? ' · reçu ' . number_format($p->amount_received, 0, ',', ' ') . ', rendu ' . number_format($p->change_given, 0, ',', ' ') : ''),
+                    'by' => $p->cashier?->first_name, 'amount' => $cash, 'drawer' => true,
+                ]));
+            }
+
+            if ($cash > 0 && $p->in_sacoche) {
+                $rows->push($row([
+                    'at' => $p->paid_at, 'kind' => 'sacoche',
+                    'label' => 'Vente encaissée par la serveuse (sacoche)',
+                    'detail' => $detail, 'by' => $p->cashier?->first_name, 'amount' => $cash, 'drawer' => false,
+                ]));
+            }
+
+            if ($p->mobile_amount > 0) {
+                $rows->push($row([
+                    'at' => $p->paid_at, 'kind' => 'mobile',
+                    'label' => 'Vente ' . (Payment::METHODS[$p->payment_method] ?? 'Mobile Money'),
+                    'detail' => $detail . ($p->reference ? ' · réf. ' . $p->reference : ''),
+                    'by' => $p->cashier?->first_name, 'amount' => (int) $p->mobile_amount, 'drawer' => false,
+                ]));
+            }
+
+            if ($p->amount_due === 0) {
+                $rows->push($row([
+                    'at' => $p->paid_at, 'kind' => 'offered', 'label' => 'Bon entièrement offert',
+                    'detail' => $detail, 'by' => $p->cashier?->first_name, 'amount' => 0, 'drawer' => false,
+                ]));
+            }
+        }
+
+        foreach ($this->remittances()->with(['server', 'receiver'])->get() as $r) {
+            $rows->push($row([
+                'at' => $r->created_at, 'kind' => 'remittance',
+                'label' => 'Versement de ' . ($r->server?->first_name ?? '—'),
+                'detail' => $r->note, 'by' => $r->receiver?->first_name, 'amount' => (int) $r->amount, 'drawer' => true,
+            ]));
+        }
+
+        $credits = CreditTransaction::withoutGlobalScopes()
+            ->with(['customer', 'recordedBy', 'order.restaurantTable'])
+            ->where('restaurant_id', $this->restaurant_id)
+            ->where(fn ($q) => $q
+                ->where(fn ($r) => $r->where('type', 'repayment')->where('cash_register_id', $this->id))
+                ->orWhere(fn ($c) => $c->where('type', 'charge')->whereBetween('created_at', [$from, $to])))
+            ->get();
+
+        foreach ($credits as $t) {
+            $repayment = $t->type === 'repayment';
+            $rows->push($row([
+                'at' => $t->created_at, 'kind' => $repayment ? 'repayment' : 'credit',
+                'label' => ($repayment ? 'Remboursement de crédit — ' : 'Vente à crédit — ') . ($t->customer?->name ?? '—'),
+                'detail' => $repayment
+                    ? $t->note
+                    : collect([$t->order?->order_number, $t->order?->restaurantTable?->label])->filter()->join(' · '),
+                'by' => $t->recordedBy?->first_name, 'amount' => (int) $t->amount, 'drawer' => $repayment,
+            ]));
+        }
+
+        foreach ($this->expenses()->with('user')->get() as $e) {
+            $rows->push($row([
+                'at' => $e->expense_date, 'kind' => 'expense',
+                'label' => 'Dépense — ' . ($e->description ?: (Expense::CATEGORIES[$e->category] ?? $e->category)),
+                'detail' => Expense::CATEGORIES[$e->category] ?? $e->category,
+                'by' => $e->user?->first_name, 'amount' => -(int) $e->amount, 'drawer' => true,
+            ]));
+        }
+
+        return $rows->sortByDesc('at')->values();
+    }
 
     public function restaurant(): BelongsTo
     {
@@ -130,13 +267,17 @@ class CashRegister extends Model
         ];
     }
 
-    public function close(int $countedAmount, ?int $closedBy = null, ?string $note = null): void
+    /**
+     * @param  array<string, int>|null  $cashCount  billetage (nombre par billet/pièce)
+     */
+    public function close(int $countedAmount, ?int $closedBy = null, ?string $note = null, ?array $cashCount = null): void
     {
         $theoretical = $this->calculateTheoreticalAmount();
 
         $this->update([
             'theoretical_amount' => $theoretical,
             'counted_amount' => $countedAmount,
+            'cash_count' => $cashCount ? array_filter($cashCount) : null,
             'discrepancy' => $countedAmount - $theoretical,
             'closing_note' => $note,
             'closed_by' => $closedBy,

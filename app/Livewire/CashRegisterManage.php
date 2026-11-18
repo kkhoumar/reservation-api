@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\CashRegister;
 use App\Models\Restaurant;
 use App\Models\User;
+use App\Support\SalesSummary;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -14,6 +15,10 @@ class CashRegisterManage extends Component
     public ?int $countedAmount = null;
     public string $closingNote = '';
     public bool $showCloseForm = false;
+    /** Billetage : nombre de billets/pièces par clé de CashRegister::DENOMINATIONS */
+    public array $counts = [];
+    public bool $directEntry = false;
+    public bool $showJournal = true;
 
     const DISCREPANCY_THRESHOLD = 500;
 
@@ -70,8 +75,24 @@ class CashRegisterManage extends Component
         }
 
         $this->validate([
+            'counts' => 'array',
+            'counts.*' => 'nullable|integer|min:0|max:100000',
+        ], [
+            'counts.*.integer' => 'Nombre invalide.',
+            'counts.*.min' => 'Nombre invalide.',
+        ]);
+
+        // Billetage saisi : le montant compté vient toujours du détail des billets
+        $cashCount = $this->cleanCounts();
+        if ($cashCount !== []) {
+            $this->countedAmount = CashRegister::countTotal($cashCount);
+        }
+
+        $this->validate([
             'countedAmount' => 'required|integer|min:0|max:100000000',
             'closingNote' => 'nullable|string|max:1000',
+        ], [
+            'countedAmount.required' => 'Comptez l\'argent du tiroir (billets et pièces) ou saisissez le total.',
         ]);
 
         $theoretical = $register->calculateTheoreticalAmount();
@@ -82,7 +103,7 @@ class CashRegisterManage extends Component
             return;
         }
 
-        $closed = DB::transaction(function () use ($register) {
+        $closed = DB::transaction(function () use ($register, $cashCount) {
             // Verrou + revérification : une caisse ne se clôture qu'une fois
             $register = CashRegister::whereKey($register->id)->lockForUpdate()->first();
 
@@ -90,7 +111,7 @@ class CashRegisterManage extends Component
                 return false;
             }
 
-            $register->close($this->countedAmount, auth()->id(), $this->closingNote ?: null);
+            $register->close($this->countedAmount, auth()->id(), $this->closingNote ?: null, $cashCount ?: null);
 
             return true;
         });
@@ -102,6 +123,28 @@ class CashRegisterManage extends Component
         }
 
         $this->redirect(route('cash-register.closed', ['register' => $register->id]), navigate: false);
+    }
+
+    /** @return array<string, int> billetage sans les cases vides ni les clés inconnues */
+    protected function cleanCounts(): array
+    {
+        $clean = [];
+
+        foreach (CashRegister::DENOMINATIONS as $key => $_) {
+            $n = (int) ($this->counts[$key] ?? 0);
+            if ($n > 0) {
+                $clean[$key] = $n;
+            }
+        }
+
+        return $clean;
+    }
+
+    /** Le total compté se met à jour à chaque billet saisi. */
+    public function updatedCounts(): void
+    {
+        $clean = $this->cleanCounts();
+        $this->countedAmount = $clean === [] ? null : CashRegister::countTotal($clean);
     }
 
     public function render()
@@ -127,12 +170,20 @@ class CashRegisterManage extends Component
                 ->values()
             : collect();
 
+        $sales = $register
+            ? new SalesSummary($register->restaurant_id, $register->opened_at, now())
+            : null;
+
         return view('livewire.cash-register-manage', [
             'register' => $register,
             'outstanding' => $outstanding,
             'breakdown' => $breakdown,
+            'sales' => $sales,
+            'journal' => $register ? $register->journal() : collect(),
             'history' => $history,
             'threshold' => self::DISCREPANCY_THRESHOLD,
+            'denominations' => CashRegister::DENOMINATIONS,
+            'lastClosed' => $register ? null : $history->first(),
         ]);
     }
 }

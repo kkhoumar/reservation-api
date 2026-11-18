@@ -11,6 +11,19 @@ class Expense extends Model
 {
     use BelongsToRestaurant, HasFactory;
 
+    public const CATEGORIES = [
+        'goods_purchase' => 'Achat de marchandises',
+        'salary' => 'Salaires',
+        'electricity' => 'Électricité',
+        'water' => 'Eau',
+        'internet' => 'Internet',
+        'transport' => 'Transport',
+        'maintenance' => 'Entretien',
+        'repair' => 'Réparation',
+        'rent' => 'Loyer',
+        'other' => 'Autres',
+    ];
+
     protected $fillable = [
         'restaurant_id', 'user_id', 'cash_register_id',
         'category', 'amount', 'description', 'expense_date',

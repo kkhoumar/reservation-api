@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux et historique des dépenses (197 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux et historique des dépenses, écran caisse explicite (205 tests).
 
 ---
 
@@ -271,6 +271,15 @@ Il y a **un seul paiement par bon**, ce qui évite de le compter deux fois :
 - l'ardoise.
 
 Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du client.
+
+### Écran Caisse
+- En haut : **« Argent qui doit être dans le tiroir maintenant »**, qui a ouvert la caisse et depuis quand, avec des raccourcis Comptoir, + Dépense et Clôturer.
+- **Chiffres de la session** : ventes, espèces, Mobile Money (sur les téléphones), vendu à crédit (pas encore payé), dépenses.
+- **« Comment on arrive à ce montant »** : chaque ligne du calcul expliquée en clair.
+- **« Ce qui n'est PAS dans le tiroir »** : Mobile Money par opérateur, crédits, sacoches non versées.
+- **Journal de la caisse** (`CashRegister::journal()`) : chaque mouvement avec l'heure, le bon, la table, la serveuse, qui l'a fait et le montant. Ce qui n'est pas passé par le tiroir est marqué « hors tiroir ».
+- **Clôture par billetage** : nombre de billets et de pièces (10 000 à 5 F), total calculé automatiquement, écart expliqué (« il manque… » ou « il y a… de trop »). Le détail est conservé dans `cash_registers.cash_count`. On peut aussi saisir seulement le total.
+- Caisse fermée : l'écran rappelle le montant compté à la dernière clôture.
 
 ### Dépenses : saisie et historique
 - **Saisie** : catégorie, montant et description. La dépense est rattachée à la caisse ouverte, donc déduite du solde théorique. Si aucune caisse n'est ouverte, elle est marquée « hors caisse ».

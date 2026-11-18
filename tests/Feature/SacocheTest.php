@@ -218,6 +218,6 @@ class SacocheTest extends TestCase
         $this->actingAs($this->caissier)
             ->get(route('cash-register.manage'))
             ->assertOk()
-            ->assertSee('Sacoches non vidées');
+            ->assertSee('Sacoche de Aya')->assertSee('récupérez les sacoches');
     }
 }

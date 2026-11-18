@@ -32,18 +32,7 @@ class ExpensesList extends Component
     public string $to = '';
 
     #[Locked]
-    public array $categories = [
-        'goods_purchase' => 'Achat de marchandises',
-        'salary' => 'Salaires',
-        'electricity' => 'Électricité',
-        'water' => 'Eau',
-        'internet' => 'Internet',
-        'transport' => 'Transport',
-        'maintenance' => 'Entretien',
-        'repair' => 'Réparation',
-        'rent' => 'Loyer',
-        'other' => 'Autres',
-    ];
+    public array $categories = Expense::CATEGORIES;
 
     public const PERIODS = [
         'today' => "Aujourd'hui",
