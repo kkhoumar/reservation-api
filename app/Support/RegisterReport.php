@@ -40,102 +40,20 @@ class RegisterReport
     public function __construct(public readonly CashRegister $register)
     {
         $restaurantId = $register->restaurant_id;
-        $from = $register->opened_at;
-        $to = $register->closed_at ?? now();
+        $stats = new PeriodStats($restaurantId, $register->opened_at, $register->closed_at ?? now());
 
-        $payments = Payment::query()
-            ->where('status', 'completed')
-            ->whereBetween('paid_at', [$from, $to])
-            ->whereHas('order', fn ($q) => $q->where('restaurant_id', $restaurantId))
-            ->get(['id', 'order_id', 'amount_due']);
-
-        $charges = CreditTransaction::query()
-            ->where('restaurant_id', $restaurantId)
-            ->where('type', 'charge')
-            ->whereBetween('created_at', [$from, $to])
-            ->get(['id', 'order_id', 'amount']);
-
-        $this->cashSalesCount = $payments->count();
-        $this->cashSales = (int) $payments->sum('amount_due');
-        $this->creditSalesCount = $charges->count();
-        $this->creditSales = (int) $charges->sum('amount');
-
-        $settledIds = $payments->pluck('order_id')->merge($charges->pluck('order_id'))->filter()->unique()->values();
-
-        $this->byServer = Order::query()
-            ->with('server:id,first_name')
-            ->whereIn('id', $settledIds)
-            ->selectRaw('user_id, count(*) as bons, sum(total) as amount')
-            ->groupBy('user_id')
-            ->orderByDesc('amount')
-            ->get()
-            ->map(fn (Order $row) => (object) [
-                'name' => $row->server?->first_name ?? '—',
-                'bons' => (int) $row->bons,
-                'amount' => (int) $row->amount,
-            ]);
-
-        $this->topProducts = OrderItem::query()
-            ->with('product:id,name')
-            ->whereIn('order_id', $settledIds)
-            ->selectRaw('product_id, sum(quantity) as qty, sum(total) as amount')
-            ->groupBy('product_id')
-            ->orderByDesc('qty')
-            ->limit(3)
-            ->get()
-            ->map(fn (OrderItem $row) => (object) [
-                'name' => $row->product?->name ?? '—',
-                'quantity' => (int) $row->qty,
-                'amount' => (int) $row->amount,
-            ]);
-
-        // Gestes commerciaux sur les bons réglés pendant la session
-        $offered = OrderItem::query()
-            ->with(['product:id,name', 'offeredBy:id,first_name', 'order.restaurantTable'])
-            ->whereIn('order_id', $settledIds)
-            ->where('is_offered', true)
-            ->get()
-            ->map(fn (OrderItem $i) => (object) [
-                'label' => "{$i->quantity} × " . ($i->product?->name ?? '—') . ' offert' . ($i->quantity > 1 ? 's' : ''),
-                'by' => $i->offeredBy?->first_name ?? '—',
-                'reason' => $i->offered_reason,
-                'where' => $i->order?->restaurantTable?->label,
-                'amount' => $i->fullValue(),
-            ]);
-
-        $discounts = Order::query()
-            ->with(['discountedBy:id,first_name', 'restaurantTable'])
-            ->whereIn('id', $settledIds)
-            ->where('discount_amount', '>', 0)
-            ->get()
-            ->map(fn (Order $o) => (object) [
-                'label' => 'Remise de ' . number_format($o->discount_amount, 0, ',', ' '),
-                'by' => $o->discountedBy?->first_name ?? '—',
-                'reason' => $o->discount_reason,
-                'where' => $o->restaurantTable?->label,
-                'amount' => (int) $o->discount_amount,
-            ]);
-
-        $this->gestures = $offered->concat($discounts)->sortByDesc('amount')->values();
-        $this->gesturesTotal = (int) $this->gestures->sum('amount');
-
-        $cancelled = Order::query()
-            ->where('restaurant_id', $restaurantId)
-            ->where('status', 'cancelled')
-            ->where('total', '>', 0)
-            ->whereBetween('updated_at', [$from, $to]);
-        $this->cancelledCount = (clone $cancelled)->count();
-        $this->cancelledTotal = (int) (clone $cancelled)->sum('total');
-
-        $this->ardoiseDue = (int) CreditTransaction::query()
-            ->where('restaurant_id', $restaurantId)
-            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'charge' THEN amount ELSE -amount END), 0) as due")
-            ->value('due');
-
-        $this->sacochesOutstanding = (int) User::where('restaurant_id', $restaurantId)
-            ->where('role', 'server')
-            ->get()
-            ->sum(fn (User $s) => max(0, $s->sacocheBalance()));
+        $this->cashSalesCount = $stats->paidCount;
+        $this->cashSales = $stats->paidTotal;
+        $this->creditSalesCount = $stats->creditCount;
+        $this->creditSales = $stats->creditTotal;
+        $this->byServer = $stats->byServer;
+        $this->topProducts = $stats->topProducts;
+        $this->gestures = $stats->gestures;
+        $this->gesturesTotal = $stats->gesturesTotal;
+        $this->cancelledCount = $stats->cancelledCount;
+        $this->cancelledTotal = $stats->cancelledTotal;
+        $this->ardoiseDue = PeriodStats::creditDue($restaurantId);
+        $this->sacochesOutstanding = PeriodStats::sacochesOutstanding($restaurantId);
 
         $this->breakdown = $register->breakdown();
     }

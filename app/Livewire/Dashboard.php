@@ -2,136 +2,144 @@
 
 namespace App\Livewire;
 
+use App\Models\CashRegister;
 use App\Models\Expense;
-use App\Support\SalesSummary;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\RestaurantTable;
-use App\Models\CashRegister;
-use Illuminate\Support\Carbon;
+use App\Support\PeriodStats;
+use App\Support\SalesSummary;
+use Carbon\CarbonInterface;
 use Livewire\Component;
 
 /**
- * Tableau de bord (PRD section 7). KPIs essentiels uniquement au MVP :
- * CA, nombre de commandes, dépenses, bénéfice estimé, tables occupées.
+ * Tableau de bord du patron et de la gérante.
+ *
+ * - En ce moment : caisse, comptoir, tables, crédits, sacoches.
+ * - Sur la période (aujourd'hui, semaine, mois) : chiffre d'affaires comparé
+ *   à la même période précédente, comment il a été payé, qui a vendu, ce qui
+ *   s'est vendu, ce qu'il faut surveiller (offerts, annulations, écarts).
  */
 class Dashboard extends Component
 {
     public string $period = 'today'; // today | week | month
 
+    public const PERIODS = [
+        'today' => ["Aujourd'hui", 'hier à la même heure'],
+        'week' => ['Cette semaine', 'la semaine dernière au même moment'],
+        'month' => ['Ce mois', 'le mois dernier au même moment'],
+    ];
+
     public function setPeriod(string $period)
     {
-        $this->period = $period;
+        $this->period = array_key_exists($period, self::PERIODS) ? $period : 'today';
     }
 
+    /** @return array{0: CarbonInterface, 1: CarbonInterface} */
     protected function periodRange(): array
     {
         return match ($this->period) {
-            'week' => [now()->startOfWeek(), now()->endOfWeek()],
-            'month' => [now()->startOfMonth(), now()->endOfMonth()],
-            default => [now()->startOfDay(), now()->endOfDay()],
+            'week' => [now()->startOfWeek(), now()],
+            'month' => [now()->startOfMonth(), now()],
+            default => [now()->startOfDay(), now()],
         };
     }
 
-    /**
-     * Chiffre d'affaires = tout ce qui a été réglé : espèces, Mobile Money et ardoise.
-     */
-    protected function revenueAndOrderCount($restaurantId, $start, $end): array
+    /** Même durée écoulée, sur la période précédente (comparaison équitable). */
+    protected function previousRange(): array
     {
-        $sales = new SalesSummary($restaurantId, $start, $end);
+        [$start, $end] = $this->periodRange();
 
-        return [$sales->total(), $sales->count(), $sales];
+        return match ($this->period) {
+            'week' => [$start->copy()->subWeek(), $end->copy()->subWeek()],
+            'month' => [$start->copy()->subMonthNoOverflow(), $end->copy()->subMonthNoOverflow()],
+            default => [$start->copy()->subDay(), $end->copy()->subDay()],
+        };
     }
 
     public function render()
     {
         $restaurantId = auth()->user()->currentRestaurantId();
 
-        if (!$restaurantId) {
-            return view('livewire.dashboard', [
-                'noRestaurant' => true,
-                'revenue' => 0,
-                'orderCount' => 0,
-                'expenses' => 0,
-                'profit' => 0,
-                'occupiedTables' => 0,
-                'totalTables' => 0,
-                'chartData' => [],
-                'lowStockProducts' => collect(),
-                'latestRegister' => null,
-            ]);
+        if (! $restaurantId) {
+            return view('livewire.dashboard', ['noRestaurant' => true]);
         }
 
+        $restaurant = auth()->user()->currentRestaurant();
         [$start, $end] = $this->periodRange();
+        [$prevStart, $prevEnd] = $this->previousRange();
 
-        [$revenue, $orderCount, $sales] = $this->revenueAndOrderCount(
-            $restaurantId,
-            $start,
-            $end
-        );
+        $sales = new SalesSummary($restaurantId, $start, $end);
+        $previous = new SalesSummary($restaurantId, $prevStart, $prevEnd);
+        $stats = new PeriodStats($restaurantId, $start, $end, topLimit: 5);
 
-        $expenses = Expense::where('restaurant_id', $restaurantId)
+        $expenses = (int) Expense::where('restaurant_id', $restaurantId)
             ->whereBetween('expense_date', [$start, $end])
             ->sum('amount');
 
-        $profit = $revenue - $expenses;
+        $expensesByCategory = Expense::where('restaurant_id', $restaurantId)
+            ->whereBetween('expense_date', [$start, $end])
+            ->selectRaw('category, SUM(amount) as total')
+            ->groupBy('category')
+            ->orderByDesc('total')
+            ->limit(3)
+            ->get();
 
-        $totalTables = RestaurantTable::where('restaurant_id', $restaurantId)
-            ->count();
+        // Écarts de caisse des clôtures de la période
+        $closings = CashRegister::where('restaurant_id', $restaurantId)
+            ->whereBetween('closed_at', [$start, $end])
+            ->get(['id', 'discrepancy']);
 
-        $occupiedTables = RestaurantTable::where('restaurant_id', $restaurantId)
-            ->whereIn('status', ['occupied', 'awaiting_payment'])
-            ->count();
-
-        // Graphique simple : CA des 7 derniers jours
-        $chartData = [];
-
-        for ($i = 6; $i >= 0; $i--) {
-            $day = now()->copy()->subDays($i);
-
-            [$dayRevenue] = $this->revenueAndOrderCount(
-                $restaurantId,
-                $day->copy()->startOfDay(),
-                $day->copy()->endOfDay()
-            );
-
-            $chartData[] = [
-                'label' => $day->format('d/m'),
-                'value' => $dayRevenue,
-            ];
-        }
-
-        // Dernière caisse
-        $latestRegister = CashRegister::where('restaurant_id', $restaurantId)
+        // En ce moment
+        $register = CashRegister::with('openedByUser:id,first_name')
+            ->where('restaurant_id', $restaurantId)
+            ->whereNull('closed_at')
             ->latest('opened_at')
             ->first();
 
-        // Produits dont le stock est inférieur ou égal au seuil d'alerte
-        $lowStockProducts = Product::where('restaurant_id', $restaurantId)
-            ->whereNotNull('stock_alert_threshold')
-            ->whereColumn(
-                'stock_quantity',
-                '<=',
-                'stock_alert_threshold'
-            )
-            ->orderBy('stock_quantity')
-            ->get();
+        $pending = Order::where('status', 'awaiting_payment');
+
+        // 7 derniers jours (une requête par jour, tout compris)
+        $chartData = collect(range(6, 0))->map(function (int $daysAgo) use ($restaurantId) {
+            $day = now()->subDays($daysAgo);
+
+            return [
+                'label' => $daysAgo === 0 ? "Auj." : ucfirst($day->locale('fr')->isoFormat('ddd D')),
+                'value' => (new SalesSummary($restaurantId, $day->copy()->startOfDay(), $day->copy()->endOfDay()))->total(),
+            ];
+        })->all();
 
         return view('livewire.dashboard', [
             'noRestaurant' => false,
-            'revenue' => $revenue,
+            'periods' => self::PERIODS,
             'sales' => $sales,
-            'orderCount' => $orderCount,
+            'revenue' => $sales->total(),
+            'orderCount' => $sales->count(),
+            'averageTicket' => $sales->count() > 0 ? intdiv($sales->total(), $sales->count()) : 0,
+            'previousRevenue' => $previous->total(),
             'expenses' => $expenses,
-            'profit' => $profit,
-            'occupiedTables' => $occupiedTables,
-            'totalTables' => $totalTables,
+            'expensesByCategory' => $expensesByCategory,
+            'netCash' => $sales->collected() - $expenses,
+            'stats' => $stats,
+            'closingsCount' => $closings->count(),
+            'closingsWithGap' => $closings->filter(fn ($c) => abs((int) $c->discrepancy) >= CashRegisterManage::DISCREPANCY_THRESHOLD)->count(),
+            'closingsGapTotal' => (int) $closings->sum('discrepancy'),
+            'register' => $register,
+            'drawerAmount' => $register?->calculateTheoreticalAmount(),
+            'paysBefore' => (bool) $restaurant?->paysBeforeService(),
+            'pendingCount' => (clone $pending)->count(),
+            'pendingTotal' => (int) (clone $pending)->sum('total'),
+            'occupiedTables' => RestaurantTable::where('restaurant_id', $restaurantId)->where('status', '!=', 'free')->count(),
+            'totalTables' => $restaurant?->usesTables() ? RestaurantTable::where('restaurant_id', $restaurantId)->count() : 0,
+            'creditEnabled' => (bool) $restaurant?->creditEnabled(),
+            'creditDue' => PeriodStats::creditDue($restaurantId),
+            'sacoches' => PeriodStats::sacochesOutstanding($restaurantId),
             'chartData' => $chartData,
-
-            // IMPORTANT : maintenant disponible dans dashboard.blade.php
-            'lowStockProducts' => $lowStockProducts,
-
-            // Disponible également si utilisé dans la vue
-            'latestRegister' => $latestRegister,
+            'lowStockProducts' => Product::where('restaurant_id', $restaurantId)
+                ->whereNotNull('stock_alert_threshold')
+                ->whereColumn('stock_quantity', '<=', 'stock_alert_threshold')
+                ->orderBy('stock_quantity')
+                ->get(),
         ]);
     }
 }

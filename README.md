@@ -181,7 +181,7 @@ Ces problèmes ont été relevés lors de la revue de code et **ne sont pas enco
 - [x] `ActingUserSwitcher` (solution temporaire) et `ash-register-manage.blade.php` (ancien fichier) supprimés.
 - [ ] Remplacer les chaînes de statut par des Enums PHP, utiliser `#[Computed]` au lieu de `getXProperty()`, optimiser les requêtes du Dashboard.
 - [ ] Remplacer les styles en ligne par des composants Blade (`<x-card>`, `<x-button>`…).
-- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux et historique des dépenses, écran caisse explicite (205 tests).
+- [x] Tests : isolation entre restaurants, Super Admin, paiement, caisse, stock, connexion, droits, création de maquis, demandes de démo, réglages, données de démo, sacoches, comptoir, ardoise, rapport du soir, Mobile Money, gestes commerciaux, historique des dépenses, écran caisse et tableau de bord (211 tests).
 
 ---
 
@@ -271,6 +271,17 @@ Il y a **un seul paiement par bon**, ce qui évite de le compter deux fois :
 - l'ardoise.
 
 Les Ventes du jour listent aussi les bons mis sur l'ardoise, avec le nom du client.
+
+### Tableau de bord (patron et gérante)
+- **En ce moment** : la caisse (montant attendu dans le tiroir, qui l'a ouverte), les bons qui attendent au comptoir, les tables occupées, les crédits à récupérer, les sacoches non versées. Chaque case mène à l'écran concerné.
+- **Sur la période** (aujourd'hui, cette semaine, ce mois) :
+  - le chiffre d'affaires, avec espèces, Mobile Money et crédit, **comparé à la même durée de la période précédente** (« ▲ +50 % par rapport à hier à la même heure ») ;
+  - le nombre de bons réglés et le panier moyen ;
+  - les dépenses, avec les 3 plus grosses catégories ;
+  - **« Reste après dépenses »** : l'argent rentré (espèces + Mobile Money) moins les dépenses. Il remplace l'ancien « bénéfice estimé », qui était trompeur car il ne tenait pas compte du prix d'achat ;
+  - le graphique des 7 derniers jours, **qui a vendu**, **ce qui se vend le plus** ;
+  - **À surveiller** : offerts et remises (qui, pourquoi), bons annulés, écarts de caisse.
+- Calcul commun avec le rapport du soir : `App\Support\PeriodStats` et `App\Support\SalesSummary`.
 
 ### Écran Caisse
 - En haut : **« Argent qui doit être dans le tiroir maintenant »**, qui a ouvert la caisse et depuis quand, avec des raccourcis Comptoir, + Dépense et Clôturer.

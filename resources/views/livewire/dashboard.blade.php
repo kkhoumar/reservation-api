@@ -1,5 +1,15 @@
+@php
+    $fcfa = fn ($n) => number_format((int) $n, 0, ',', ' ');
+    $tile = 'padding: 14px 16px;';
+    $small = 'font-size: 12px; color: var(--color-text-secondary);';
+    $big = 'font-size: 22px; font-weight: 800; letter-spacing: -0.01em;';
+@endphp
+
 <div>
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+    @if ($noRestaurant)
+        <div class="card">Choisissez d'abord un maquis.</div>
+    @else
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
         <div>
             <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
                 Vue d'ensemble
@@ -8,7 +18,7 @@
         </div>
 
         <div style="display: flex; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 3px;">
-            @foreach (['today' => "Aujourd'hui", 'week' => 'Semaine', 'month' => 'Mois'] as $key => $label)
+            @foreach ($periods as $key => [$label])
                 <button wire:click="setPeriod('{{ $key }}')"
                         style="border: none; background: {{ $period === $key ? 'var(--color-primary)' : 'transparent' }};
                                color: {{ $period === $key ? 'white' : 'var(--color-text-secondary)' }};
@@ -20,140 +30,180 @@
         </div>
     </div>
 
-    {{-- Ligne KPI --}}
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+    {{-- ===== En ce moment ===== --}}
+    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary); margin-bottom: 8px;">En ce moment</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 24px;">
+        <a href="{{ route('cash-register.manage') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit; border-left: 4px solid {{ $register ? 'var(--color-primary-300)' : 'var(--color-border)' }};">
+            <div style="{{ $small }}">Caisse</div>
+            @if ($register)
+                <div style="{{ $big }}">{{ $fcfa($drawerAmount) }}</div>
+                <div style="{{ $small }}">dans le tiroir · ouverte par {{ $register->openedByUser?->first_name }} à {{ $register->opened_at->format('H:i') }}</div>
+            @else
+                <div style="{{ $big }} color: var(--color-text-secondary);">Fermée</div>
+                <div style="{{ $small }}">Ouvrir la caisse →</div>
+            @endif
+        </a>
 
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="color: var(--color-text-secondary); font-size: 13px; font-weight: 500;">Chiffre d'affaires</div>
-                <div style="width: 34px; height: 34px; border-radius: 9px; background: rgba(6,59,39,0.08); display: flex; align-items: center; justify-content: center;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#063B27" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        @if ($paysBefore)
+            <a href="{{ route('counter') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit; border-left: 4px solid {{ $pendingCount > 0 ? 'var(--color-accent)' : 'var(--color-border)' }};">
+                <div style="{{ $small }}">Au comptoir</div>
+                <div style="{{ $big }}">{{ $pendingCount }} bon{{ $pendingCount > 1 ? 's' : '' }}</div>
+                <div style="{{ $small }}">{{ $pendingCount > 0 ? $fcfa($pendingTotal) . ' FCFA à encaisser' : 'rien à encaisser' }}</div>
+            </a>
+        @endif
+
+        @if ($totalTables > 0)
+            <a href="{{ route('tables.index') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit;">
+                <div style="{{ $small }}">Tables occupées</div>
+                <div style="{{ $big }}">{{ $occupiedTables }} <span style="font-size: 14px; color: var(--color-text-secondary);">/ {{ $totalTables }}</span></div>
+                <div style="background: var(--color-border); border-radius: 999px; height: 6px; overflow: hidden; margin-top: 6px;">
+                    <div style="background: var(--color-accent); height: 100%; width: {{ ($occupiedTables / $totalTables) * 100 }}%;"></div>
                 </div>
-            </div>
-            <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin-top: 10px;">
-                {{ number_format($revenue, 0, ',', ' ') }} <span style="font-size: 14px; font-weight: 600; color: var(--color-text-secondary);">FCFA</span>
-            </div>
-            @isset($sales)
-                @if ($sales->total() > 0)
-                    <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.6;">
-                        Espèces {{ number_format($sales->cash, 0, ',', ' ') }}
-                        @if ($sales->mobileTotal() > 0) · Mobile Money {{ number_format($sales->mobileTotal(), 0, ',', ' ') }} @endif
-                        @if ($sales->credit > 0) · <span style="color: var(--color-accent);">Crédit {{ number_format($sales->credit, 0, ',', ' ') }}</span> @endif
-                    </div>
-                @endif
-            @endisset
-        </div>
+            </a>
+        @endif
 
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="color: var(--color-text-secondary); font-size: 13px; font-weight: 500;">Commandes</div>
-                <div style="width: 34px; height: 34px; border-radius: 9px; background: rgba(255,122,0,0.1); display: flex; align-items: center; justify-content: center;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF7A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 6 6H2v2h1l1.5 10.5A2 2 0 0 0 6.5 20h11a2 2 0 0 0 2-1.5L21 8h-1"/><path d="M9 2h6l1 4H8z"/></svg>
-                </div>
-            </div>
-            <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin-top: 10px;">
-                {{ $orderCount }}
-            </div>
-        </div>
+        @if ($creditEnabled)
+            <a href="{{ route('credits') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit; border-left: 4px solid {{ $creditDue > 0 ? 'var(--color-accent)' : 'var(--color-border)' }};">
+                <div style="{{ $small }}">Crédits à récupérer</div>
+                <div style="{{ $big }} color: {{ $creditDue > 0 ? 'var(--color-accent)' : 'inherit' }};">{{ $fcfa($creditDue) }}</div>
+                <div style="{{ $small }}">dus par les clients</div>
+            </a>
+        @endif
 
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="color: var(--color-text-secondary); font-size: 13px; font-weight: 500;">Dépenses</div>
-                <div style="width: 34px; height: 34px; border-radius: 9px; background: rgba(232,74,58,0.1); display: flex; align-items: center; justify-content: center;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E84A3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
-                </div>
-            </div>
-            <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin-top: 10px; color: var(--color-danger);">
-                {{ number_format($expenses, 0, ',', ' ') }} <span style="font-size: 14px; font-weight: 600; color: var(--color-text-secondary);">FCFA</span>
-            </div>
-        </div>
-
-        <div class="card" style="background: var(--color-primary); border-color: var(--color-primary);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 500;">Bénéfice estimé</div>
-                <div style="width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                </div>
-            </div>
-            <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin-top: 10px; color: white;">
-                {{ number_format($profit, 0, ',', ' ') }} <span style="font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.65);">FCFA</span>
-            </div>
-        </div>
-
+        @if ($sacoches > 0)
+            <a href="{{ route('sacoches') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit; border-left: 4px solid var(--color-accent);">
+                <div style="{{ $small }}">Sacoches non versées</div>
+                <div style="{{ $big }} color: var(--color-accent);">{{ $fcfa($sacoches) }}</div>
+                <div style="{{ $small }}">encore sur les serveuses</div>
+            </a>
+        @endif
     </div>
 
-
-  @if ($lowStockProducts->isNotEmpty())
-    <div class="card" style="margin-top: 16px; border-left: 4px solid var(--color-danger);">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D93B3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
-            <strong style="font-size: 14px;">{{ $lowStockProducts->count() }} produit{{ $lowStockProducts->count() > 1 ? 's' : '' }} en stock faible</strong>
+    {{-- ===== Sur la période ===== --}}
+    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary); margin-bottom: 8px;">{{ $periods[$period][0] }}</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;">
+        <div class="card" style="background: var(--color-primary); border-color: var(--color-primary); color: white;">
+            <div style="font-size: 13px; color: rgba(255,255,255,0.75);">Chiffre d'affaires</div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">{{ $fcfa($revenue) }} <span style="font-size: 14px; color: rgba(255,255,255,0.7);">FCFA</span></div>
+            <div style="font-size: 12px; margin-top: 4px; color: rgba(255,255,255,0.85);">
+                @if ($previousRevenue > 0)
+                    @php $pct = (int) round(($revenue - $previousRevenue) / $previousRevenue * 100); @endphp
+                    <strong>{{ $pct >= 0 ? '▲ +' : '▼ ' }}{{ $pct }} %</strong> par rapport à {{ $periods[$period][1] }} ({{ $fcfa($previousRevenue) }})
+                @else
+                    Aucune vente {{ $periods[$period][1] }}
+                @endif
+            </div>
+            @if ($revenue > 0)
+                <div style="font-size: 12px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2); line-height: 1.7; color: rgba(255,255,255,0.85);">
+                    Espèces {{ $fcfa($sales->cash) }}
+                    @if ($sales->mobileTotal() > 0) · Mobile Money {{ $fcfa($sales->mobileTotal()) }} @endif
+                    @if ($sales->credit > 0) · Crédit {{ $fcfa($sales->credit) }} @endif
+                </div>
+            @endif
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            @foreach ($lowStockProducts as $product)
-                <span style="background: rgba(217,59,59,0.1); color: #D93B3B; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
-                    {{ $product->name }} ({{ $product->stock_quantity }})
-                </span>
+
+        <div class="card">
+            <div style="font-size: 13px; color: var(--color-text-secondary);">Bons réglés</div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">{{ $orderCount }}</div>
+            <div style="{{ $small }}">Panier moyen : <strong>{{ $fcfa($averageTicket) }} FCFA</strong> par bon</div>
+        </div>
+
+        <div class="card">
+            <div style="font-size: 13px; color: var(--color-text-secondary);">Dépenses</div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px; color: {{ $expenses > 0 ? 'var(--color-danger)' : 'inherit' }};">{{ $fcfa($expenses) }}</div>
+            @foreach ($expensesByCategory as $row)
+                <div style="{{ $small }}">{{ \App\Models\Expense::CATEGORIES[$row->category] ?? $row->category }} : {{ $fcfa($row->total) }}</div>
             @endforeach
         </div>
-    </div>
-@endif
-
-
-    {{-- Deuxième ligne : graphique + tables --}}
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 16px;">
 
         <div class="card">
-            <h3 style="margin: 0 0 4px 0;">Évolution du chiffre d'affaires</h3>
-            <div style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 20px;">7 derniers jours</div>
+            <div style="font-size: 13px; color: var(--color-text-secondary);">Reste après dépenses</div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px; color: {{ $netCash < 0 ? 'var(--color-danger)' : 'inherit' }};">{{ $fcfa($netCash) }}</div>
+            <div style="{{ $small }}">Argent rentré (espèces + Mobile Money) moins les dépenses. Le prix d'achat des boissons et les crédits non payés ne sont pas comptés.</div>
+        </div>
+    </div>
 
-            @php
-                $maxValue = collect($chartData)->max('value') ?: 1;
-            @endphp
-
-            <svg width="100%" height="180" viewBox="0 0 560 180" preserveAspectRatio="none" style="overflow: visible;">
-                <defs>
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#FF7A00"/>
-                        <stop offset="100%" stop-color="#FFA62B"/>
-                    </linearGradient>
-                </defs>
-
-                @for ($i = 0; $i <= 3; $i++)
-                    <line x1="0" y1="{{ 10 + $i * 40 }}" x2="560" y2="{{ 10 + $i * 40 }}" stroke="#E5E7EB" stroke-width="1"/>
-                @endfor
-
-                @php $barWidth = 560 / count($chartData); @endphp
-
-                @foreach ($chartData as $i => $day)
-                    @php
-                        $barHeight = max(3, ($day['value'] / $maxValue) * 130);
-                        $x = $i * $barWidth + $barWidth * 0.22;
-                        $w = $barWidth * 0.56;
-                        $y = 140 - $barHeight;
-                    @endphp
-                    <rect x="{{ $x }}" y="{{ $y }}" width="{{ $w }}" height="{{ $barHeight }}" rx="4" fill="url(#barGradient)"/>
-                    <text x="{{ $x + $w/2 }}" y="165" text-anchor="middle" font-size="11" fill="#6B7280" font-family="Inter">{{ $day['label'] }}</text>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 16px; align-items: start;">
+        <div class="card">
+            <h3 style="margin: 0 0 4px 0;">Chiffre d'affaires des 7 derniers jours</h3>
+            <div style="{{ $small }} margin-bottom: 16px;">Espèces, Mobile Money et crédit compris</div>
+            @php $maxValue = collect($chartData)->max('value') ?: 1; @endphp
+            <div style="display: flex; align-items: flex-end; gap: 8px; height: 170px;">
+                @foreach ($chartData as $day)
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px;">
+                        <div style="font-size: 11px; color: var(--color-text-secondary); white-space: nowrap;">{{ $day['value'] > 0 ? $fcfa($day['value']) : '' }}</div>
+                        <div title="{{ $fcfa($day['value']) }} FCFA" style="width: 70%; max-width: 46px; border-radius: 6px 6px 0 0; background: {{ $loop->last ? 'var(--color-primary)' : 'var(--color-accent-light)' }}; height: {{ max(3, ($day['value'] / $maxValue) * 120) }}px;"></div>
+                        <div style="font-size: 11px; color: var(--color-text-secondary);">{{ $day['label'] }}</div>
+                    </div>
                 @endforeach
-            </svg>
+            </div>
         </div>
 
         <div class="card">
-            <h3 style="margin: 0 0 16px 0;">Tables</h3>
+            <h3 style="margin: 0 0 10px 0;">Qui a vendu</h3>
+            @forelse ($stats->byServer as $row)
+                <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                    <span>{{ $row->name }} <span style="{{ $small }}">· {{ $row->bons }} bon{{ $row->bons > 1 ? 's' : '' }}</span></span>
+                    <strong>{{ $fcfa($row->amount) }}</strong>
+                </div>
+            @empty
+                <p style="{{ $small }}">Aucune vente sur la période.</p>
+            @endforelse
+        </div>
+    </div>
 
-            <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px;">
-                <div style="font-size: 32px; font-weight: 800;">{{ $occupiedTables }}</div>
-                <div style="font-size: 16px; color: var(--color-text-secondary);">/ {{ $totalTables }} occupées</div>
-            </div>
-
-            <div style="background: var(--color-border); border-radius: 999px; height: 8px; overflow: hidden; margin-bottom: 16px;">
-                <div style="background: var(--color-accent); height: 100%; width: {{ $totalTables > 0 ? ($occupiedTables / $totalTables) * 100 : 0 }}%;"></div>
-            </div>
-
-            <a href="{{ route('tables.index') }}" class="btn btn-secondary" style="width: 100%; justify-content: center;">
-                Voir le plan des tables
-            </a>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start;">
+        <div class="card">
+            <h3 style="margin: 0 0 10px 0;">Ce qui se vend le plus</h3>
+            @forelse ($stats->topProducts as $i => $product)
+                <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                    <span><span style="{{ $small }}">{{ $i + 1 }}.</span> {{ $product->name }} <span style="{{ $small }}">× {{ $product->quantity }}</span></span>
+                    <strong>{{ $fcfa($product->amount) }}</strong>
+                </div>
+            @empty
+                <p style="{{ $small }}">Aucune vente sur la période.</p>
+            @endforelse
         </div>
 
+        <div class="card">
+            <h3 style="margin: 0 0 10px 0;">À surveiller</h3>
+            @php $nothing = $stats->gesturesTotal === 0 && $stats->cancelledCount === 0 && $closingsWithGap === 0; @endphp
+
+            <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                <span>Offerts et remises <span style="{{ $small }}">· {{ $stats->gestures->count() }}</span></span>
+                <strong style="color: {{ $stats->gesturesTotal > 0 ? 'var(--color-accent)' : 'inherit' }};">{{ $fcfa($stats->gesturesTotal) }}</strong>
+            </div>
+            @foreach ($stats->gestures->take(3) as $g)
+                <div style="{{ $small }} padding: 0 0 4px 10px;">• {{ $g->label }} par {{ $g->by }} ({{ collect([$g->reason, $g->where])->filter()->join(', ') }})</div>
+            @endforeach
+
+            <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                <span>Bons annulés <span style="{{ $small }}">· {{ $stats->cancelledCount }}</span></span>
+                <strong style="color: {{ $stats->cancelledCount > 0 ? 'var(--color-danger)' : 'inherit' }};">{{ $fcfa($stats->cancelledTotal) }}</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                <span>Écarts de caisse <span style="{{ $small }}">· {{ $closingsWithGap }} clôture{{ $closingsWithGap > 1 ? 's' : '' }} sur {{ $closingsCount }} avec un écart</span></span>
+                <strong style="color: {{ $closingsGapTotal < 0 ? 'var(--color-danger)' : 'inherit' }};">{{ $closingsGapTotal > 0 ? '+' : '' }}{{ $fcfa($closingsGapTotal) }}</strong>
+            </div>
+
+            @if ($nothing)
+                <div style="{{ $small }} margin-top: 6px;">Rien d'anormal sur la période.</div>
+            @endif
+        </div>
     </div>
+
+    @if ($lowStockProducts->isNotEmpty())
+        <div class="card" style="margin-top: 16px; border-left: 4px solid var(--color-danger);">
+            <strong style="font-size: 14px;">{{ $lowStockProducts->count() }} produit{{ $lowStockProducts->count() > 1 ? 's' : '' }} bientôt en rupture</strong>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                @foreach ($lowStockProducts as $product)
+                    <span style="background: rgba(217,59,59,0.1); color: var(--color-danger); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                        {{ $product->name }} : {{ $product->stock_quantity }} restant{{ $product->stock_quantity > 1 ? 's' : '' }}
+                    </span>
+                @endforeach
+            </div>
+        </div>
+    @endif
+    @endif
 </div>
