@@ -332,6 +332,16 @@ Un maquis impayé, suspendu ou en fin d'essai n'est plus coupé complètement :
 
 Pas encore fait : le paiement en ligne automatique (CinetPay ou PayDunya), qui demande un compte marchand.
 
+### Application installable (PWA)
+L'application web s'installe sur le téléphone comme une vraie application : icône sur l'écran d'accueil, ouverture en plein écran, sans passer par le Play Store.
+- **Manifeste** (`/manifest.webmanifest`) : nom, couleurs, plein écran, ouverture sur **`/app`**, qui envoie chacun au bon écran selon son rôle. Raccourcis *Prendre une commande*, *Comptoir* et *Caisse*.
+- **Icônes** dans `public/icons/` : 192 et 512, icône adaptative Android, iPhone, onglet du navigateur.
+- **Service worker** (`public/sw.js`) : garde en mémoire les icônes, les polices et le script Livewire pour ouvrir l'application plus vite. **Les pages et les données ne sont jamais mises en cache**. Sans réseau, il affiche `public/offline.html`, qui se recharge quand internet revient.
+- **Bouton « Installer l'application »** sur la page de connexion et en bas du menu. Sur Android, l'installation se fait en un clic. Sur iPhone, une aide indique Partager → « Sur l'écran d'accueil ». Le bouton est masqué si l'application est déjà installée.
+- ⚠️ **L'installation sur téléphone exige le HTTPS.** Elle marche donc après la mise en ligne ; en local, seulement sur `localhost`.
+- **L'application ne marche pas sans internet** : un vrai mode hors ligne demandera l'application Flutter.
+- Pour forcer les téléphones à recharger les fichiers après une mise à jour, augmenter `VERSION` dans `public/sw.js`.
+
 ### Super Admin : vider ou supprimer un maquis
 Dans **Établissements → Gérer**, la **zone dangereuse** (`App\Actions\RestaurantDataManager`) propose deux actions. Il faut retaper le nom exact du maquis pour confirmer, et chaque action est journalisée.
 - **Vider les données de test**, avant de remettre le maquis au client :

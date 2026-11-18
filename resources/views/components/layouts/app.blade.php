@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @include('partials.pwa-head')
     <title>{{ $title ?? 'Maquis Express' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -360,7 +361,9 @@
             @endif
         </nav>
 
-        <div class="sidebar-footer">
+        <div style="margin-top: auto; padding: 0 4px;">@include('partials.pwa-install', ['variant' => 'dark'])</div>
+
+        <div class="sidebar-footer" style="margin-top: 14px;">
             @if ($currentRestaurant)
                 <strong>{{ $currentRestaurant->name }}</strong>
                 @if ($currentRestaurant->commune || $currentRestaurant->city)

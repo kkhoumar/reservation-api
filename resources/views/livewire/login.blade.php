@@ -53,5 +53,7 @@
         Pas encore client ? <a href="{{ route('demo.request') }}" style="font-weight: 700; text-decoration: none;">Demander une démo gratuite →</a>
     </div>
 
+    @include('partials.pwa-install', ['variant' => 'light'])
+
     <style>[x-cloak] { display: none !important; }</style>
 </div>

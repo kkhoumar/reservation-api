@@ -38,6 +38,48 @@ Route::post('/logout', function () {
     return redirect()->route('login');
 })->middleware('auth')->name('logout');
 
+// Point d'entrée de l'application (icône installée sur le téléphone, liens
+// génériques) : chacun arrive sur le bon écran selon son rôle
+Route::get('/app', function () {
+    $user = auth()->user();
+
+    return match (true) {
+        ! $user => redirect()->route('login'),
+        $user->isPlatformAdmin() && ! $user->currentRestaurant() => redirect()->route('admin.restaurants'),
+        $user->isPlatformAdmin() || in_array($user->role, ['owner', 'manager'], true) => redirect()->route('dashboard.index'),
+        default => redirect()->route('tables.index'),
+    };
+})->name('app.start');
+
+// Carte d'identité de l'application installable (PWA)
+Route::get('/manifest.webmanifest', function () {
+    return response()->json([
+        'name' => 'Maquis Express',
+        'short_name' => 'Maquis Express',
+        'description' => 'Commandes, comptoir, caisse, stock et crédits clients pour votre maquis.',
+        'id' => '/app',
+        'start_url' => '/app',
+        'scope' => '/',
+        'display' => 'standalone',
+        'orientation' => 'portrait',
+        'background_color' => '#0B4D3C',
+        'theme_color' => '#0B4D3C',
+        'lang' => 'fr',
+        'dir' => 'ltr',
+        'categories' => ['business', 'productivity', 'food'],
+        'icons' => [
+            ['src' => '/icons/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => '/icons/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => '/icons/icon-maskable-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
+        ],
+        'shortcuts' => [
+            ['name' => 'Prendre une commande', 'url' => '/tables', 'icons' => [['src' => '/icons/icon-192.png', 'sizes' => '192x192']]],
+            ['name' => 'Comptoir', 'url' => '/comptoir', 'icons' => [['src' => '/icons/icon-192.png', 'sizes' => '192x192']]],
+            ['name' => 'Caisse', 'url' => '/cash-register', 'icons' => [['src' => '/icons/icon-192.png', 'sizes' => '192x192']]],
+        ],
+    ], 200, ['Content-Type' => 'application/manifest+json'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+})->name('pwa.manifest');
+
 // Documents légaux (publics) et acceptation par le patron
 Route::view('/conditions', 'legal.terms')->name('legal.terms');
 Route::view('/confidentialite', 'legal.privacy')->name('legal.privacy');

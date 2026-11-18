@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\EnsureRole::class,
             'restaurant.access' => \App\Http\Middleware\EnsureRestaurantAccess::class,
         ]);
+
+        // Déjà connecté et on ouvre une page « invités » (connexion, accueil) :
+        // direction le bon écran selon le rôle (évite une boucle vers « / »)
+        $middleware->redirectUsersTo('/app');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
