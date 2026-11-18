@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maquis Express — La gestion de votre maquis, simplifiée</title>
+    <meta name="description" content="Commandes, comptoir, caisse, stock et crédits clients pour les maquis, bars et restaurants de Côte d'Ivoire. Espèces, Wave, Orange Money, et le rapport du soir sur WhatsApp.">
+    <meta name="theme-color" content="#0B4D3C">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -69,8 +71,16 @@
         }
         footer .foot-links { display: flex; gap: 20px; }
         footer .foot-links a { color: var(--color-text-secondary); text-decoration: none; font-size: 13px; }
-        @media (max-width: 720px) {
+        @media (max-width: 860px) {
             .nav-links { display: none; }
+        }
+        @media (max-width: 600px) {
+            .nav { padding: 12px 16px; }
+            .nav-brand .name { display: none; }
+            .btn-nav-primary { padding: 8px 12px; font-size: 13px; }
+            main { padding: 0 16px; }
+            footer { padding: 24px 16px; }
+            footer .foot-links { flex-wrap: wrap; gap: 12px; }
         }
     </style>
 </head>
@@ -81,9 +91,10 @@
             <div class="name">Maquis Express</div>
         </a>
         <div class="nav-links">
-            <a href="#fonctionnalites">Fonctionnalités</a>
-            <a href="#comment-ca-marche">Comment ça marche</a>
-            <a href="#tarifs">Tarifs</a>
+            <a href="{{ route('landing') }}#fonctionnalites">Fonctionnalités</a>
+            <a href="{{ route('landing') }}#comment-ca-marche">Comment ça marche</a>
+            <a href="{{ route('landing') }}#tarifs">Tarifs</a>
+            <a href="{{ route('landing') }}#questions">Questions</a>
         </div>
         <div class="nav-actions">
             <a href="{{ route('login') }}" class="btn-nav-ghost">Connexion</a>

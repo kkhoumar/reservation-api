@@ -146,6 +146,9 @@ class Restaurant extends Model
             && $this->trial_ends_at->isPast();
     }
 
+    /** Durée d'essai gratuit proposée par défaut (création d'un maquis, site public). */
+    public const DEFAULT_TRIAL_DAYS = 14;
+
     /** Jours de tolérance après la date payée avant le verrouillage. */
     public const GRACE_DAYS = 3;
 

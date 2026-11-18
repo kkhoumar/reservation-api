@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
+    // La page d'accueil lit les formules d'abonnement en base
+    use RefreshDatabase;
+
     public function test_the_application_returns_a_successful_response(): void
     {
         $response = $this->get('/');

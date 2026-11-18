@@ -28,7 +28,7 @@ class CreateRestaurant extends Component
     public string $restaurantPhone = '';
     public string $commune = '';
     public string $city = 'Abidjan';
-    public int $trialDays = 14;
+    public int $trialDays = \App\Models\Restaurant::DEFAULT_TRIAL_DAYS;
     public string $serviceMode = 'both';
     public bool $creditEnabled = false;
     public string $paymentTiming = 'before';
