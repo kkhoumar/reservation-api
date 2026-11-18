@@ -17,6 +17,9 @@ class Login extends Component
     public string $phone = '';
     public string $password = '';
 
+    /** « Rester connecté sur cet appareil » (téléphone personnel de la serveuse…). */
+    public bool $remember = false;
+
     public function authenticate()
     {
         $this->validate([
@@ -34,7 +37,7 @@ class Login extends Component
         }
 
         // Seuls les comptes actifs peuvent se connecter
-        if (!Auth::attempt(['phone' => User::normalizePhone($this->phone), 'password' => $this->password, 'status' => 'active'])) {
+        if (!Auth::attempt(['phone' => User::normalizePhone($this->phone), 'password' => $this->password, 'status' => 'active'], $this->remember)) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
             $this->addError('phone', 'Numéro de téléphone ou mot de passe incorrect.');
             return;
@@ -61,6 +64,12 @@ class Login extends Component
 
     public function render()
     {
-        return view('livewire.login');
+        $whatsapp = config('maquis.billing.whatsapp');
+
+        return view('livewire.login', [
+            'supportUrl' => $whatsapp
+                ? 'https://wa.me/225' . User::normalizePhone($whatsapp) . '?text=' . rawurlencode('Bonjour, j\'ai oublié le mot de passe de mon compte patron Maquis Express.')
+                : null,
+        ]);
     }
 }
