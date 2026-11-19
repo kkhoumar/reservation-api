@@ -242,6 +242,11 @@
             div[style*="grid-template-columns: repeat(2, 1fr)"] { grid-template-columns: 1fr !important; }
             div[style*="grid-template-columns: repeat(auto-fill"] { grid-template-columns: repeat(2, 1fr) !important; }
             .btn { white-space: nowrap; }
+            /* Une colonne ne s'élargit jamais au-delà de l'écran à cause d'un
+               long contenu (ex. une liste déroulante au texte long) */
+            main [style*="display: grid"] > *, main [style*="display: flex"] > * { min-width: 0; }
+            select, input, textarea { max-width: 100%; }
+            img, svg, video { max-width: 100%; }
             /* En-têtes « titre + boutons » : les boutons passent dessous au lieu de déborder */
             .page-head { flex-wrap: wrap !important; row-gap: 12px !important; }
             /* Lignes « libellé … montant » : le montant reste sur une seule ligne */
@@ -581,6 +586,7 @@
         })();
     </script>
 
+    @include('partials.tap-feedback')
     @livewireScripts
 </body>
 </html>

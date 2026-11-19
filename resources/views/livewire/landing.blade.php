@@ -2,6 +2,8 @@
     <style>
         /* ====== Bases ====== */
         .lp .band { width: 100vw; margin-left: calc(50% - 50vw); }
+        /* Jamais de défilement de côté (barre de défilement incluse dans 100vw) */
+        html, body { overflow-x: clip; }
         .lp .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
         .lp section { padding: 88px 0; scroll-margin-top: 70px; }
         .lp .alt { background: var(--color-mint); }
@@ -170,7 +172,8 @@
         .lp .step p { font-size: 14px; color: var(--color-text-secondary); margin: 0; line-height: 1.55; }
 
         /* ====== Tarifs ====== */
-        .lp .plans { display: grid; gap: 22px; align-items: stretch; }
+        .lp .plans { display: grid; gap: 22px; align-items: stretch; grid-template-columns: repeat(var(--cols, 3), 1fr); }
+        @media (max-width: 900px) { .lp .plans { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; } }
         .lp .plan { position: relative; display: flex; flex-direction: column; padding: 30px; }
         .lp .plan.featured { background: linear-gradient(165deg, #0B4D3C, #062E24); color: white; border-color: transparent; box-shadow: var(--shadow-lg); transform: translateY(-8px); }
         .lp .plan.featured:hover { transform: translateY(-12px); }
@@ -494,7 +497,7 @@
                 <div class="center reveal"><span class="eyebrow">Tarifs</span></div>
                 <h2 class="reveal">Un prix clair, selon la taille de votre équipe</h2>
                 <p class="lead reveal">Le cœur de l'application dans chaque formule : seuls le nombre de personnes et le rapport automatique changent. {{ $trialDays }} jours d'essai gratuit pour commencer.</p>
-                <div class="plans" style="grid-template-columns: repeat({{ min(3, $plans->count()) }}, 1fr);">
+                <div class="plans" style="--cols: {{ min(3, $plans->count()) }};">
                     @foreach ($plans as $i => $plan)
                         @php $featured = $plans->count() >= 3 && $i === 1; @endphp
                         <div class="card plan reveal {{ $featured ? 'featured' : '' }} {{ 'd' . min(3, $i) }}">

@@ -189,6 +189,7 @@
         @media (max-width: 600px) { .nav-links .only-mobile { display: block; } }
     </style>
 
+    @include('partials.tap-feedback')
     @livewireScripts
 </body>
 </html>

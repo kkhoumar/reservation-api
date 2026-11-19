@@ -18,6 +18,10 @@
         .legal ul { padding-left: 20px; }
         .legal table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0; }
         .legal th, .legal td { border: 1px solid var(--color-border); padding: 8px 10px; text-align: left; vertical-align: top; }
+        @media (max-width: 600px) {
+            .legal table { table-layout: fixed; font-size: 13px; }
+            .legal th, .legal td { padding: 6px 7px; overflow-wrap: anywhere; hyphens: auto; }
+        }
     </style>
 
     <h1>Politique de confidentialité</h1>

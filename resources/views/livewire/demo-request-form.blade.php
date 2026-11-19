@@ -114,9 +114,13 @@
 
                 <div class="field">
                     <label>Type d'établissement <span class="opt">(facultatif)</span></label>
-                    <div class="chips">
+                    {{-- Choix instantané sur le téléphone : envoyé avec le formulaire --}}
+                    <div class="chips" role="radiogroup" x-data="{ type: $wire.entangle('establishmentType') }">
                         @foreach ($types as $type)
-                            <button type="button" wire:click="$set('establishmentType', @js($establishmentType === $type ? '' : $type))" class="chip {{ $establishmentType === $type ? 'on' : '' }}">{{ $type }}</button>
+                            <button type="button" role="radio"
+                                    @click="type = (type === @js($type) ? '' : @js($type))"
+                                    :class="{ on: type === @js($type) }" :aria-checked="type === @js($type)"
+                                    class="chip {{ $establishmentType === $type ? 'on' : '' }}">{{ $type }}</button>
                         @endforeach
                     </div>
                     @error('establishmentType') <div class="error">{{ $message }}</div> @enderror

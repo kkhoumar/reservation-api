@@ -133,6 +133,7 @@
             </div>
         </main>
     </div>
+    @include('partials.tap-feedback')
     @livewireScripts
 </body>
 </html>
