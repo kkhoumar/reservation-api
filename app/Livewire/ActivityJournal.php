@@ -35,7 +35,7 @@ class ActivityJournal extends Component
     public function mount(): void
     {
         $user = auth()->user();
-        abort_unless($user->isPlatformAdmin() || in_array($user->role, ['owner', 'manager'], true), 403);
+        abort_unless($user->isPlatformAdmin() || in_array($user->role, ['owner', 'manager', 'associate'], true), 403);
     }
 
     public function updated(): void

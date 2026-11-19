@@ -15,6 +15,7 @@ class Product extends Model
     protected $fillable = [
         'restaurant_id', 'category_id', 'name', 'photo',
         'selling_price', 'cost_price', 'is_available', 'stock_quantity', 'stock_alert_threshold',
+        'is_returnable', 'crate_size', 'empty_quantity', 'empties_counted_at',
     ];
 
     protected $casts = [
@@ -22,6 +23,10 @@ class Product extends Model
         'cost_price' => 'integer',
         'selling_price' => 'integer',
         'stock_quantity' => 'integer',
+        'is_returnable' => 'boolean',
+        'crate_size' => 'integer',
+        'empty_quantity' => 'integer',
+        'empties_counted_at' => 'datetime',
     ];
 
     /**
@@ -68,5 +73,25 @@ class Product extends Model
     public function decrementStock(int $quantity): void
     {
         $this->decrement('stock_quantity', $quantity);
+
+        // Bouteille consignée : chaque bouteille vendue devient un vide au maquis
+        if ($this->is_returnable) {
+            $this->increment('empty_quantity', $quantity);
+        }
+    }
+
+    /**
+     * Vente annulée ou article retiré : la bouteille pleine revient, le vide attendu disparaît.
+     */
+    public static function restoreStock(int $productId, int $quantity): void
+    {
+        static::whereKey($productId)->increment('stock_quantity', $quantity);
+        static::whereKey($productId)->where('is_returnable', true)->decrement('empty_quantity', $quantity);
+    }
+
+    /** Le maquis a déjà compté les vides de ce produit : le contrôle des vides est possible. */
+    public function hasEmptiesBaseline(): bool
+    {
+        return $this->is_returnable && $this->empties_counted_at !== null;
     }
 }

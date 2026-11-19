@@ -49,6 +49,7 @@ class ActivityLog extends Model
         'stock_delivery' => ['Livraison', 'info', 'stock', 'truck'],
         'stock_loss' => ['Perte ou casse', 'warning', 'stock', 'alert'],
         'stock_count' => ['Comptage', 'info', 'stock', 'clipboard'],
+        'empties_alert' => ['Vides en trop', 'danger', 'stock', 'bottle'],
         'user_created' => ['Compte créé', 'info', 'team', 'users'],
         'user_updated' => ['Compte modifié', 'info', 'team', 'users'],
         'password_reset' => ['Mot de passe provisoire', 'warning', 'team', 'lock'],

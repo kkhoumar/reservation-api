@@ -24,7 +24,7 @@ class StockMovement extends Model
     protected $fillable = [
         'restaurant_id', 'product_id', 'user_id', 'type', 'quantity',
         'stock_before', 'stock_after', 'unit_cost', 'supplier', 'reason',
-        'stock_count_id', 'expense_id',
+        'stock_count_id', 'expense_id', 'photo_path', 'empties_surplus',
     ];
 
     protected $casts = [

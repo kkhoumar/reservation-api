@@ -135,6 +135,12 @@ class User extends Authenticatable
         return $this->role === 'cashier';
     }
 
+    /** Associé (propriétaire absent, investisseur) : consulte tout, ne modifie rien. */
+    public function isAssociate(): bool
+    {
+        return $this->role === 'associate';
+    }
+
     /** Adresse de la photo de profil (null sans photo). « v » change avec la photo : le téléphone ne garde pas l'ancienne. */
     public function avatarUrl(): ?string
     {

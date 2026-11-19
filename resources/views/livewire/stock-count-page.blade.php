@@ -96,7 +96,7 @@
             <a href="{{ route('products.manage') }}" class="btn btn-primary">Ajouter des produits</a>
         </div>
     @elseif ($readOnly)
-        <div class="sc-warn"><x-icon name="lock" size="18" /> <div>{{ \App\Support\ReadOnlyGuard::MESSAGE }}</div></div>
+        <div class="sc-warn"><x-icon name="lock" size="18" /> <div>{{ \App\Support\ReadOnlyGuard::message() }}</div></div>
     @else
         {{-- ================= Comptage (calculs dans le téléphone) ================= --}}
         <div wire:ignore x-data="stockCount(@js($rows->keyBy('id')), @js($draftKey))">
@@ -159,8 +159,17 @@
                                     <button type="button" class="sc-step" aria-label="Un de plus" @click="step({{ $r['id'] }}, 1)"><x-icon name="plus" size="18" stroke="2.4" /></button>
                                 </div>
                                 <button type="button" class="sc-exact" :class="{ on: gap({{ $r['id'] }}) === 0 }" @click="exact({{ $r['id'] }})" title="Le compte est bon"><x-icon name="check" size="15" stroke="2.6" /> Juste</button>
+                                @if ($r['returnable'])
+                                    <div class="sc-empties">
+                                        <span class="lbl"><x-icon name="bottle" size="16" /> Vides comptés</span>
+                                        <input type="text" inputmode="numeric" autocomplete="off" placeholder="—" aria-label="Vides comptés : {{ $r['name'] }}"
+                                               :value="empties[{{ $r['id'] }}] ?? ''" @input="typeEmpty({{ $r['id'] }}, $event)" @focus="$event.target.select()">
+                                        <span class="exp">{{ $r['emptiesExpected'] !== null ? 'attendus : ' . $r['emptiesExpected'] : 'premier comptage des vides' }}</span>
+                                    </div>
+                                @endif
                                 <div class="sc-result" x-show="(gap({{ $r['id'] }}) ?? 0) !== 0" x-cloak>
                                     <span class="sc-badge" :class="state({{ $r['id'] }})" x-html="badge({{ $r['id'] }})"></span>
+                                    <span class="sc-why" x-show="why({{ $r['id'] }})" x-html="why({{ $r['id'] }})"></span>
                                     <div class="sc-reasons" x-show="gap({{ $r['id'] }}) !== 0">
                                         <span>Pourquoi ?</span>
                                         @foreach (\App\Models\StockCountLine::REASONS as $rk => $rl)
@@ -195,6 +204,7 @@
                                 <span x-show="g.counted > 0 && g.gapSale !== 0" x-text="signed(g.gapSale)"></span>
                             </div>
                             <div class="small muted" style="margin-top: 6px;" x-show="g.counted > 0 && g.gapSale !== 0" x-text="'Soit ' + signed(g.gapCost) + ' au prix d\'achat'"></div>
+                            <div class="small" style="margin-top: 6px; font-weight: 700;" :style="g.key === 'total' ? 'color:#FFD3D3' : 'color: var(--color-danger)'" x-show="g.unbilled > 0" x-text="'Dont ' + money(g.unbilled) + ' de boissons vendues sans bon'"></div>
                         </div>
                     </template>
                 </div>
@@ -256,6 +266,7 @@
         window.stockCount = (rows, draftKey) => ({
             rows,
             counts: {},
+            empties: {},
             reasons: {},
             note: '',
             kind: 'all',
@@ -269,6 +280,7 @@
                     if (draft && draft.counts && Object.keys(draft.counts).length) {
                         for (const id in draft.counts) if (this.rows[id]) this.counts[id] = draft.counts[id];
                         this.reasons = draft.reasons || {};
+                        this.empties = draft.empties || {};
                         this.note = draft.note || '';
                         this.restored = true;
                         setTimeout(() => this.restored = false, 6000);
@@ -280,7 +292,7 @@
             },
 
             saveDraft() {
-                try { localStorage.setItem(draftKey, JSON.stringify({ counts: this.counts, reasons: this.reasons, note: this.note })); } catch (e) {}
+                try { localStorage.setItem(draftKey, JSON.stringify({ counts: this.counts, reasons: this.reasons, note: this.note, empties: this.empties })); } catch (e) {}
             },
 
             value(id) {
@@ -294,6 +306,31 @@
             state(id) {
                 const g = this.gap(id);
                 return g === null ? '' : (g === 0 ? 'ok' : (g < 0 ? 'miss' : 'over'));
+            },
+            typeEmpty(id, e) {
+                const d = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 6);
+                e.target.value = d;
+                if (d === '') { delete this.empties[id]; this.empties = { ...this.empties }; } else { this.empties[id] = d; }
+            },
+            emptyValue(id) {
+                const v = this.empties[id];
+                return v === undefined || v === '' ? null : parseInt(v, 10);
+            },
+            // Bouteilles qui manquent : vendues sans bon (vides en trop) ou sorties du maquis
+            split(id) {
+                const r = this.rows[id], g = this.gap(id), e = this.emptyValue(id);
+                if (!r.returnable || r.emptiesExpected === null || e === null || g === null || g >= 0) return null;
+                const missing = -g;
+                const unbilled = Math.max(0, Math.min(missing, e - r.emptiesExpected));
+                return { unbilled, out: missing - unbilled };
+            },
+            why(id) {
+                const s = this.split(id), r = this.rows[id];
+                if (!s) return '';
+                const parts = [];
+                if (s.unbilled) parts.push('<b>' + s.unbilled + ' vendue' + (s.unbilled > 1 ? 's' : '') + ' sans bon</b> (vides en trop, ' + this.signed(-s.unbilled * r.price) + ')');
+                if (s.out) parts.push('<b>' + s.out + ' sortie' + (s.out > 1 ? 's' : '') + ' du maquis</b> (pas de vide)');
+                return parts.join(' · ');
             },
             type(id, e) {
                 const d = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 6);
@@ -317,7 +354,7 @@
             },
             clearAll() {
                 if (!confirm('Effacer tout ce que vous avez compté ?')) return;
-                this.counts = {}; this.reasons = {}; this.note = '';
+                this.counts = {}; this.reasons = {}; this.note = ''; this.empties = {};
             },
 
             unitCost(r) { return r.cost ?? r.price; },
@@ -328,7 +365,7 @@
             kindGapCount(kind) { return this.ids(kind).filter(id => (this.gap(id) ?? 0) !== 0).length; },
 
             totals(kind) {
-                const t = { size: 0, counted: 0, cost: 0, sale: 0, gapSale: 0, gapCost: 0 };
+                const t = { size: 0, counted: 0, cost: 0, sale: 0, gapSale: 0, gapCost: 0, unbilled: 0 };
                 for (const id of this.ids(kind)) {
                     const r = this.rows[id], v = this.value(id);
                     t.size++;
@@ -338,6 +375,8 @@
                     t.sale += v * r.price;
                     t.gapSale += (v - r.expected) * r.price;
                     t.gapCost += (v - r.expected) * this.unitCost(r);
+                    const s = this.split(id);
+                    if (s) t.unbilled += s.unbilled * r.price;
                 }
                 return t;
             },
@@ -372,12 +411,13 @@
 
                 this.sending = true;
                 this.error = '';
-                const counts = {}, reasons = {};
+                const counts = {}, reasons = {}, empties = {};
+                for (const id in this.empties) if (this.emptyValue(id) !== null && this.value(id) !== null) empties[id] = String(this.emptyValue(id));
                 for (const id in this.counts) if (this.value(id) !== null) counts[id] = String(this.value(id));
                 for (const id in this.reasons) if (this.reasons[id] && counts[id] !== undefined) reasons[id] = this.reasons[id];
 
                 try {
-                    const error = await this.$wire.save(counts, reasons, this.note);
+                    const error = await this.$wire.save(counts, reasons, this.note, empties);
                     if (error) { this.error = error; this.sending = false; return; }
                     try { localStorage.removeItem(draftKey); } catch (e) {}
                 } catch (e) {

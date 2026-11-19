@@ -18,7 +18,7 @@ class UserPolicy
     public static function assignableRoles(User $actor): array
     {
         if ($actor->isPlatformAdmin() || $actor->role === 'owner') {
-            return ['manager', 'cashier', 'server'];
+            return ['manager', 'cashier', 'server', 'associate'];
         }
 
         if ($actor->role === 'manager') {
@@ -45,6 +45,13 @@ class UserPolicy
         }
 
         if ($actor->restaurant_id === null || $actor->restaurant_id !== $target->restaurant_id) {
+            return false;
+        }
+
+        // Une fois créé, l'associé ne peut être ni modifié, ni désactivé, ni retiré
+        // par le maquis : celui qu'il surveille ne doit pas pouvoir le bloquer.
+        // Seul le Super Admin (Maquis Express) le peut.
+        if ($target->isAssociate()) {
             return false;
         }
 

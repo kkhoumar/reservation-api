@@ -116,7 +116,7 @@ class Profile extends Component
     public function render()
     {
         $user = auth()->user();
-        $roles = ['owner' => 'Patron', 'manager' => 'Gérante', 'cashier' => 'Caisse et comptoir', 'server' => 'Serveuse'];
+        $roles = ['owner' => 'Patron', 'manager' => 'Gérante', 'cashier' => 'Caisse et comptoir', 'server' => 'Serveuse', 'associate' => 'Associé'];
 
         return view('livewire.profile', [
             'user' => $user,

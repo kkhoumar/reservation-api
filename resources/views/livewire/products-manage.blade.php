@@ -104,6 +104,31 @@
                 </div>
             </div>
 
+            <div style="margin-bottom: 16px; padding: 14px; border: 1px solid var(--color-border); border-radius: 14px;">
+                <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer;">
+                    <input type="checkbox" wire:model.live="isReturnable" style="margin-top: 2px;">
+                    <span>
+                        <strong style="font-size: 14px;">Bouteille consignée</strong>
+                        <span style="display: block; font-size: 12.5px; color: var(--color-text-secondary); margin-top: 2px; line-height: 1.45;">
+                            Bouteille en verre rendue au fournisseur : un casier vide contre un casier plein. Les canettes et le plastique ne sont pas consignés.
+                        </span>
+                    </span>
+                </label>
+                @if ($isReturnable)
+                    <div style="margin-top: 12px;">
+                        <label style="font-size: 13px; font-weight: 600;">Bouteilles par casier</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+                            @foreach ([12, 15, 20, 24] as $size)
+                                <button type="button" wire:click="$set('crateSize', '{{ $size }}')" class="btn {{ $crateSize === (string) $size ? 'btn-secondary' : 'btn-ghost' }}" style="padding: 6px 14px; font-size: 13px;">{{ $size }}</button>
+                            @endforeach
+                        </div>
+                        <div style="font-size: 12.5px; color: var(--color-text-secondary); margin-top: 8px; line-height: 1.45;">
+                            Au comptage, vous compterez aussi les bouteilles vides. L'application saura si une bière qui manque a été vendue sans bon ou est sortie du maquis.
+                        </div>
+                    </div>
+                @endif
+            </div>
+
             <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" wire:model="isAvailable" id="isAvailable" style="width: auto;">
                 <label for="isAvailable" style="font-size: 13px; font-weight: 600;">Disponible à la vente</label>

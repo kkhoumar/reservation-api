@@ -62,10 +62,16 @@ class EnsureRestaurantAccess
             abort(403, 'Aucun établissement associé à ce compte.');
         }
 
+        // Associé : seulement les écrans de consultation
+        if ($user->isAssociate() && ! $request->hasHeader('X-Livewire')
+            && ! in_array($request->route()?->getName(), self::ASSOCIATE_ROUTES, true)) {
+            return redirect()->route('dashboard.index');
+        }
+
         if ($restaurant->isLocked()) {
-            // Patron et gérante : lecture seule (ils consultent leurs chiffres).
+            // Patron, gérante et associé : lecture seule (ils consultent leurs chiffres).
             // Les autres n'ont rien à consulter : page « Accès suspendu ».
-            if (! in_array($user->role, ['owner', 'manager'], true)) {
+            if (! in_array($user->role, ['owner', 'manager', 'associate'], true)) {
                 return redirect()->route('account.locked');
             }
 
@@ -92,9 +98,28 @@ class EnsureRestaurantAccess
         'credits',
         'expenses.index',
         'stock.index',
+        'stock.photo',
         'exports.index',
         'exports.download',
         'users.manage',
         'settings',
+        'journal',
+        'stock.count',
+        'stock.count.show',
+    ];
+
+    /** Écrans de l'associé : il consulte, il ne vend ni ne gère. */
+    public const ASSOCIATE_ROUTES = [
+        'dashboard.index',
+        'journal',
+        'sales.today',
+        'cash-register.history',
+        'cash-register.closed',
+        'stock.index',
+        'stock.photo',
+        'stock.count',
+        'stock.count.show',
+        'exports.index',
+        'exports.download',
     ];
 }

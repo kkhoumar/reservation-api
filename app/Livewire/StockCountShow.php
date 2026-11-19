@@ -17,7 +17,7 @@ class StockCountShow extends Component
 
     public function mount(StockCount $stockCount): void
     {
-        abort_unless(StockService::canManage(auth()->user()), 403);
+        abort_unless(StockService::canView(auth()->user()), 403);
         $this->stockCount = $stockCount;
     }
 

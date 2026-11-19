@@ -74,10 +74,10 @@
             </div>
 
             @if ($editingId !== auth()->id())
-                @php $formRoles = ['server' => 'Serveur', 'cashier' => 'Caissier', 'manager' => 'Gérant']; @endphp
+                @php $formRoles = ['server' => 'Serveur', 'cashier' => 'Caissier', 'manager' => 'Gérant', 'associate' => 'Associé (consulte seulement)']; @endphp
                 <div style="margin-bottom: 20px;">
                     <label style="font-size: 13px; font-weight: 600;">Rôle</label>
-                    <select wire:model="role" style="width: 100%; margin-top: 6px;">
+                    <select wire:model.live="role" style="width: 100%; margin-top: 6px;">
                         @foreach ($formRoles as $value => $label)
                             @if (in_array($value, $assignableRoles, true))
                                 <option value="{{ $value }}">{{ $label }}</option>
@@ -85,6 +85,11 @@
                         @endforeach
                     </select>
                     @error('role') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                    @if ($role === 'associate')
+                        <div style="font-size: 12.5px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.45;">
+                            Un associé voit tout (tableau de bord, journal, stock, caisse) mais ne peut rien modifier. Une fois créé, son compte ne peut plus être modifié ni désactivé depuis le maquis : seul Maquis Express le peut.
+                        </div>
+                    @endif
                 </div>
             @endif
 
@@ -113,7 +118,7 @@
                         <td style="padding: 12px 20px; color: var(--color-text-secondary);">{{ $user->phone }}</td>
                         <td style="padding: 12px 20px;">
                             @php
-                                $roleLabels = ['owner' => 'Propriétaire', 'manager' => 'Gérant', 'server' => 'Serveur', 'cashier' => 'Caissier'];
+                                $roleLabels = ['owner' => 'Propriétaire', 'manager' => 'Gérant', 'server' => 'Serveur', 'cashier' => 'Caissier', 'associate' => 'Associé'];
                             @endphp
                             {{ $roleLabels[$user->role] ?? $user->role }}
                         </td>
@@ -143,6 +148,9 @@
                                     Retirer du maquis
                                 </button>
                             @endcan
+                            @if ($user->isAssociate() && ! auth()->user()->isPlatformAdmin())
+                                <span style="font-size: 12px; color: var(--color-text-secondary); display: inline-flex; align-items: center; gap: 5px;"><x-icon name="lock" size="13" /> Compte protégé, modifiable seulement par Maquis Express</span>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -162,7 +170,7 @@
                 <table style="width: 100%; border-collapse: collapse;">
                     <tbody>
                         @foreach ($formerUsers as $former)
-                            @php $roleLabels = ['owner' => 'Propriétaire', 'manager' => 'Gérant', 'server' => 'Serveur', 'cashier' => 'Caissier']; @endphp
+                            @php $roleLabels = ['owner' => 'Propriétaire', 'manager' => 'Gérant', 'server' => 'Serveur', 'cashier' => 'Caissier', 'associate' => 'Associé']; @endphp
                             <tr style="border-bottom: 1px solid var(--color-border);">
                                 <td style="padding: 12px 20px;">
                                     <strong>{{ $former->first_name }} {{ $former->last_name }}</strong>

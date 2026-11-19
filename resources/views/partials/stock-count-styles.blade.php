@@ -139,6 +139,14 @@
         .sc-bar .sc-seg { width: 100%; }
         .sc-bar .sc-seg button { flex: 1; }
     }
+    /* --- Vides (bouteilles consignées) --- */
+    .sc-empties { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #F2F7FD; border: 1px dashed #B9D2EE; border-radius: 12px; padding: 8px 12px; }
+    .sc-empties .lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #2463B5; }
+    .sc-empties input { width: 84px; height: 40px; text-align: center; font-size: 17px; font-weight: 800; border-radius: 10px; }
+    .sc-empties .exp { font-size: 12.5px; color: var(--color-text-secondary); }
+    .sc-why { font-size: 12.5px; color: var(--color-text); line-height: 1.45; }
+    .sc-why b { color: var(--color-danger); }
+
     /* --- Finitions --- */
     .sc { font-variant-numeric: tabular-nums; }
     .sc-card, .sc-list, .sc-sum, .st-kpi, .sc-seg, .st-tabs { box-shadow: 0 1px 2px rgba(16,35,29,.04), 0 6px 18px -8px rgba(16,35,29,.08); }

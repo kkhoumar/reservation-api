@@ -13,7 +13,7 @@ class EnsureRole
         $user = auth()->user();
 
         if (!$user || (!$user->isPlatformAdmin() && !in_array($user->role, $roles))) {
-            return redirect()->route('tables.index')
+            return redirect()->route($user?->isAssociate() ? 'dashboard.index' : 'tables.index')
                 ->with('error', "Cette page n'est pas accessible avec votre rôle actuel.");
         }
 

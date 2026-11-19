@@ -111,24 +111,29 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/payment/{order}', TakePayment::class)->name('payment.take');
     Route::get('/payment/{order}/success', PaymentSuccess::class)->name('payment.success');
 
-    Route::get('/dashboard', Dashboard::class)->middleware('role:owner,manager')->name('dashboard.index');
+    Route::get('/dashboard', Dashboard::class)->middleware('role:owner,manager,associate')->name('dashboard.index');
     Route::get('/cash-register', CashRegisterManage::class)->middleware('role:owner,manager,cashier')->name('cash-register.manage');
-    Route::get('/cash-register/history', CashRegisterHistory::class)->middleware('role:owner,manager')->name('cash-register.history');
-    Route::get('/cash-register/{register}/closed', CashRegisterClosed::class)->middleware('role:owner,manager,cashier')->name('cash-register.closed');
+    Route::get('/cash-register/history', CashRegisterHistory::class)->middleware('role:owner,manager,associate')->name('cash-register.history');
+    Route::get('/cash-register/{register}/closed', CashRegisterClosed::class)->middleware('role:owner,manager,cashier,associate')->name('cash-register.closed');
     Route::get('/comptoir', Counter::class)->middleware('role:owner,manager,cashier')->name('counter');
     Route::get('/credits', Ardoise::class)->middleware('role:owner,manager,cashier')->name('credits');
     Route::redirect('/ardoise', '/credits', 301);
     Route::get('/sacoches', Sacoches::class)->middleware('role:owner,manager,cashier')->name('sacoches');
     Route::get('/expenses', ExpensesList::class)->middleware('role:owner,manager,cashier')->name('expenses.index');
-    Route::get('/sales-today', SalesToday::class)->middleware('role:owner,manager,cashier')->name('sales.today');
+    Route::get('/sales-today', SalesToday::class)->middleware('role:owner,manager,cashier,associate')->name('sales.today');
     Route::get('/users', UsersManage::class)->middleware('role:owner,manager')->name('users.manage');
     Route::get('/products', ProductsManage::class)->middleware('role:owner,manager')->name('products.manage');
-    Route::get('/stock', \App\Livewire\StockManage::class)->middleware('role:owner,manager')->name('stock.index');
-    Route::get('/journal', \App\Livewire\ActivityJournal::class)->middleware('role:owner,manager')->name('journal');
-    Route::get('/comptage',\App\Livewire\StockCountPage::class)->middleware('role:owner,manager')->name('stock.count');
-    Route::get('/comptage/{stockCount}', \App\Livewire\StockCountShow::class)->middleware('role:owner,manager')->name('stock.count.show');
-    Route::get('/exports', [\App\Http\Controllers\ExportController::class, 'index'])->middleware('role:owner,manager')->name('exports.index');
-    Route::get('/exports/{type}', [\App\Http\Controllers\ExportController::class, 'download'])->middleware('role:owner,manager')->name('exports.download');
+    Route::get('/stock', \App\Livewire\StockManage::class)->middleware('role:owner,manager,associate')->name('stock.index');
+    Route::get('/stock/photo/{movement}', function (\App\Models\StockMovement $movement) {
+        abort_unless(\App\Actions\StockService::canView(auth()->user()) && $movement->photo_path, 404);
+
+        return \App\Support\PhotoStore::response($movement->photo_path);
+    })->middleware('role:owner,manager,associate')->name('stock.photo');
+    Route::get('/journal', \App\Livewire\ActivityJournal::class)->middleware('role:owner,manager,associate')->name('journal');
+    Route::get('/comptage',\App\Livewire\StockCountPage::class)->middleware('role:owner,manager,associate')->name('stock.count');
+    Route::get('/comptage/{stockCount}', \App\Livewire\StockCountShow::class)->middleware('role:owner,manager,associate')->name('stock.count.show');
+    Route::get('/exports', [\App\Http\Controllers\ExportController::class, 'index'])->middleware('role:owner,manager,associate')->name('exports.index');
+    Route::get('/exports/{type}', [\App\Http\Controllers\ExportController::class, 'download'])->middleware('role:owner,manager,associate')->name('exports.download');
     Route::get('/parametres', RestaurantSettings::class)->middleware('role:owner')->name('settings');
 });
 

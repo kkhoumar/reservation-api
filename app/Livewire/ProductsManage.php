@@ -29,6 +29,10 @@ class ProductsManage extends Component
     public string $stockAlertThreshold = '';
     public bool $isAvailable = true;
 
+    /** Bouteille en verre rendue au fournisseur (1 vide contre 1 pleine). */
+    public bool $isReturnable = false;
+    public string $crateSize = '';
+
     public string $newCategoryName = '';
     public string $newCategoryKind = '';
 
@@ -49,6 +53,8 @@ class ProductsManage extends Component
             // par les ventes, livraisons, pertes et inventaires (écran Stock)
             'stockQuantity' => $this->editingProductId ? 'nullable' : 'required|integer|min:0|max:1000000',
             'stockAlertThreshold' => 'nullable|integer|min:0',
+            'isReturnable' => 'boolean',
+            'crateSize' => 'nullable|in:6,12,15,20,24',
         ];
     }
 
@@ -63,7 +69,7 @@ class ProductsManage extends Component
 
     public function openCreateForm()
     {
-        $this->reset(['editingProductId', 'name', 'sellingPrice', 'costPrice', 'categoryId', 'stockQuantity', 'stockAlertThreshold']);
+        $this->reset(['editingProductId', 'name', 'sellingPrice', 'costPrice', 'categoryId', 'stockQuantity', 'stockAlertThreshold', 'isReturnable', 'crateSize']);
         $this->isAvailable = true;
         $this->showProductForm = true;
     }
@@ -80,6 +86,8 @@ class ProductsManage extends Component
         $this->stockQuantity = (string) $product->stock_quantity;
         $this->stockAlertThreshold = $product->stock_alert_threshold !== null ? (string) $product->stock_alert_threshold : '';
         $this->isAvailable = $product->is_available;
+        $this->isReturnable = (bool) $product->is_returnable;
+        $this->crateSize = $product->crate_size ? (string) $product->crate_size : '';
         $this->showProductForm = true;
     }
 
@@ -95,6 +103,8 @@ class ProductsManage extends Component
             'cost_price' => (int) $this->costPrice,
             'stock_alert_threshold' => $this->stockAlertThreshold !== '' ? $this->stockAlertThreshold : null,
             'is_available' => $this->isAvailable,
+            'is_returnable' => $this->isReturnable,
+            'crate_size' => $this->isReturnable && $this->crateSize !== '' ? (int) $this->crateSize : null,
         ];
 
         if ($this->editingProductId) {

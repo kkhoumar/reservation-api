@@ -20,7 +20,7 @@ class StockCount extends Model
 
     protected $fillable = [
         'restaurant_id', 'user_id', 'products_counted', 'quantity_gap', 'value_gap',
-        'gap_sale_value', 'cost_value', 'sale_value', 'note', 'previous_count_at',
+        'gap_sale_value', 'cost_value', 'sale_value', 'note', 'previous_count_at', 'unbilled_value',
     ];
 
     protected $casts = [
@@ -30,6 +30,7 @@ class StockCount extends Model
         'gap_sale_value' => 'integer',
         'cost_value' => 'integer',
         'sale_value' => 'integer',
+        'unbilled_value' => 'integer',
         'previous_count_at' => 'datetime',
     ];
 

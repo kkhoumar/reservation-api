@@ -40,13 +40,15 @@ class StockManage extends Component
     public ?int $lossProductId = null;
     public ?int $lossQuantity = 1;
     public string $lossReason = '';
+    /** Photo de la perte, déjà réduite par le téléphone (JPEG en base64). Obligatoire. */
+    public string $lossPhoto = '';
 
     // Historique
     public string $historyType = '';
 
     public function mount(): void
     {
-        abort_unless(StockService::canManage(auth()->user()), 403);
+        abort_unless(StockService::canView(auth()->user()), 403);
         $this->resetDeliveryLines();
     }
 
@@ -105,6 +107,11 @@ class StockManage extends Component
             . ($result['total_cost'] > 0 ? ', ' . number_format($result['total_cost'], 0, ',', ' ') . ' FCFA' : '')
             . ($result['expense'] ? ', dépense créée dans la caisse.' : '.'));
 
+        // Plus de vides rendus que prévu : à montrer tout de suite au patron
+        if ($result['empties_alerts'] !== []) {
+            session()->flash('empties_alerts', $result['empties_alerts']);
+        }
+
         $this->supplier = '';
         $this->paidFromRegister = false;
         $this->resetDeliveryLines();
@@ -117,15 +124,26 @@ class StockManage extends Component
             'lossProductId' => 'required|integer',
             'lossQuantity' => 'required|integer|min:1|max:100000',
             'lossReason' => 'required|string|min:3|max:255',
+            'lossPhoto' => 'required|string',
         ], [
             'lossProductId.required' => 'Choisissez le produit.',
             'lossReason.required' => 'Indiquez le motif.',
             'lossReason.min' => 'Indiquez le motif.',
+            'lossPhoto.required' => 'Prenez une photo de la perte (les bouteilles cassées, le produit périmé).',
         ]);
 
+        [$photoPath, $photoError] = \App\Support\PhotoStore::store($this->lossPhoto, 'pertes', (string) auth()->user()->currentRestaurantId(), 1600, 900_000);
+
+        if ($photoError) {
+            $this->addError('lossPhoto', $photoError);
+
+            return;
+        }
+
         try {
-            $movement = $stock->recordLoss(auth()->user(), $this->lossProductId, $this->lossQuantity, $this->lossReason);
+            $movement = $stock->recordLoss(auth()->user(), $this->lossProductId, $this->lossQuantity, $this->lossReason, $photoPath);
         } catch (BusinessRuleException $e) {
+            \App\Support\PhotoStore::delete($photoPath);
             $this->addError('lossQuantity', $e->getMessage());
 
             return;
@@ -134,7 +152,7 @@ class StockManage extends Component
         session()->flash('success', 'Perte enregistrée : ' . abs($movement->quantity) . ' ' . $movement->product->name
             . ', soit ' . number_format(abs($movement->quantity) * $movement->unit_cost, 0, ',', ' ') . ' FCFA.');
 
-        $this->reset(['lossProductId', 'lossReason']);
+        $this->reset(['lossProductId', 'lossReason', 'lossPhoto']);
         $this->lossQuantity = 1;
         $this->tab = 'overview';
     }

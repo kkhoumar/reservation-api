@@ -77,6 +77,14 @@
         .st-total { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--color-mint); border-radius: 14px; padding: 12px 16px; margin-top: 12px; font-size: 14px; }
         .st-total strong { font-size: 18px; color: var(--color-primary); }
         .st-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .st-photo-btn { width: 100%; border: 2px dashed var(--color-border); background: var(--color-bg); border-radius: 14px; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; font: inherit; font-weight: 700; color: var(--color-text); }
+        .st-photo-btn small { font-weight: 500; color: var(--color-text-secondary); font-size: 12.5px; }
+        .st-photo-btn:hover { border-color: var(--color-primary-300); }
+        .st-photo-preview { display: flex; align-items: center; gap: 12px; }
+        .st-photo-preview img { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; border: 1px solid var(--color-border); }
+        .st-thumb { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--color-accent); text-decoration: none; }
+        .st-thumb img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-border); }
+        .st-empties { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: #2463B5; background: #E6F0FA; padding: 2px 8px; border-radius: 6px; margin-left: 6px; vertical-align: 2px; }
 
         /* Historique */
         .st-move { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--color-border); }
@@ -118,6 +126,19 @@
     @if (session('success'))
         <div class="sc-warn" style="background: var(--color-success-bg); color: var(--color-success);">
             <x-icon name="check-circle" size="18" /> <div><strong>{{ session('success') }}</strong></div>
+        </div>
+    @endif
+
+    @if (session('empties_alerts'))
+        <div class="sc-warn" style="background: var(--color-danger-bg); color: var(--color-danger);">
+            <x-icon name="alert" size="18" style="margin-top: 1px;" />
+            <div>
+                @foreach (session('empties_alerts') as $alert)
+                    <strong>{{ $alert['surplus'] }} vides de {{ $alert['product'] }} rendus en plus de ce que l'application attendait.</strong>
+                    Ce sont probablement des bouteilles vendues sans bon, soit {{ $fcfa($alert['value']) }} F.<br>
+                @endforeach
+                <span style="font-weight: 500;">C'est noté dans le Journal.</span>
+            </div>
         </div>
     @endif
 
@@ -215,8 +236,14 @@
                                 <x-stock-ava :kind="$k" />
                                 <div class="sc-txt">
                                 <div class="sc-name">{{ $p->name }}@if ($p->category && mb_strtolower($p->category->name) !== mb_strtolower($label))<span class="cat">{{ $p->category->name }}</span>@endif@if ($p->isLowStock())<span class="st-low"><x-icon name="alert" size="12" stroke="2.4" /> Bientôt en rupture</span>@endif</div>
-                                @if ($p->stock_alert_threshold !== null)
-                                    <div class="sc-calc">Alerte à {{ $p->stock_alert_threshold }}</div>
+                                @if ($p->stock_alert_threshold !== null || $p->is_returnable)
+                                    <div class="sc-calc">
+                                        @if ($p->stock_alert_threshold !== null) Alerte à {{ $p->stock_alert_threshold }} @endif
+                                        @if ($p->is_returnable)
+                                            {{ $p->stock_alert_threshold !== null ? '·' : '' }} Consignée{{ $p->crate_size ? ', casier de ' . $p->crate_size : '' }} ·
+                                            {{ $p->hasEmptiesBaseline() ? $p->empty_quantity . ' vides attendus' : 'vides pas encore comptés' }}
+                                        @endif
+                                    </div>
                                 @endif
                                 </div>
                             </div>
@@ -290,7 +317,7 @@
                                     <x-stock-ava :kind="$k" />
                                     <div class="sc-txt">
                                         <div class="sc-name">{{ $p->name }}</div>
-                                        <div class="stock">{{ $p->stock_quantity }} en stock</div>
+                                        <div class="stock">{{ $p->stock_quantity }} en stock @if ($p->is_returnable)· consignée, autant de vides rendus @endif</div>
                                     </div>
                                 </div>
                                 <div><small class="st-m">Quantité</small><input type="number" min="0" inputmode="numeric" wire:model="deliveryLines.{{ $p->id }}.quantity" placeholder="0" aria-label="Quantité livrée : {{ $p->name }}"></div>
@@ -359,6 +386,26 @@
                 @error('lossReason') <div class="sc-error" style="margin-top: 8px;">{{ $message }}</div> @enderror
             </div>
 
+            <div class="st-field" x-data="photoCapture('lossPhoto')">
+                <label>Photo de la perte</label>
+                <input type="file" accept="image/*" capture="environment" x-ref="file" @change="chosen($event)" hidden>
+                <template x-if="!preview">
+                    <button type="button" class="st-photo-btn" @click="pick()" :disabled="busy">
+                        <x-icon name="phone" size="22" />
+                        <span x-text="busy ? 'Préparation de la photo…' : 'Prendre une photo'"></span>
+                        <small>Obligatoire : les bouteilles cassées, le produit périmé</small>
+                    </button>
+                </template>
+                <template x-if="preview">
+                    <div class="st-photo-preview">
+                        <img :src="preview" alt="Photo de la perte">
+                        <button type="button" class="sc-chip" @click="pick()">Reprendre la photo</button>
+                    </div>
+                </template>
+                <div class="sc-error" x-show="error" x-text="error" x-cloak style="margin-top: 8px;"></div>
+                @error('lossPhoto') <div class="sc-error" style="margin-top: 8px;">{{ $message }}</div> @enderror
+            </div>
+
             <div class="st-total" style="background: var(--color-danger-bg);" x-show="$wire.lossProductId && costs[$wire.lossProductId]" x-cloak>
                 <span>Valeur perdue au prix d'achat</span>
                 <strong style="color: var(--color-danger);" x-text="((parseInt($wire.lossQuantity) || 0) * (costs[$wire.lossProductId] || 0)).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' F'"></strong>
@@ -394,6 +441,14 @@
                             @if ($m->unit_cost !== null) · {{ $fcfa($m->unit_cost) }} F l'unité @endif
                             @if ($m->reason) · {{ $m->reason }} @endif
                         </div>
+                        @if ($m->empties_surplus)
+                            <div class="d" style="color: var(--color-danger); font-weight: 700;">{{ $m->empties_surplus }} vides rendus en trop : bouteilles vendues sans bon</div>
+                        @endif
+                        @if ($m->photo_path)
+                            <a href="{{ route('stock.photo', $m) }}" target="_blank" rel="noopener" class="st-thumb"><img src="{{ route('stock.photo', $m) }}" alt="" loading="lazy"> Voir la photo</a>
+                        @elseif ($m->type === 'loss')
+                            <div class="d" style="color: #9A5B0C;">Sans photo</div>
+                        @endif
                     </div>
                     <div class="q" style="color: {{ $m->quantity < 0 ? 'var(--color-danger)' : 'var(--color-success)' }};">{{ $m->quantity > 0 ? '+' : '−' }}{{ abs($m->quantity) }}</div>
                 </div>

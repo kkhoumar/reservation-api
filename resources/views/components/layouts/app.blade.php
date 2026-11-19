@@ -342,6 +342,38 @@
         @endphp
         @php $canManage = auth()->check() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['owner', 'manager'], true)); @endphp
         <nav class="sidebar-nav">
+            @if (auth()->user()?->isAssociate())
+                <div class="nav-group">Suivi du maquis</div>
+                <a href="{{ route('dashboard.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                    Tableau de bord
+                </a>
+                <a href="{{ route('journal') }}" class="sidebar-link {{ request()->routeIs('journal') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12h6"/><path d="M9 15.5h4"/><path d="M9 8.5h6"/></svg>
+                    Journal
+                </a>
+                <a href="{{ route('sales.today') }}" class="sidebar-link {{ request()->routeIs('sales.today') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Ventes du jour
+                </a>
+                <a href="{{ route('cash-register.history') }}" class="sidebar-link {{ request()->routeIs('cash-register.*') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+                    Historique caisse
+                </a>
+                <a href="{{ route('stock.index') }}" class="sidebar-link {{ request()->routeIs('stock.index') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+                    Stock
+                </a>
+                <a href="{{ route('stock.count') }}" class="sidebar-link {{ request()->routeIs('stock.count*') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 2h6v4H9z"/><path d="m9 14 2 2 4-4"/></svg>
+                    Comptage
+                </a>
+                <a href="{{ route('exports.index') }}" class="sidebar-link {{ request()->routeIs('exports.*') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                    Exports
+                </a>
+                <div style="margin: 14px 10px 0; font-size: 12px; line-height: 1.45; color: rgba(255,255,255,.6);">Compte associé : vous consultez tout, sans rien modifier.</div>
+            @else
             @if ($canManage)
                 <div class="nav-group">Pilotage</div>
                 <a href="{{ route('dashboard.index') }}" class="sidebar-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
@@ -449,6 +481,7 @@
                     Paramètres
                 </a>
             @endif
+            @endif
         </nav>
 
         <div style="margin-top: auto; padding: 0 4px;">@include('partials.pwa-install', ['variant' => 'dark'])</div>
@@ -484,7 +517,7 @@
                         </div>
                     @endif
                     @php
-                        $roleLabels = ['owner' => 'Patron', 'manager' => 'Gérante', 'cashier' => 'Caisse / comptoir', 'server' => 'Serveuse'];
+                        $roleLabels = ['owner' => 'Patron', 'manager' => 'Gérante', 'cashier' => 'Caisse / comptoir', 'server' => 'Serveuse', 'associate' => 'Associé'];
                         $roleLabel = auth()->user()->isPlatformAdmin() ? 'Super Admin' : ($roleLabels[auth()->user()->role] ?? auth()->user()->role);
                     @endphp
                     <a href="{{ route('profile') }}" class="me-profile-link" title="Mon profil" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; border-radius: 999px;">
@@ -533,7 +566,7 @@
             @endif
 
             {{-- Lecture seule : abonnement impayé, suspendu ou essai terminé --}}
-            @if ($readOnly)
+            @if (\App\Support\ReadOnlyGuard::isLocked())
                 <div class="card" style="border-left: 6px solid var(--color-danger); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px;">
                     <span>
                         <strong>Mode lecture seule.</strong>

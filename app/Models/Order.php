@@ -294,7 +294,7 @@ class Order extends Model
             }
 
             foreach ($order->items as $item) {
-                Product::whereKey($item->product_id)->increment('stock_quantity', $item->quantity);
+                Product::restoreStock($item->product_id, $item->quantity);
             }
 
             $order->forceFill(['status' => 'cancelled', 'cancelled_by' => auth()->id(), 'cancelled_at' => now()])->save();

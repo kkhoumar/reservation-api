@@ -63,3 +63,44 @@
         });
     });
 </script>
+<script>
+    // Photo de preuve (perte, casse) : prise avec l'appareil photo, réduite à 1280 px (environ 100 Ko)
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('photoCapture', (model) => ({
+            preview: '',
+            busy: false,
+            error: '',
+            pick() { this.$refs.file.click(); },
+            clear() { this.preview = ''; this.$wire.$set(model, '', false); },
+            async chosen(event) {
+                const file = event.target.files && event.target.files[0];
+                event.target.value = '';
+                if (!file) return;
+                if (!/^image\//.test(file.type)) { this.error = 'Choisissez une photo.'; return; }
+                this.busy = true; this.error = '';
+                try {
+                    const dataUrl = await new Promise((resolve, reject) => {
+                        const url = URL.createObjectURL(file);
+                        const img = new Image();
+                        img.onload = () => {
+                            const max = 1280, ratio = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+                            const w = Math.round(img.naturalWidth * ratio), h = Math.round(img.naturalHeight * ratio);
+                            const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+                            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+                            ctx.drawImage(img, 0, 0, w, h);
+                            URL.revokeObjectURL(url);
+                            resolve(canvas.toDataURL('image/jpeg', 0.72));
+                        };
+                        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image')); };
+                        img.src = url;
+                    });
+                    this.preview = dataUrl;
+                    this.$wire.$set(model, dataUrl, false);
+                } catch (e) {
+                    this.error = 'La photo n\'a pas pu être lue. Reprenez-la.';
+                }
+                this.busy = false;
+            },
+        }));
+    });
+</script>

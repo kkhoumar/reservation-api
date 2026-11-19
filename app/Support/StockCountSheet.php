@@ -115,6 +115,9 @@ class StockCountSheet
                 'delivered' => (int) ($delivered[$p->id] ?? 0),
                 'sold' => (int) ($sold[$p->id] ?? 0),
                 'lost' => (int) ($lost[$p->id] ?? 0),
+                'returnable' => (bool) $p->is_returnable,
+                // null = vides jamais comptés : pas encore de contrôle possible
+                'emptiesExpected' => $p->hasEmptiesBaseline() ? max(0, (int) $p->empty_quantity) : null,
             ]);
     }
 

@@ -184,7 +184,7 @@ class NewOrder extends Component
                     return;
                 }
 
-                Product::whereKey($item->product_id)->increment('stock_quantity', $item->quantity);
+                Product::restoreStock($item->product_id, $item->quantity);
                 $item->delete();
                 $order->recalculateTotal();
 

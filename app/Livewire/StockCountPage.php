@@ -20,7 +20,7 @@ class StockCountPage extends Component
 {
     public function mount(): void
     {
-        abort_unless(StockService::canManage(auth()->user()), 403);
+        abort_unless(StockService::canView(auth()->user()), 403);
     }
 
     /**
@@ -29,7 +29,7 @@ class StockCountPage extends Component
      * @return string|null  message d'erreur à afficher, null si tout va bien
      */
     #[Renderless]
-    public function save(array $counts, array $reasons = [], string $note = ''): ?string
+    public function save(array $counts, array $reasons = [], string $note = '', array $empties = []): ?string
     {
         $counts = collect($counts)
             ->filter(fn ($v, $k) => is_numeric($k))
@@ -40,8 +40,13 @@ class StockCountPage extends Component
             ->filter(fn ($v, $k) => is_numeric($k) && is_string($v))
             ->all();
 
+        $empties = collect($empties)
+            ->filter(fn ($v, $k) => is_numeric($k) && (is_int($v) || is_string($v)))
+            ->map(fn ($v) => is_int($v) ? $v : trim($v))
+            ->all();
+
         try {
-            $count = app(StockService::class)->recordInventory(auth()->user(), $counts, mb_substr(trim($note), 0, 255) ?: null, $reasons);
+            $count = app(StockService::class)->recordInventory(auth()->user(), $counts, mb_substr(trim($note), 0, 255) ?: null, $reasons, $empties);
         } catch (BusinessRuleException $e) {
             return $e->getMessage();
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
