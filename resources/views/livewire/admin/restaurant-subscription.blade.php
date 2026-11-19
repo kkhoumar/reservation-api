@@ -136,7 +136,7 @@
                     <strong>Garde</strong> les réglages, l'équipe, le menu, les tables et l'abonnement.
                 </p>
                 <div style="background: var(--color-bg); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px;">
-                    Actuellement : {{ $activity['orders'] }} commande(s) · {{ $activity['registers'] }} caisse(s) · {{ $activity['expenses'] }} dépense(s) · {{ $activity['customers'] }} client(s) à crédit
+                    Actuellement : {{ $activity['orders'] }} {{ $activity['orders'] > 1 ? 'commandes' : 'commande' }} · {{ $activity['registers'] }} {{ $activity['registers'] > 1 ? 'caisses' : 'caisse' }} · {{ $activity['expenses'] }} {{ $activity['expenses'] > 1 ? 'dépenses' : 'dépense' }} · {{ $activity['customers'] }} client(s) à crédit
                 </div>
                 <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 6px; cursor: pointer;">
                     <input type="checkbox" wire:model="resetCustomers"> Effacer aussi les clients à crédit
@@ -155,7 +155,7 @@
             <div class="card" style="border: 1.5px solid #F6C9C9;">
                 <h3 style="margin-top: 0;">Supprimer le maquis</h3>
                 <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: 0; line-height: 1.55;">
-                    Supprime le maquis et <strong>tout</strong> ce qui lui appartient : {{ $activity['users'] }} compte(s) de l'équipe, le menu, les tables, les ventes, la caisse et l'historique d'abonnement.
+                    Supprime le maquis et <strong>tout</strong> ce qui lui appartient : {{ $activity['users'] }} {{ $activity['users'] > 1 ? 'comptes' : 'compte' }} de l'équipe, le menu, les tables, les ventes, la caisse et l'historique d'abonnement.
                 </p>
                 @if ($activity['paid'] > 0)
                     <div style="background: var(--color-danger-bg); color: #8E2222; border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px;">

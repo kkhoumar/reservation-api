@@ -40,11 +40,11 @@ class RecordSubscriptionPayment
         }
 
         if (! in_array($months, self::ALLOWED_MONTHS, true)) {
-            throw new BusinessRuleException('Durée invalide : 1, 3, 6 ou 12 mois.');
+            throw new BusinessRuleException('Choisissez une durée de 1, 3, 6 ou 12 mois.');
         }
 
         if (! array_key_exists($method, SubscriptionPayment::METHODS)) {
-            throw new BusinessRuleException('Moyen de paiement invalide.');
+            throw new BusinessRuleException('Choisissez le moyen de paiement dans la liste.');
         }
 
         if (! $plan->is_active) {
@@ -54,7 +54,7 @@ class RecordSubscriptionPayment
         $amount ??= $plan->monthly_price * $months;
 
         if ($amount < 0 || $amount > 100_000_000) {
-            throw new BusinessRuleException('Montant invalide.');
+            throw new BusinessRuleException('Entrez le montant reçu en chiffres, entre 0 et 100 000 000 FCFA.');
         }
 
         return DB::transaction(function () use ($restaurant, $plan, $months, $method, $admin, $amount, $reference, $note) {

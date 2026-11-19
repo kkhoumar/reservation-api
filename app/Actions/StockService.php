@@ -55,7 +55,7 @@ class StockService
                 $unitCost = isset($line['unit_cost']) && $line['unit_cost'] !== '' && $line['unit_cost'] !== null ? (int) $line['unit_cost'] : null;
 
                 if ($quantity < 1 || $quantity > 100000) {
-                    throw new BusinessRuleException('Quantité livrée invalide.');
+                    throw new BusinessRuleException('Entrez une quantité livrée entre 1 et 100 000.');
                 }
 
                 if ($unitCost !== null && ($unitCost < 0 || $unitCost > 10000000)) {
@@ -131,7 +131,7 @@ class StockService
         $this->guard($by);
 
         if ($quantity < 1 || $quantity > 100000) {
-            throw new BusinessRuleException('Quantité invalide.');
+            throw new BusinessRuleException('Entrez une quantité entre 1 et 100 000.');
         }
 
         if (mb_strlen(trim($reason)) < 3) {

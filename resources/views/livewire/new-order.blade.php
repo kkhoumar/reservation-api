@@ -112,7 +112,7 @@
                     @else
                         <button wire:click="sendToCounter" class="btn btn-primary" style="justify-content: center; font-size: 16px; padding: 14px 18px;">Envoyer au comptoir</button>
                         <div style="font-size: 12px; color: var(--color-text-secondary);">
-                            Apporte l'argent au comptoir : le bon est servi une fois encaissé.
+                            Apportez l'argent au comptoir. La commande est servie une fois encaissée.
                         </div>
                     @endif
                 @else

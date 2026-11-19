@@ -78,7 +78,7 @@ class DemoRequestForm extends Component
         $key = 'demo-request:' . request()->ip();
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_PER_HOUR)) {
-            $this->addError('phone', 'Trop de demandes envoyées. Réessaie plus tard ou appelle-nous directement.');
+            $this->addError('phone', 'Trop de demandes envoyées depuis ce téléphone. Réessayez dans une heure, ou appelez-nous.');
 
             return;
         }

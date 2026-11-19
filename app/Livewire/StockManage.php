@@ -91,8 +91,8 @@ class StockManage extends Component
             'deliveryLines.*.quantity' => 'nullable|integer|min:0|max:100000',
             'deliveryLines.*.unit_cost' => 'nullable|integer|min:0|max:10000000',
         ], [
-            'deliveryLines.*.quantity.*' => 'Quantité invalide.',
-            'deliveryLines.*.unit_cost.*' => 'Prix invalide.',
+            'deliveryLines.*.quantity.*' => 'Entrez une quantité en nombre entier, sans virgule.',
+            'deliveryLines.*.unit_cost.*' => 'Entrez le prix d\'achat en FCFA, sans virgule.',
         ]);
 
         $lines = collect($this->deliveryLines)
@@ -108,9 +108,9 @@ class StockManage extends Component
             return;
         }
 
-        session()->flash('success', "Livraison enregistrée : {$result['quantity']} article(s) sur {$result['lines']} produit(s)"
+        session()->flash('success', "Livraison enregistrée : {$result['quantity']} " . ($result['quantity'] > 1 ? 'articles' : 'article') . " sur {$result['lines']} " . ($result['lines'] > 1 ? 'produits' : 'produit')
             . ($result['total_cost'] > 0 ? ', ' . number_format($result['total_cost'], 0, ',', ' ') . ' FCFA' : '')
-            . ($result['expense'] ? ' (dépense créée dans la caisse).' : '.'));
+            . ($result['expense'] ? ', dépense créée dans la caisse.' : '.'));
 
         $this->supplier = '';
         $this->paidFromRegister = false;

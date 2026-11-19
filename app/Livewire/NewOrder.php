@@ -51,7 +51,7 @@ class NewOrder extends Component
         }
 
         if (! $this->tableId && ! $restaurant?->usesQuickSale()) {
-            session()->flash('error', "La vente rapide n'est pas activée : choisis une table.");
+            session()->flash('error', "La vente rapide n'est pas activée dans ce maquis. Choisissez une table.");
             $this->redirect(route('tables.index'), navigate: false);
 
             return;
@@ -284,7 +284,7 @@ class NewOrder extends Component
         $order = $this->order;
 
         if (!$order || $order->items->isEmpty()) {
-            session()->flash('error', 'La commande est vide.');
+            session()->flash('error', 'Ajoutez au moins un article avant de continuer.');
 
             return false;
         }

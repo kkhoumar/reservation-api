@@ -30,7 +30,7 @@
             <h3 style="margin-top: 0;">La caisse est fermée</h3>
             <p style="color: var(--color-text-secondary); font-size: 14px;">
                 Pour commencer la journée, comptez les espèces que vous mettez dans le tiroir
-                (la monnaie pour rendre aux clients). C'est le <strong>fonds de départ</strong>.
+                pour rendre la monnaie aux clients. C'est le <strong>fonds de départ</strong>.
             </p>
 
             @if ($lastClosed)
@@ -123,18 +123,18 @@
                     </div>
                     @if ($breakdown['remittances_count'] > 0 || $outstanding->isNotEmpty())
                         <div style="{{ $line }}">
-                            <span>+ Versements des serveuses<span style="{{ $hint }}">{{ $breakdown['remittances_count'] }} versement(s) : l'argent de leurs sacoches remis à la caisse</span></span>
+                            <span>+ Versements des serveuses<span style="{{ $hint }}">{{ $breakdown['remittances_count'] }} {{ $breakdown['remittances_count'] > 1 ? 'versements' : 'versement' }} : l'argent des sacoches remis à la caisse</span></span>
                             <strong style="color: var(--color-primary-300);">+{{ $fcfa($breakdown['remittances_total']) }}</strong>
                         </div>
                     @endif
                     @if ($breakdown['repayments_count'] > 0 || $sales->credit > 0)
                         <div style="{{ $line }}">
-                            <span>+ Remboursements de crédits<span style="{{ $hint }}">{{ $breakdown['repayments_count'] }} client(s) venu(s) payer leur crédit en espèces</span></span>
+                            <span>+ Remboursements de crédits<span style="{{ $hint }}">{{ $breakdown['repayments_count'] }} {{ $breakdown['repayments_count'] > 1 ? 'clients venus payer leur crédit' : 'client venu payer son crédit' }} en espèces</span></span>
                             <strong style="color: var(--color-primary-300);">+{{ $fcfa($breakdown['repayments_total']) }}</strong>
                         </div>
                     @endif
                     <div style="{{ $line }}">
-                        <span>− Dépenses<span style="{{ $hint }}">{{ $breakdown['expenses_count'] }} dépense(s) payée(s) avec l'argent de la caisse</span></span>
+                        <span>− Dépenses<span style="{{ $hint }}">{{ $breakdown['expenses_count'] }} {{ $breakdown['expenses_count'] > 1 ? 'dépenses payées' : 'dépense payée' }} avec l'argent de la caisse</span></span>
                         <strong style="color: var(--color-danger);">−{{ $fcfa($breakdown['expenses_total']) }}</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 14px 0 0 0; font-size: 16px;">

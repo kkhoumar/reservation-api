@@ -32,7 +32,7 @@ class Login extends Component
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $minutes = (int) ceil(RateLimiter::availableIn($key) / 60);
-            $this->addError('phone', "Trop de tentatives. Réessaie dans {$minutes} minute" . ($minutes > 1 ? 's' : '') . '.');
+            $this->addError('phone', "Trop de tentatives. Réessayez dans {$minutes} minute" . ($minutes > 1 ? 's' : '') . '.');
             return;
         }
 

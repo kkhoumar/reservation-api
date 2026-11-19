@@ -29,7 +29,7 @@ class ChangePassword extends Component
         ], [
             'password.min' => 'Au moins 8 caractères.',
             'password.same' => 'Les deux mots de passe ne correspondent pas.',
-            'password.different' => 'Choisis un mot de passe différent du provisoire.',
+            'password.different' => 'Choisissez un mot de passe différent du mot de passe provisoire.',
         ]);
 
         if (! Hash::check($this->currentPassword, $user->password)) {

@@ -1,11 +1,11 @@
 <div>
     <div class="auth-badge">ME</div>
-    <h1 style="font-size: 20px; font-weight: 800; margin: 0 0 4px 0;">Choisis ton mot de passe</h1>
+    <h1 style="font-size: 20px; font-weight: 800; margin: 0 0 4px 0;">Choisissez votre mot de passe</h1>
     <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 24px 0;">
         @if ($forced)
-            Bienvenue {{ auth()->user()->first_name }} ! Pour ta sécurité, remplace le mot de passe provisoire par un mot de passe que toi seul connais.
+            Bienvenue {{ auth()->user()->first_name }}. Remplacez le mot de passe provisoire par un mot de passe que vous seul connaissez.
         @else
-            Modifie ton mot de passe.
+            Entrez votre mot de passe actuel, puis le nouveau.
         @endif
     </p>
 

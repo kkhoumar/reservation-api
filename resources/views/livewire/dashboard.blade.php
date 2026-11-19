@@ -127,7 +127,7 @@
             </div>
             @if ($uncostedQuantity > 0)
                 <div style="font-size: 12px; color: var(--color-accent); margin-top: 6px;">
-                    <x-icon name="alert" size="15" style="color: var(--color-warning);" /> {{ $uncostedQuantity }} article(s) vendu(s) sans prix d'achat : bénéfice surestimé.
+                    <x-icon name="alert" size="15" style="color: var(--color-warning);" /> {{ $uncostedQuantity }} {{ $uncostedQuantity > 1 ? 'articles vendus' : 'article vendu' }} sans prix d'achat : le bénéfice affiché est trop haut.
                     <a href="{{ route('products.manage') }}" style="color: var(--color-accent);">Renseigner les prix</a>
                 </div>
             @endif

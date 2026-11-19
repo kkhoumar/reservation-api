@@ -74,7 +74,7 @@
                 <h3 style="margin-top: 0;">Derniers inventaires</h3>
                 @foreach ($recentCounts as $c)
                     <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
-                        <span>{{ $c->created_at->format('d/m/Y H:i') }} · {{ $c->products_counted }} produit(s) comptés · par {{ $c->user?->first_name }}</span>
+                        <span>{{ $c->created_at->format('d/m/Y H:i') }} · {{ $c->products_counted }} {{ $c->products_counted > 1 ? 'produits comptés' : 'produit compté' }} · par {{ $c->user?->first_name }}</span>
                         <strong style="color: {{ $c->value_gap < 0 ? 'var(--color-danger)' : ($c->value_gap > 0 ? 'var(--color-primary-300)' : 'inherit') }};">
                             {{ $c->value_gap === 0 ? 'juste' : ($c->value_gap < 0 ? 'manque ' . $fcfa(abs($c->value_gap)) : 'en trop ' . $fcfa($c->value_gap)) . ' F' }}
                         </strong>
@@ -158,7 +158,7 @@
             <div class="card" style="margin-bottom: 16px; border-left: 6px solid {{ $lastCount->value_gap < 0 ? 'var(--color-danger)' : 'var(--color-primary-300)' }};">
                 <h3 style="margin-top: 0;">Résultat de l'inventaire</h3>
                 <p style="font-size: 15px; margin: 0 0 10px 0;">
-                    {{ $lastCount->products_counted }} produit(s) comptés.
+                    {{ $lastCount->products_counted }} {{ $lastCount->products_counted > 1 ? 'produits comptés' : 'produit compté' }}.
                     @if ($lastCount->value_gap === 0 && $lastCount->movements->isEmpty())
                         <strong style="color: var(--color-primary-300);">Tout est juste.</strong>
                     @elseif ($lastCount->value_gap < 0)

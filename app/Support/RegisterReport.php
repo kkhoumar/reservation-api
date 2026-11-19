@@ -90,7 +90,7 @@ class RegisterReport
             : '—';
 
         $alerts = collect([
-            $this->cancelledCount > 0 ? $this->cancelledCount . ' bon(s) annulé(s) : ' . $f($this->cancelledTotal) . ' F' : null,
+            $this->cancelledCount > 0 ? $this->cancelledCount . ($this->cancelledCount > 1 ? ' bons annulés : ' : ' bon annulé : ') . $f($this->cancelledTotal) . ' F' : null,
             $this->gesturesTotal > 0 ? 'offerts et remises : ' . $f($this->gesturesTotal) . ' F' : null,
             $this->sacochesOutstanding > 0 ? 'sacoches non versées : ' . $f($this->sacochesOutstanding) . ' F' : null,
             $this->ardoiseDue > 0 ? 'crédits à récupérer : ' . $f($this->ardoiseDue) . ' F' : null,
@@ -173,7 +173,7 @@ class RegisterReport
                     . ' (' . collect([$g->reason, $g->where])->filter()->join(', ') . ')';
             }
             if ($this->gestures->count() > 5) {
-                $lines[] = '• … et ' . ($this->gestures->count() - 5) . ' autre(s)';
+                $lines[] = '• … et ' . ($this->gestures->count() - 5) . (($this->gestures->count() - 5) > 1 ? ' autres' : ' autre');
             }
         }
 

@@ -96,7 +96,7 @@ class Counter extends Component
         $customer = Customer::find($this->creditCustomerId);
 
         if (! $customer) {
-            $this->addError('creditCustomerId', 'Client introuvable.');
+            $this->addError('creditCustomerId', 'Ce client n\'existe plus. Rechargez la page et choisissez-le de nouveau.');
 
             return;
         }

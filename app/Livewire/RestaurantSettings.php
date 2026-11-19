@@ -75,7 +75,7 @@ class RestaurantSettings extends Component
             $pending = Order::where('status', 'awaiting_payment')->count();
 
             if ($pending > 0) {
-                $this->addError('paymentTiming', "Impossible pour l'instant : {$pending} commande(s) attendent d'être encaissées. Encaisse-les d'abord.");
+                $this->addError('paymentTiming', "Impossible pour l'instant : {$pending} " . ($pending > 1 ? 'commandes attendent' : 'commande attend') . " d'être encaissée" . ($pending > 1 ? 's' : '') . ". Encaissez-les d'abord.");
 
                 return;
             }
@@ -88,7 +88,7 @@ class RestaurantSettings extends Component
                 ->count();
 
             if ($openTableOrders > 0) {
-                $this->addError('serviceMode', "Impossible pour l'instant : {$openTableOrders} commande(s) de table ne sont pas encore payées. Encaisse-les d'abord.");
+                $this->addError('serviceMode', "Impossible pour l'instant : {$openTableOrders} " . ($openTableOrders > 1 ? 'commandes de table ne sont pas encore payées' : 'commande de table n\'est pas encore payée') . ". Encaissez-les d'abord.");
 
                 return;
             }

@@ -297,6 +297,6 @@ class StockTest extends TestCase
             ->assertViewHas('stockLosses', 600)
             ->assertViewHas('uncostedQuantity', 2)
             ->assertSee('Bénéfice estimé')
-            ->assertSee('2 article(s) vendu(s) sans prix d', false);
+            ->assertSee('2 articles vendus sans prix d', false);
     }
 }
