@@ -83,7 +83,7 @@
                 </p>
 
                 <label style="font-size: 13px; font-weight: 600;">Montant reçu (FCFA)</label>
-                <input type="number" wire:model="amount" style="width: 100%; margin: 6px 0 8px 0; font-size: 18px;">
+                <x-money-input model="amount" style="width: 100%; margin: 6px 0 8px 0; font-size: 18px;" />
                 @error('amount') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 8px;">{{ $message }}</div> @enderror
 
                 <label style="font-size: 13px; font-weight: 600;">Note (facultatif)</label>

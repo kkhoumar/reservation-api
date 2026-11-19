@@ -55,12 +55,12 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Prix de vente (FCFA)</label>
-                    <input type="number" wire:model="sellingPrice" style="width: 100%; margin-top: 6px;">
+                    <x-money-input model="sellingPrice" style="width: 100%; margin-top: 6px;" />
                     @error('sellingPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
                 </div>
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Prix d'achat (FCFA)</label>
-                    <input type="number" wire:model="costPrice" placeholder="Facultatif" style="width: 100%; margin-top: 6px;">
+                    <x-money-input model="costPrice" placeholder="Facultatif" style="width: 100%; margin-top: 6px;" />
                     @error('costPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
                 </div>
             </div>

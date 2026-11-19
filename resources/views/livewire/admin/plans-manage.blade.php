@@ -25,7 +25,7 @@
                 </div>
 
                 <label style="font-size: 13px; font-weight: 600; display: block; margin-top: 12px;">Prix par mois (FCFA)</label>
-                <input type="number" wire:model="form.{{ $plan->id }}.monthly_price" style="width: 100%; margin-top: 4px; font-size: 18px;">
+                <x-money-input model="form.{{ $plan->id }}.monthly_price" style="width: 100%; margin-top: 4px; font-size: 18px;" />
                 @error("form.{$plan->id}.monthly_price") <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
 
                 <label style="font-size: 13px; font-weight: 600; display: block; margin-top: 12px;">Utilisateurs actifs maximum</label>

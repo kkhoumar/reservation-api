@@ -101,7 +101,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 100px 130px; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
                             <span>{{ $p->name }} <span style="{{ $small }}">· stock {{ $p->stock_quantity }}</span></span>
                             <input type="number" min="0" wire:model="deliveryLines.{{ $p->id }}.quantity" placeholder="Qté" style="padding: 6px 8px;">
-                            <input type="number" min="0" wire:model="deliveryLines.{{ $p->id }}.unit_cost" placeholder="Prix d'achat" style="padding: 6px 8px;">
+                            <x-money-input model="deliveryLines.{{ $p->id }}.unit_cost" placeholder="Prix d'achat" style="padding: 6px 8px;" />
                         </div>
                     @endforeach
                 @endif

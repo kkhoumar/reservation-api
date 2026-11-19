@@ -23,7 +23,7 @@
         @if ($isMobile)
             <div>
                 <label style="font-size: 13px; font-weight: 600; display: block;">Montant {{ $methods[$paymentMethod] }} (FCFA)</label>
-                <input type="number" wire:model.live.debounce.300ms="mobileAmount" style="font-size: 18px; width: 170px; margin-top: 4px;">
+                <x-money-input model="mobileAmount" live style="font-size: 18px; width: 170px; margin-top: 4px;" />
             </div>
             <div>
                 <label style="font-size: 13px; font-weight: 600; display: block;">Référence de la transaction</label>
@@ -36,7 +36,7 @@
                 <label style="font-size: 13px; font-weight: 600; display: block;">
                     {{ $isMobile ? 'Espèces reçues pour le reste' : 'Espèces reçues' }} (FCFA)
                 </label>
-                <input type="number" wire:model.live.debounce.300ms="amountReceived" style="font-size: 18px; width: 170px; margin-top: 4px;">
+                <x-money-input model="amountReceived" live style="font-size: 18px; width: 170px; margin-top: 4px;" />
             </div>
         @endif
     </div>

@@ -107,7 +107,7 @@
                 @if ($selectedBalance > 0 && ! \App\Support\ReadOnlyGuard::isReadOnly())
                     <div style="border-top: 1px dashed var(--color-border); padding-top: 12px;">
                         <label style="font-size: 13px; font-weight: 600;">Remboursement reçu (FCFA)</label>
-                        <input type="number" wire:model="repaymentAmount" placeholder="{{ $selectedBalance }}" style="width: 100%; margin: 4px 0 8px 0; font-size: 18px;">
+                        <x-money-input model="repaymentAmount" placeholder="{{ number_format($selectedBalance, 0, ',', ' ') }}" style="width: 100%; margin: 4px 0 8px 0; font-size: 18px;" />
                         @error('repaymentAmount') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 8px;">{{ $message }}</div> @enderror
                         <input type="text" wire:model="repaymentNote" maxlength="255" placeholder="Note (facultatif)" style="width: 100%; margin-bottom: 10px;">
                         <button wire:click="recordRepayment" class="btn btn-primary" style="width: 100%; justify-content: center;">Encaisser le remboursement</button>

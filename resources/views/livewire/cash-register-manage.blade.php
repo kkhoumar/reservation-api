@@ -41,7 +41,7 @@
             @endif
 
             <label style="font-size: 13px; font-weight: 600;">Fonds de départ (FCFA)</label>
-            <input type="number" wire:model="openingAmount" style="width: 100%; margin: 6px 0 16px 0; font-size: 18px;">
+            <x-money-input model="openingAmount" :empty="0" style="width: 100%; margin: 6px 0 16px 0; font-size: 18px;" />
             @error('openingAmount') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 12px;">{{ $message }}</div> @enderror
 
             <button wire:click="openRegister" class="btn btn-primary" style="width: 100%; justify-content: center;">
@@ -244,7 +244,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 70px 80px; gap: 6px 8px; align-items: center; font-size: 13px;">
                             @foreach ($denominations as $key => [$value, $label])
                                 <span>{{ $label }}</span>
-                                <input type="number" min="0" wire:model.live.debounce.400ms="counts.{{ $key }}" placeholder="0" style="padding: 6px 8px; width: 100%;">
+                                <x-money-input model="counts.{{ $key }}" live placeholder="0" style="padding: 6px 8px; width: 100%;" />
                                 <span style="text-align: right; color: var(--color-text-secondary);">{{ $fcfa(max(0, (int) ($counts[$key] ?? 0)) * $value) }}</span>
                             @endforeach
                         </div>
@@ -254,7 +254,7 @@
                         </button>
                     @else
                         <label style="font-size: 13px; font-weight: 600;">Montant total compté (FCFA)</label>
-                        <input type="number" wire:model.live="countedAmount" style="width: 100%; margin: 6px 0 8px 0; font-size: 18px;">
+                        <x-money-input model="countedAmount" live style="width: 100%; margin: 6px 0 8px 0; font-size: 18px;" />
                         <button type="button" wire:click="$set('directEntry', false)" style="background: none; border: none; color: var(--color-text-secondary); font-size: 12px; text-decoration: underline; cursor: pointer; padding: 0 0 8px 0;">
                             Compter billet par billet
                         </button>

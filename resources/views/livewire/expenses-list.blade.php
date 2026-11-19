@@ -31,7 +31,7 @@
             </select>
 
             <label style="font-size: 13px; font-weight: 600;">Montant (FCFA)</label>
-            <input type="number" wire:model="amount" style="width: 100%; margin: 6px 0 14px 0;">
+            <x-money-input model="amount" style="width: 100%; margin: 6px 0 14px 0;" />
             @error('amount') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 10px;">{{ $message }}</div> @enderror
 
             <label style="font-size: 13px; font-weight: 600;">Description (optionnel)</label>

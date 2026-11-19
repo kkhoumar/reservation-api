@@ -586,6 +586,7 @@
         })();
     </script>
 
+    @include('partials.money-input-script')
     @include('partials.tap-feedback')
     @livewireScripts
 </body>
