@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Exceptions\BusinessRuleException;
+use App\Models\ActivityLog;
 use App\Models\CashRegister;
 use App\Models\Expense;
 use App\Models\Product;
@@ -118,6 +119,9 @@ class StockService
             }
 
             Log::info('Stock : livraison', ['user_id' => $by->id, 'restaurant_id' => $restaurantId, 'lines' => count($movements), 'total_cost' => $totalCost]);
+            ActivityLog::record('stock_delivery', "a enregistré une livraison de {$totalQty} " . ($totalQty > 1 ? 'articles' : 'article')
+                . ($supplier ? " ({$supplier})" : '') . ($totalCost > 0 ? ', ' . ActivityLog::fcfa($totalCost) : '')
+                . ($expense ? ', payée avec la caisse.' : '.'), ['user' => $by, 'amount' => -$totalCost]);
 
             return ['lines' => count($movements), 'quantity' => $totalQty, 'total_cost' => $totalCost, 'expense' => $expense];
         });
@@ -163,6 +167,9 @@ class StockService
             ]);
 
             Log::info('Stock : perte', ['user_id' => $by->id, 'product_id' => $product->id, 'quantity' => $quantity]);
+            ActivityLog::record('stock_loss', "a déclaré une perte de {$quantity} × {$product->name}, soit " . ActivityLog::fcfa($quantity * $product->unitValue()) . '. Motif : ' . trim($reason), [
+                'user' => $by, 'amount' => -($quantity * $product->unitValue()), 'meta' => ['product_id' => $product->id],
+            ]);
 
             return $movement;
         });
@@ -266,6 +273,10 @@ class StockService
             ]);
 
             Log::info('Stock : comptage', ['user_id' => $by->id, 'stock_count_id' => $count->id, 'value_gap' => $totals['gap_cost']]);
+            ActivityLog::record('stock_count', 'a validé un comptage de ' . count($counted) . ' ' . (count($counted) > 1 ? 'produits' : 'produit') . ' : '
+                . ($totals['gap_sale'] === 0 ? 'tout est juste.' : 'écart de ' . ($totals['gap_sale'] > 0 ? '+' : '') . ActivityLog::fcfa($totals['gap_sale']) . ' au prix de vente.'), [
+                'user' => $by, 'amount' => $totals['gap_sale'], 'meta' => ['stock_count_id' => $count->id],
+            ]);
 
             return $count;
         });

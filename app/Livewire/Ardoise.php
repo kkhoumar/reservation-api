@@ -108,7 +108,9 @@ class Ardoise extends Component
 
         $this->validate(['editLimit' => 'nullable|integer|min:0|max:100000000']);
 
-        Customer::findOrFail($this->customerId)->update(['credit_limit' => $this->editLimit]);
+        $customer = Customer::findOrFail($this->customerId);
+        $customer->update(['credit_limit' => $this->editLimit]);
+        \App\Models\ActivityLog::record('credit_limit', "a fixé le plafond de crédit de {$customer->name} à " . ($this->editLimit === null ? 'aucun plafond' : \App\Models\ActivityLog::fcfa((int) $this->editLimit)) . '.', ['meta' => ['customer_id' => $customer->id]]);
         session()->flash('success', 'Plafond enregistré.');
     }
 

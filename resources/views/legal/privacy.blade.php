@@ -43,7 +43,8 @@
     <h2>2. Quelles informations, et pourquoi ?</h2>
     <table>
         <tr><th>Qui</th><th>Informations</th><th>Pourquoi</th></tr>
-        <tr><td>Patron et personnel</td><td>Prénom, nom, numéro de téléphone, rôle, mot de passe (chiffré, illisible même pour nous), dates de connexion</td><td>Se connecter, savoir qui a fait quoi (vente, encaissement, dépense), sécuriser l'accès</td></tr>
+        <tr><td>Patron et personnel</td><td>Prénom, nom, numéro de téléphone, rôle, mot de passe (chiffré, illisible même pour nous), dates de connexion, photo de profil si la personne en ajoute une</td><td>Se connecter, reconnaître les membres de l'équipe, savoir qui a fait quoi (vente, encaissement, dépense), sécuriser l'accès</td></tr>
+        <tr><td>Journal des actions</td><td>Nom de la personne, action faite (connexion, bon annulé, remise, changement de prix…), date, heure et adresse IP</td><td>Permettre au patron et à la gérante de savoir qui a fait quoi. Ce journal ne peut être ni modifié ni effacé dans l'application</td></tr>
         <tr><td>Clients à crédit</td><td>Nom, numéro de téléphone (facultatif), plafond, consommations et remboursements</td><td>Suivre ce que le client doit, lui envoyer un rappel s'il le faut</td></tr>
         <tr><td>Personnes qui demandent une démo</td><td>Nom, nom du maquis, téléphone, commune, message</td><td>Les rappeler pour présenter le service</td></tr>
         <tr><td>Toutes les connexions</td><td>Adresse IP, journaux techniques</td><td>Sécurité : bloquer les tentatives de piratage, comprendre une panne</td></tr>

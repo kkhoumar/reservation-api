@@ -88,6 +88,19 @@ Route::get('/conditions/accepter', \App\Livewire\AcceptTerms::class)->middleware
 // Choix du mot de passe (obligatoire après un mot de passe provisoire)
 Route::get('/mot-de-passe', ChangePassword::class)->middleware('auth')->name('password.change');
 
+// Mon profil (tous les comptes) et photos de profil, visibles seulement par le même maquis
+Route::get('/mon-profil', \App\Livewire\Profile::class)->middleware('auth')->name('profile');
+Route::get('/photo/{user}', function (\App\Models\User $user) {
+    abort_unless(auth()->user()->canSeeAvatarOf($user) && $user->avatar_path, 404);
+    abort_unless(\Illuminate\Support\Facades\Storage::disk('local')->exists($user->avatar_path), 404);
+
+    return \Illuminate\Support\Facades\Storage::disk('local')->response($user->avatar_path, null, [
+        'Content-Type' => 'image/jpeg',
+        'Cache-Control' => 'private, max-age=31536000, immutable',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+})->middleware('auth')->name('avatar.show');
+
 // Page affichée au personnel d'un maquis verrouillé (non-paiement, essai terminé)
 Route::view('/compte-suspendu', 'account-locked')->middleware('auth')->name('account.locked');
 
@@ -111,7 +124,8 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/users', UsersManage::class)->middleware('role:owner,manager')->name('users.manage');
     Route::get('/products', ProductsManage::class)->middleware('role:owner,manager')->name('products.manage');
     Route::get('/stock', \App\Livewire\StockManage::class)->middleware('role:owner,manager')->name('stock.index');
-    Route::get('/comptage', \App\Livewire\StockCountPage::class)->middleware('role:owner,manager')->name('stock.count');
+    Route::get('/journal', \App\Livewire\ActivityJournal::class)->middleware('role:owner,manager')->name('journal');
+    Route::get('/comptage',\App\Livewire\StockCountPage::class)->middleware('role:owner,manager')->name('stock.count');
     Route::get('/comptage/{stockCount}', \App\Livewire\StockCountShow::class)->middleware('role:owner,manager')->name('stock.count.show');
     Route::get('/exports', [\App\Http\Controllers\ExportController::class, 'index'])->middleware('role:owner,manager')->name('exports.index');
     Route::get('/exports/{type}', [\App\Http\Controllers\ExportController::class, 'download'])->middleware('role:owner,manager')->name('exports.download');

@@ -99,13 +99,26 @@ class ProductsManage extends Component
 
         if ($this->editingProductId) {
             // Le stock n'est jamais modifié ici (pas de correction silencieuse)
-            Product::where('restaurant_id', auth()->user()->currentRestaurantId())
-                ->findOrFail($this->editingProductId)
-                ->update($data);
+            $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($this->editingProductId);
+            $oldSale = (int) $product->selling_price;
+            $oldCost = $product->cost_price;
+            $product->update($data);
+
+            $changes = [];
+            if ($oldSale !== (int) $product->selling_price) {
+                $changes[] = 'prix de vente ' . \App\Models\ActivityLog::fcfa($oldSale) . ' → ' . \App\Models\ActivityLog::fcfa((int) $product->selling_price);
+            }
+            if ($oldCost !== $product->cost_price) {
+                $changes[] = "prix d'achat " . ($oldCost === null ? 'vide' : \App\Models\ActivityLog::fcfa($oldCost)) . ' → ' . \App\Models\ActivityLog::fcfa((int) $product->cost_price);
+            }
+            if ($changes !== []) {
+                \App\Models\ActivityLog::record('price_changed', "a changé le prix de {$product->name} : " . implode(', ', $changes) . '.', ['meta' => ['product_id' => $product->id]]);
+            }
         } else {
             DB::transaction(function () use ($data) {
                 $product = Product::create($data + ['stock_quantity' => (int) $this->stockQuantity]);
                 app(StockService::class)->recordInitial(auth()->user(), $product);
+                \App\Models\ActivityLog::record('product_created', "a ajouté le produit {$product->name} à " . \App\Models\ActivityLog::fcfa((int) $product->selling_price) . ", stock de départ {$product->stock_quantity}.", ['meta' => ['product_id' => $product->id]]);
             });
         }
 

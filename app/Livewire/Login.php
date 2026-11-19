@@ -46,6 +46,8 @@ class Login extends Component
         RateLimiter::clear($key);
         session()->regenerate();
 
+        \App\Models\ActivityLog::record('login', "s'est connecté.", ['user' => Auth::user()]);
+
         // Le Super Admin arrive sur la liste des maquis
         // Mot de passe provisoire : à changer avant tout
         $destination = match (true) {

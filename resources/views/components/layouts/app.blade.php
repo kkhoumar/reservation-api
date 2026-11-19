@@ -420,6 +420,10 @@
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     Utilisateurs
                 </a>
+                <a href="{{ route('journal') }}" class="sidebar-link {{ request()->routeIs('journal') ? 'active' : '' }}">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12h6"/><path d="M9 15.5h4"/><path d="M9 8.5h6"/></svg>
+                    Journal
+                </a>
                 @unless ($readOnly)
                     <a href="{{ route('products.manage') }}" class="sidebar-link {{ request()->routeIs('products.manage') ? 'active' : '' }}">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M8 21V9"/></svg>
@@ -483,11 +487,13 @@
                         $roleLabels = ['owner' => 'Patron', 'manager' => 'Gérante', 'cashier' => 'Caisse / comptoir', 'server' => 'Serveuse'];
                         $roleLabel = auth()->user()->isPlatformAdmin() ? 'Super Admin' : ($roleLabels[auth()->user()->role] ?? auth()->user()->role);
                     @endphp
-                    <div class="avatar">{{ strtoupper(mb_substr(auth()->user()->first_name, 0, 1)) }}</div>
-                    <div class="who">
-                        <strong>{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</strong>
-                        <small>{{ $roleLabel }}</small>
-                    </div>
+                    <a href="{{ route('profile') }}" class="me-profile-link" title="Mon profil" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; border-radius: 999px;">
+                        <x-avatar :user="auth()->user()" size="34" />
+                        <div class="who">
+                            <strong>{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</strong>
+                            <small>{{ $roleLabel }}</small>
+                        </div>
+                    </a>
                     <form method="POST" action="{{ route('logout') }}" style="margin: 0 0 0 6px;">
                         @csrf
                         <button type="submit" class="logout" title="Se déconnecter">Déconnexion</button>
@@ -618,6 +624,7 @@
     </script>
 
     @include('partials.money-input-script')
+    @include('partials.avatar-picker-script')
     @include('partials.tap-feedback')
     @livewireScripts
 </body>

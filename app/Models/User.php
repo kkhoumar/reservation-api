@@ -135,6 +135,22 @@ class User extends Authenticatable
         return $this->role === 'cashier';
     }
 
+    /** Adresse de la photo de profil (null sans photo). « v » change avec la photo : le téléphone ne garde pas l'ancienne. */
+    public function avatarUrl(): ?string
+    {
+        return $this->avatar_path
+            ? route('avatar.show', ['user' => $this->id, 'v' => substr(md5($this->avatar_path), 0, 8)])
+            : null;
+    }
+
+    /** La personne connectée peut-elle voir la photo de ce compte ? Même maquis, ou Super Admin. */
+    public function canSeeAvatarOf(User $other): bool
+    {
+        return $this->id === $other->id
+            || $this->isPlatformAdmin()
+            || ($this->restaurant_id !== null && $this->restaurant_id === $other->restaurant_id);
+    }
+
     public function isPlatformAdmin(): bool
     {
         return $this->is_platform_admin === true;

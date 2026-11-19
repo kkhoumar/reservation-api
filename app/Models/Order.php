@@ -164,6 +164,10 @@ class Order extends Model
             $order->recalculateTotal();
             $this->refresh();
 
+            ActivityLog::record('item_offered', "a offert {$quantity} × " . ($offeredItem->product?->name ?? 'article') . " sur le bon {$order->order_number}. Motif : " . trim($reason), [
+                'user' => $by, 'amount' => -($offeredItem->unit_price * $quantity), 'meta' => ['order_id' => $order->id],
+            ]);
+
             return $offeredItem;
         });
     }
@@ -179,9 +183,11 @@ class Order extends Model
             throw new BusinessRuleException('Seuls le patron et la gérante peuvent modifier un article offert.');
         }
 
-        DB::transaction(function () use ($itemId) {
+        DB::transaction(function () use ($itemId, $by) {
             $order = $this->lockForGesture();
             $item = OrderItem::where('order_id', $order->id)->where('is_offered', true)->lockForUpdate()->findOrFail($itemId);
+
+            ActivityLog::record('offer_cancelled', 'a annulé l\'offert de ' . ($item->product?->name ?? 'article') . " sur le bon {$order->order_number}.", ['user' => $by, 'meta' => ['order_id' => $order->id]]);
 
             $item->update([
                 'is_offered' => false,
@@ -223,6 +229,10 @@ class Order extends Model
             ]);
             $order->recalculateTotal();
             $this->refresh();
+
+            ActivityLog::record('discount', $amount > 0
+                ? 'a fait une remise de ' . ActivityLog::fcfa($amount) . " sur le bon {$order->order_number}. Motif : " . trim($reason)
+                : "a retiré la remise du bon {$order->order_number}.", ['user' => $by, 'amount' => -$amount, 'meta' => ['order_id' => $order->id]]);
         });
     }
 
@@ -287,8 +297,13 @@ class Order extends Model
                 Product::whereKey($item->product_id)->increment('stock_quantity', $item->quantity);
             }
 
-            $order->update(['status' => 'cancelled']);
+            $order->forceFill(['status' => 'cancelled', 'cancelled_by' => auth()->id(), 'cancelled_at' => now()])->save();
             $this->status = 'cancelled';
+
+            $articles = $order->items->map(fn ($i) => $i->quantity . ' × ' . ($i->product?->name ?? 'article'))->implode(', ');
+            ActivityLog::record('order_cancelled', "a annulé le bon {$order->order_number} de " . ActivityLog::fcfa((int) $order->total) . ' (' . ($articles ?: 'vide') . '). Articles remis en stock.', [
+                'amount' => -(int) $order->total, 'meta' => ['order_id' => $order->id],
+            ]);
         });
     }
 }

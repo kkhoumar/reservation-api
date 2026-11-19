@@ -187,6 +187,12 @@ class NewOrder extends Component
                 Product::whereKey($item->product_id)->increment('stock_quantity', $item->quantity);
                 $item->delete();
                 $order->recalculateTotal();
+
+                // Retrait après l'envoi en cuisine ou le service : à surveiller
+                $sent = $order->status !== 'created';
+                \App\Models\ActivityLog::record('item_removed', 'a retiré ' . $item->quantity . ' × ' . ($item->product?->name ?? 'article') . " du bon {$order->order_number}" . ($sent ? " après l'envoi en cuisine." : '.'), [
+                    'amount' => -(int) $item->total, 'meta' => ['order_id' => $order->id, 'sent' => $sent],
+                ]);
             });
         } catch (BusinessRuleException $e) {
             session()->flash('error', $e->getMessage());

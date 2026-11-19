@@ -81,6 +81,8 @@ class ExpensesList extends Component
             'expense_date' => now(),
         ]);
 
+        \App\Models\ActivityLog::record('expense', 'a enregistré une dépense de ' . \App\Models\ActivityLog::fcfa((int) $this->amount) . ' : ' . ($this->categories[$this->category] ?? $this->category) . ($this->description ? ', ' . trim($this->description) : '') . '.', ['amount' => -(int) $this->amount]);
+
         $this->amount = null;
         $this->description = '';
 

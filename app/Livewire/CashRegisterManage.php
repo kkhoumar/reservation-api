@@ -55,6 +55,8 @@ class CashRegisterManage extends Component
                 'opened_at' => now(),
             ]);
 
+            \App\Models\ActivityLog::record('register_opened', 'a ouvert la caisse avec ' . \App\Models\ActivityLog::fcfa((int) $this->openingAmount) . ' de fonds de départ.', ['amount' => (int) $this->openingAmount]);
+
             return true;
         });
 
@@ -114,6 +116,11 @@ class CashRegisterManage extends Component
             }
 
             $register->close($this->countedAmount, auth()->id(), $this->closingNote ?: null, $cashCount ?: null);
+
+            $gap = (int) $register->discrepancy;
+            \App\Models\ActivityLog::record('register_closed', 'a clôturé la caisse : ' . \App\Models\ActivityLog::fcfa((int) $this->countedAmount) . ' comptés, '
+                . ($gap === 0 ? 'aucun écart.' : 'écart de ' . ($gap > 0 ? '+' : '') . \App\Models\ActivityLog::fcfa($gap) . '.')
+                . ($this->closingNote ? ' Note : ' . trim($this->closingNote) : ''), ['amount' => $gap, 'meta' => ['register_id' => $register->id]]);
 
             return true;
         });

@@ -110,6 +110,12 @@ class RestaurantSettings extends Component
             'payment_timing' => $this->paymentTiming,
         ]);
 
+        $labels = ['service_mode' => 'mode de service', 'credit_enabled' => 'crédit client', 'payment_timing' => 'moment du paiement', 'whatsapp_report_enabled' => 'rapport WhatsApp', 'report_phone' => 'numéro du rapport'];
+        $changed = array_values(array_intersect_key($labels, $restaurant->getChanges()));
+        if ($changed !== []) {
+            \App\Models\ActivityLog::record('settings_changed', 'a modifié les réglages : ' . implode(', ', $changed) . '.');
+        }
+
         session()->flash('success', 'Réglages enregistrés.');
     }
 

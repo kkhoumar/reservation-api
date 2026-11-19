@@ -18,6 +18,7 @@ use Livewire\Component;
 class UsersManage extends Component
 {
     use \App\Livewire\Concerns\ShowsBusinessErrors;
+    use \App\Livewire\Concerns\HandlesAvatarUpload;
 
     public bool $showForm = false;
     #[Locked]
@@ -46,6 +47,22 @@ class UsersManage extends Component
     private function findStaff(int $userId): User
     {
         return User::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($userId);
+    }
+
+    /** Le patron ajoute ou change la photo d'un membre de l'équipe. @return string|null message d'erreur */
+    public function saveMemberPhoto(int $userId, string $dataUrl): ?string
+    {
+        $member = $this->findStaff($userId);
+        Gate::authorize('update', $member);
+
+        return $this->storeAvatar($member, $dataUrl);
+    }
+
+    public function removeMemberPhoto(int $userId): void
+    {
+        $member = $this->findStaff($userId);
+        Gate::authorize('update', $member);
+        $this->deleteAvatar($member);
     }
 
     public function openCreateForm()
@@ -128,6 +145,18 @@ class UsersManage extends Component
             $target->forceFill(['must_change_password' => true])->save();
         }
 
+        $who = trim("{$target->first_name} {$target->last_name}");
+        if ($target->wasRecentlyCreated) {
+            \App\Models\ActivityLog::record('user_created', "a créé le compte de {$who}.", ['meta' => ['user_id' => $target->id]]);
+        } else {
+            if ($target->wasChanged(['first_name', 'last_name', 'phone', 'role'])) {
+                \App\Models\ActivityLog::record('user_updated', "a modifié le compte de {$who}.", ['meta' => ['user_id' => $target->id]]);
+            }
+            if ($mustChange) {
+                \App\Models\ActivityLog::record('password_reset', "a donné un mot de passe provisoire à {$who}, qui devra le changer à sa prochaine connexion.", ['meta' => ['user_id' => $target->id]]);
+            }
+        }
+
         $this->showForm = false;
         session()->flash('success', 'Utilisateur enregistré.');
     }
@@ -152,6 +181,8 @@ class UsersManage extends Component
         }
 
         $user->update(['status' => $user->status === 'active' ? 'inactive' : 'active']);
+        $active = $user->status === 'active';
+        \App\Models\ActivityLog::record($active ? 'user_reactivated' : 'user_deactivated', ($active ? 'a réactivé' : 'a désactivé') . " le compte de {$user->first_name} {$user->last_name}.", ['meta' => ['user_id' => $user->id]]);
     }
 
     /**
@@ -196,6 +227,7 @@ class UsersManage extends Component
         }
 
         $user->forceFill(['status' => 'inactive', 'left_at' => now()])->save();
+        \App\Models\ActivityLog::record('user_removed', "a retiré {$user->first_name} {$user->last_name} du maquis.", ['meta' => ['user_id' => $user->id]]);
 
         Log::info('Employé retiré du maquis', [
             'by' => auth()->id(),
@@ -222,6 +254,7 @@ class UsersManage extends Component
         }
 
         $user->forceFill(['status' => 'active', 'left_at' => null])->save();
+        \App\Models\ActivityLog::record('user_reactivated', "a réintégré {$user->first_name} {$user->last_name} dans l'équipe.", ['meta' => ['user_id' => $user->id]]);
 
         session()->flash('success', "{$user->first_name} {$user->last_name} fait de nouveau partie de l'équipe.");
     }

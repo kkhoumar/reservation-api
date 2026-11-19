@@ -29,6 +29,23 @@
         <div class="card" style="max-width: 460px; margin-bottom: 20px;">
             <h3 style="margin-top: 0;">{{ $editingId ? 'Modifier' : 'Nouvel' }} utilisateur</h3>
 
+            @if ($editingId && ($member = $users->firstWhere('id', $editingId)))
+                <div x-data="avatarPicker('saveMemberPhoto', {{ $member->id }})" style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding: 12px; background: var(--color-bg); border-radius: 14px;">
+                    <x-avatar :user="$member" size="56" />
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 700; font-size: 14px;">Photo de profil</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+                            <button type="button" class="btn btn-ghost" style="padding: 6px 12px; font-size: 13px;" @click="pick()" :disabled="busy" x-text="busy ? 'Envoi…' : '{{ $member->avatar_path ? 'Changer' : 'Ajouter une photo' }}'"></button>
+                            @if ($member->avatar_path)
+                                <button type="button" class="btn btn-ghost" style="padding: 6px 12px; font-size: 13px; color: var(--color-danger);" wire:click="removeMemberPhoto({{ $member->id }})">Retirer</button>
+                            @endif
+                        </div>
+                        <div x-show="error" x-text="error" x-cloak style="color: var(--color-danger); font-size: 12.5px; margin-top: 6px;"></div>
+                    </div>
+                    <input type="file" accept="image/*" x-ref="file" @change="chosen($event)" hidden>
+                </div>
+            @endif
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Prénom</label>
@@ -92,7 +109,7 @@
             <tbody>
                 @foreach ($users as $user)
                     <tr style="border-bottom: 1px solid var(--color-border);">
-                        <td style="padding: 12px 20px; font-weight: 600;">{{ $user->first_name }} {{ $user->last_name }}</td>
+                        <td style="padding: 12px 20px; font-weight: 600;"><span style="display: inline-flex; align-items: center; gap: 10px;"><x-avatar :user="$user" size="34" /> {{ $user->first_name }} {{ $user->last_name }}</span></td>
                         <td style="padding: 12px 20px; color: var(--color-text-secondary);">{{ $user->phone }}</td>
                         <td style="padding: 12px 20px;">
                             @php

@@ -45,6 +45,7 @@ class ChangePassword extends Component
 
         session()->regenerate();
         Log::info('Mot de passe changé', ['user_id' => $user->id]);
+        \App\Models\ActivityLog::record('password_changed', 'a changé son mot de passe.', ['user' => $user]);
 
         $this->redirect(
             route($user->isPlatformAdmin() ? 'admin.restaurants' : 'dashboard.index'),

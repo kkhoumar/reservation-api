@@ -44,6 +44,7 @@ class RestaurantDataManager
                 'versements de sacoche' => DB::table('cash_remittances')->where('restaurant_id', $id)->count(),
                 'mouvements de stock' => DB::table('stock_movements')->where('restaurant_id', $id)->count(),
                 'comptages' => DB::table('stock_counts')->where('restaurant_id', $id)->count(),
+                'lignes du journal' => DB::table('activity_logs')->where('restaurant_id', $id)->count(),
             ];
 
             // Ordre : d'abord ce qui dépend des autres
@@ -51,6 +52,7 @@ class RestaurantDataManager
             DB::table('cash_remittances')->where('restaurant_id', $id)->delete();
             DB::table('stock_movements')->where('restaurant_id', $id)->delete();
             DB::table('stock_counts')->where('restaurant_id', $id)->delete();
+            DB::table('activity_logs')->where('restaurant_id', $id)->delete();
             DB::table('payments')->whereIn('order_id', $orderIds)->delete();
             DB::table('order_items')->whereIn('order_id', $orderIds)->delete();
             DB::table('orders')->where('restaurant_id', $id)->delete();

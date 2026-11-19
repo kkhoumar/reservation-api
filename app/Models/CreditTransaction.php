@@ -97,6 +97,10 @@ class CreditTransaction extends Model
             $order->update(['customer_id' => $customer->id]);
             $order->markAsPaid();
 
+            ActivityLog::record('credit_sale', "a mis le bon {$order->order_number} à crédit pour {$customer->name} : " . ActivityLog::fcfa((int) $order->total) . '.', [
+                'user' => $by, 'amount' => (int) $order->total, 'meta' => ['order_id' => $order->id, 'customer_id' => $customer->id],
+            ]);
+
             return $transaction;
         });
     }
@@ -134,7 +138,7 @@ class CreditTransaction extends Model
                 throw new BusinessRuleException('Ouvrez d\'abord la caisse pour encaisser un remboursement.');
             }
 
-            return static::create([
+            $transaction = static::create([
                 'restaurant_id' => $customer->restaurant_id,
                 'customer_id' => $customer->id,
                 'user_id' => $by->id,
@@ -143,6 +147,12 @@ class CreditTransaction extends Model
                 'amount' => $amount,
                 'note' => $note ?: null,
             ]);
+
+            ActivityLog::record('credit_repayment', "a encaissé " . ActivityLog::fcfa($amount) . " remboursés par {$customer->name}.", [
+                'user' => $by, 'amount' => $amount, 'meta' => ['customer_id' => $customer->id],
+            ]);
+
+            return $transaction;
         });
     }
 }
