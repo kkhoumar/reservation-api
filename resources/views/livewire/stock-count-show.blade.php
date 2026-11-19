@@ -12,6 +12,16 @@
 <div class="sc">
     @include('partials.stock-count-styles')
     <style>
+        .scs-hero { display: flex; gap: 16px; align-items: center; border-radius: 18px; padding: 20px 22px; margin: 18px 0 14px; color: #fff; box-shadow: 0 12px 30px -12px rgba(16,35,29,.35); }
+        .scs-hero.ok { background: linear-gradient(135deg, #0B4D3C, #1E8E5A); }
+        .scs-hero.miss { background: linear-gradient(135deg, #8E1F1F, #D93B3B); }
+        .scs-hero.over { background: linear-gradient(135deg, #173F75, #2463B5); }
+        .scs-hero .ic { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .scs-hero .lbl { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
+        .scs-hero .big { font-size: 28px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; margin: 2px 0 8px; }
+        .scs-hero .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+        .scs-hero .meta span { font-size: 12.5px; font-weight: 600; background: rgba(255,255,255,.16); padding: 4px 10px; border-radius: 999px; }
+        @media (max-width: 520px) { .scs-hero { padding: 18px; gap: 12px; align-items: flex-start; } .scs-hero .ic { width: 44px; height: 44px; } .scs-hero .big { font-size: 23px; } }
         .scs-line { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 84px) 120px; gap: 8px 14px; align-items: center; padding: 13px 18px; border-top: 1px solid var(--color-border); }
         .scs-line:first-child { border-top: 0; }
         .scs-line.head { font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .03em; padding-top: 10px; padding-bottom: 10px; background: var(--color-bg); }
@@ -59,8 +69,28 @@
         <a href="{{ route('stock.count') }}" class="btn btn-ghost"><x-icon name="arrow-left" size="16" /> Comptage</a>
     </div>
 
+    {{-- ================= Résultat en un coup d'œil ================= --}}
+    @php
+        $total = $summary['total'];
+        $heroTone = $tone($total['gap_sale']);
+        $heroText = $total['gap_sale'] === 0 && $gaps->isEmpty()
+            ? 'Tout est juste'
+            : ($total['gap_sale'] < 0 ? 'Il manque ' . $fcfa(abs($total['gap_sale'])) . ' F' : ($total['gap_sale'] > 0 ? $fcfa($total['gap_sale']) . ' F en trop' : 'Les écarts s\'annulent'));
+    @endphp
+    <div class="scs-hero {{ $heroTone }}">
+        <div class="ic"><x-icon :name="$heroTone === 'ok' ? 'check-circle' : 'alert'" size="28" /></div>
+        <div style="min-width: 0;">
+            <div class="lbl">Résultat au prix de vente</div>
+            <div class="big">{{ $heroText }}</div>
+            <div class="meta">
+                <span>{{ $total['products'] }} {{ $total['products'] > 1 ? 'produits comptés' : 'produit compté' }}</span>
+                <span>{{ $gaps->count() }} {{ $gaps->count() > 1 ? 'écarts' : 'écart' }}</span>
+                @if ($prev)<span>Période de {{ $report->periodLabel() }}</span>@endif
+            </div>
+        </div>
+    </div>
     {{-- ================= Envoi WhatsApp ================= --}}
-    <div class="sc-card" style="margin: 18px 0;">
+    <div class="sc-card" style="margin: 0 0 18px;">
         <h3><x-icon name="message" size="16" /> Envoyer le résumé</h3>
         <div class="scs-wa">
             @if ($ownerUrl)
@@ -112,8 +142,10 @@
                 <div class="scs-line head"><span>Produit</span><span style="text-align:center">Attendu</span><span style="text-align:center">Compté</span><span style="text-align:center">Écart</span><span style="text-align:right">Valeur</span></div>
                 @foreach ($gaps as $l)
                     <div class="scs-line">
-                        <div class="sc-info">
-                            <div class="sc-name">{{ $l->product_name }} <span class="cat">{{ $kinds[$l->kind] ?? '' }}</span></div>
+                        <div class="sc-info with-ava">
+                            <x-stock-ava :kind="$l->kind" />
+                            <div class="sc-txt">
+                            <div class="sc-name">{{ $l->product_name }}</div>
                             @if ($prev)
                                 <div class="sc-calc">
                                     Le {{ $prev->isoFormat('D MMM') }} : <span class="out">{{ $l->startQuantity() }}</span>
@@ -122,6 +154,7 @@
                                     @if ($l->lost) · <span class="out">−{{ $l->lost }} {{ $l->lost > 1 ? 'perdus' : 'perdu' }}</span>@endif
                                 </div>
                             @endif
+                            </div>
                         </div>
                         <div class="scs-num"><small>Attendu</small>{{ $l->expected }}</div>
                         <div class="scs-num"><small>Compté</small>{{ $l->counted }}</div>

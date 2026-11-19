@@ -56,15 +56,15 @@
             <h3><x-icon name="box" size="16" /> {{ $since ? 'Depuis le ' . $since->isoFormat('D MMMM') : 'Premier comptage' }}</h3>
             @if ($since)
                 <div class="sc-moves">
-                    <div class="sc-move"><strong style="color: var(--sc-ok);">+{{ $fcfa($totalDelivered) }}</strong><span>{{ $totalDelivered > 1 ? 'articles livrés' : 'article livré' }}</span></div>
-                    <div class="sc-move"><strong>−{{ $fcfa($totalSold) }}</strong><span>{{ $totalSold > 1 ? 'articles vendus' : 'article vendu' }}</span></div>
-                    <div class="sc-move"><strong>−{{ $fcfa($totalLost) }}</strong><span>{{ $totalLost > 1 ? 'pertes déclarées' : 'perte déclarée' }}</span></div>
+                    <div class="sc-move"><strong style="color: {{ $totalDelivered ? 'var(--sc-ok)' : 'inherit' }};">{{ $totalDelivered ? '+' : '' }}{{ $fcfa($totalDelivered) }}</strong><span>{{ $totalDelivered > 1 ? 'articles livrés' : 'article livré' }}</span></div>
+                    <div class="sc-move"><strong>{{ $totalSold ? '−' : '' }}{{ $fcfa($totalSold) }}</strong><span>{{ $totalSold > 1 ? 'articles vendus' : 'article vendu' }}</span></div>
+                    <div class="sc-move"><strong>{{ $totalLost ? '−' : '' }}{{ $fcfa($totalLost) }}</strong><span>{{ $totalLost > 1 ? 'pertes déclarées' : 'perte déclarée' }}</span></div>
                 </div>
                 @if ($registers->isNotEmpty())
                     <div class="muted small" style="margin-bottom: 6px; display: flex; align-items: center; gap: 6px;"><x-icon name="users" size="14" /> Qui tenait la caisse pendant cette période</div>
                     <div class="sc-team">
                         @foreach ($registers as $r)
-                            <span>{{ $r->opened_at->locale('fr')->isoFormat('ddd D MMM') }} · {{ $r->openedByUser?->first_name ?? '—' }}@if ($r->closedByUser && $r->closed_by !== $r->opened_by) → {{ $r->closedByUser->first_name }}@endif</span>
+                            <span>{{ $r->opened_at->lt($sheet->since) ? 'Ouverte depuis le ' . $r->opened_at->locale('fr')->isoFormat('D MMM') : ucfirst($r->opened_at->locale('fr')->isoFormat('ddd D MMM')) }} · {{ $r->openedByUser?->first_name ?? 'inconnu' }}@if ($r->closedByUser && $r->closed_by !== $r->opened_by) → {{ $r->closedByUser->first_name }}@endif</span>
                         @endforeach
                     </div>
                 @else
@@ -127,15 +127,17 @@
                 @continue(! $byKind->has($k))
                 <section class="sc-section" x-show="kind === 'all' || kind === '{{ $k }}' || (kind === 'gaps' && kindGapCount('{{ $k }}') > 0)">
                     <div class="sc-section-head">
-                        <h2>{{ $label }}</h2>
+                        <h2><span class="sc-h-ico {{ $k }}"><x-icon :name="$k === 'drink' ? 'bottle' : 'utensils'" size="17" /></span>{{ $label }}</h2>
                         <span class="muted small"><span x-text="kindCounted('{{ $k }}')"></span> / {{ $byKind[$k]->count() }} comptés</span>
                     </div>
                     <div class="sc-list">
                         @foreach ($byKind[$k] as $r)
                             @php $start = $r['expected'] - $r['delivered'] + $r['sold'] + $r['lost']; @endphp
                             <div class="sc-row" :class="state({{ $r['id'] }})" x-show="kind !== 'gaps' || (gap({{ $r['id'] }}) ?? 0) !== 0" wire:key="row-{{ $r['id'] }}">
-                                <div class="sc-info">
-                                    <div class="sc-name">{{ $r['name'] }}@if ($r['category'])<span class="cat">{{ $r['category'] }}</span>@endif @if ($r['cost'] === null)<span class="sc-tag">prix d'achat manquant</span>@endif</div>
+                                <div class="sc-info with-ava">
+                                    <x-stock-ava :kind="$r['kind']" />
+                                    <div class="sc-txt">
+                                    <div class="sc-name">{{ $r['name'] }}@if ($r['category'] && mb_strtolower($r['category']) !== mb_strtolower($label))<span class="cat">{{ $r['category'] }}</span>@endif @if ($r['cost'] === null)<span class="sc-tag">prix d'achat manquant</span>@endif</div>
                                     <div class="sc-calc">
                                         @if ($since)
                                             Le {{ $since->isoFormat('D MMM') }} : <span class="out">{{ $start }}</span>
@@ -146,6 +148,7 @@
                                         @else
                                             {{ $fcfa($r['price']) }} F la vente @if ($r['cost'] !== null) · {{ $fcfa($r['cost']) }} F l'achat @endif
                                         @endif
+                                    </div>
                                     </div>
                                 </div>
                                 <div class="sc-expected"><small>Doit rester</small><strong>{{ $r['expected'] }}</strong></div>

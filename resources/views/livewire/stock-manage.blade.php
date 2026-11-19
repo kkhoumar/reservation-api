@@ -53,6 +53,13 @@
         .st-qty.low { color: var(--color-danger); }
         .st-low { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: var(--color-danger); background: var(--color-danger-bg); padding: 2px 8px; border-radius: 6px; margin-left: 6px; vertical-align: 2px; }
         .st-missing { color: var(--color-warning); font-weight: 700; font-size: 13px; }
+        .st-gauge { display: block; height: 5px; border-radius: 99px; background: var(--color-border); overflow: hidden; margin: 6px 0 0 auto; width: 64px; }
+        .st-gauge i { display: block; height: 100%; border-radius: 99px; }
+        .st-gauge i.ok { background: var(--color-primary-300); }
+        .st-gauge i.mid { background: #E3A23B; }
+        .st-gauge i.low { background: var(--color-danger); }
+        .st-kpi .k svg { width: 26px; height: 26px; padding: 5px; border-radius: 8px; background: var(--color-bg); color: var(--color-primary); }
+        .st-kpi.hl .k svg { background: rgba(255,255,255,.14); color: #fff; }
 
         /* Formulaires */
         .st-form { max-width: 760px; }
@@ -86,6 +93,7 @@
             .st-row .sc-info { grid-column: 1 / -1; }
             .st-cell { text-align: left; background: var(--color-bg); border-radius: 10px; padding: 7px 10px; }
             .st-cell small { display: block; }
+            .st-gauge { margin-left: 0; width: 100%; }
             .st-cell.qtycell { order: -1; }
             .st-row .sc-info { order: -2; }
             .st-cell.value { display: none; }
@@ -101,6 +109,8 @@
         }
         @media (max-width: 420px) {
             .st-kpi .v { font-size: 20px; }
+            .st-kpi .k svg { display: none; }
+            .st-kpi .k { font-size: 12px; }
             .st-kpi { padding: 12px 13px; }
         }
     </style>
@@ -188,10 +198,11 @@
                 $group = $byKind[$k];
                 $groupSale = $group->sum(fn ($p) => max(0, $p->stock_quantity) * $p->selling_price);
                 $groupCost = $group->sum(fn ($p) => max(0, $p->stock_quantity) * $p->unitValue());
+                $groupMax = (int) $group->max('stock_quantity');
             @endphp
             <section class="sc-section">
                 <div class="sc-section-head">
-                    <h2>{{ $label }}</h2>
+                    <h2><span class="sc-h-ico {{ $k }}"><x-icon :name="$k === 'drink' ? 'bottle' : 'utensils'" size="17" /></span>{{ $label }}</h2>
                     <span class="muted small">{{ $group->count() }} {{ $group->count() > 1 ? 'produits' : 'produit' }}</span>
                 </div>
                 <div class="sc-list">
@@ -200,13 +211,16 @@
                     </div>
                     @foreach ($group as $p)
                         <div class="st-row">
-                            <div class="sc-info">
+                            <div class="sc-info with-ava">
+                                <x-stock-ava :kind="$k" />
+                                <div class="sc-txt">
                                 <div class="sc-name">{{ $p->name }}@if ($p->category && mb_strtolower($p->category->name) !== mb_strtolower($label))<span class="cat">{{ $p->category->name }}</span>@endif@if ($p->isLowStock())<span class="st-low"><x-icon name="alert" size="12" stroke="2.4" /> Bientôt en rupture</span>@endif</div>
                                 @if ($p->stock_alert_threshold !== null)
                                     <div class="sc-calc">Alerte à {{ $p->stock_alert_threshold }}</div>
                                 @endif
+                                </div>
                             </div>
-                            <div class="st-cell qtycell"><small>En stock</small><span class="st-qty {{ $p->isLowStock() ? 'low' : '' }}">{{ $p->stock_quantity }}</span></div>
+                            <div class="st-cell qtycell"><small>En stock</small><span class="st-qty {{ $p->isLowStock() ? 'low' : '' }}">{{ $p->stock_quantity }}</span>@php $ref = max(1, ($p->stock_alert_threshold ?? 0) * 4, $groupMax); $lvl = $p->isLowStock() ? 'low' : ($p->stock_alert_threshold !== null && $p->stock_quantity <= $p->stock_alert_threshold * 2 ? 'mid' : 'ok'); @endphp<span class="st-gauge"><i class="{{ $lvl }}" style="width: {{ max(4, min(100, round(max(0, $p->stock_quantity) / $ref * 100))) }}%;"></i></span></div>
                             <div class="st-cell"><small>Achat</small>@if ($p->cost_price !== null){{ $fcfa($p->cost_price) }} F @else<span class="st-missing">Manquant</span>@endif</div>
                             <div class="st-cell"><small>Vente</small>{{ $fcfa($p->selling_price) }} F</div>
                             <div class="st-cell value"><strong>{{ $fcfa(max(0, $p->stock_quantity) * $p->selling_price) }} F</strong></div>
@@ -265,16 +279,19 @@
             @foreach ($kinds as $k => $label)
                 @continue(! $byKind->has($k))
                 <section class="sc-section" style="margin-bottom: 14px;">
-                    <div class="sc-section-head"><h2>{{ $label }}</h2></div>
+                    <div class="sc-section-head"><h2><span class="sc-h-ico {{ $k }}"><x-icon :name="$k === 'drink' ? 'bottle' : 'utensils'" size="17" /></span>{{ $label }}</h2></div>
                     <div class="sc-list">
                         <div class="st-line st-head" style="font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .03em; background: var(--color-bg);">
                             <span>Produit</span><span style="text-align: right;">Quantité</span><span class="cost" style="text-align: right;">Prix d'achat</span>
                         </div>
                         @foreach ($byKind[$k] as $p)
                             <div class="st-line">
-                                <div style="min-width: 0;">
-                                    <div style="font-weight: 700;">{{ $p->name }}</div>
-                                    <div class="stock">{{ $p->stock_quantity }} en stock</div>
+                                <div class="sc-info with-ava">
+                                    <x-stock-ava :kind="$k" />
+                                    <div class="sc-txt">
+                                        <div class="sc-name">{{ $p->name }}</div>
+                                        <div class="stock">{{ $p->stock_quantity }} en stock</div>
+                                    </div>
                                 </div>
                                 <div><small class="st-m">Quantité</small><input type="number" min="0" inputmode="numeric" wire:model="deliveryLines.{{ $p->id }}.quantity" placeholder="0" aria-label="Quantité livrée : {{ $p->name }}"></div>
                                 <div class="cost"><small class="st-m">Prix d'achat</small><x-money-input model="deliveryLines.{{ $p->id }}.unit_cost" :empty="''" placeholder="Prix d'achat" aria-label="Prix d'achat : {{ $p->name }}" style="width: 100%; text-align: right; font-weight: 700;" /></div>
