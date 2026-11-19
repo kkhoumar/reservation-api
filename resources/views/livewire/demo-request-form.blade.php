@@ -49,13 +49,13 @@
     {{-- ================= Colonne explications ================= --}}
     <div>
         <span class="eyebrow">Démo gratuite et sans engagement</span>
-        <h1>Voyons ensemble comment Maquis Express peut aider votre maquis</h1>
-        <p class="intro">Laissez-nous votre numéro : on vous rappelle, on vous montre l'application et on l'installe avec vous.</p>
+        <h1>Voyez Maquis Express marcher dans votre maquis</h1>
+        <p class="intro">Laissez votre numéro. On vous rappelle, on vous montre l'application, puis on l'installe avec vous.</p>
 
         <div class="steps">
-            <div class="step"><div class="n">1</div><div><strong>On vous appelle</strong><span>Pour comprendre votre maquis : vos tables, votre équipe, votre façon de travailler.</span></div></div>
+            <div class="step"><div class="n">1</div><div><strong>On vous appelle</strong><span>Pour connaître vos tables, votre équipe et votre façon de servir.</span></div></div>
             <div class="step"><div class="n">2</div><div><strong>On installe votre maquis</strong><span>Votre compte, votre menu, vos tables et les accès de votre équipe.</span></div></div>
-            <div class="step"><div class="n">3</div><div><strong>Vous essayez {{ $trialDays }} jours gratuitement</strong><span>En vrai, pendant le service. Vous décidez ensuite.</span></div></div>
+            <div class="step"><div class="n">3</div><div><strong>Vous essayez {{ $trialDays }} jours gratuitement</strong><span>Pendant le vrai service, avec votre équipe. Vous décidez ensuite.</span></div></div>
         </div>
 
         <div class="reassure">
@@ -73,7 +73,7 @@
                 <div class="ok">✓</div>
                 <h2>Merci, c'est noté !</h2>
                 <p style="font-size: 15px; color: var(--color-text-secondary); line-height: 1.6; margin: 10px 0 22px;">
-                    Nous vous appelons très vite au numéro indiqué pour vous présenter Maquis Express et préparer votre maquis.
+                    Nous vous appelons au numéro indiqué pour vous présenter Maquis Express et préparer votre maquis.
                     Gardez votre téléphone à portée de main.
                 </p>
                 @if ($whatsappUrl)

@@ -1,5 +1,5 @@
 <div x-data="{ show: false, help: false }">
-    <h1 style="font-size: 28px; font-weight: 800; margin: 0 0 6px 0;">Bon retour 👋</h1>
+    <h1 style="font-size: 28px; font-weight: 800; margin: 0 0 6px 0;">Bon retour</h1>
     <p style="font-size: 15px; color: var(--color-text-secondary); margin: 0 0 28px 0;">
         Connectez-vous pour accéder à votre établissement.
     </p>

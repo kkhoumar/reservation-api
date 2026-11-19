@@ -104,7 +104,7 @@
             <a href="{{ Route::has('landing') ? route('landing') : '/' }}" class="logo"><span class="badge">ME</span> Maquis Express</a>
 
             <div class="pitch">
-                <h2>La gestion de votre maquis, <span>simplifiée.</span></h2>
+                <h2>Chaque bouteille vendue, <span>chaque franc encaissé.</span></h2>
                 <p>Commandes, comptoir, caisse, stock et crédits clients, au même endroit.</p>
                 <ul class="perks">
                     <li><span class="i">🧾</span> Pas d'argent, pas de boisson : tout passe par le comptoir</li>

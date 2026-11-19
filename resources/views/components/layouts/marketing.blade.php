@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @include('partials.pwa-head')
-    <title>Maquis Express — La gestion de votre maquis, simplifiée</title>
+    <title>Maquis Express · Commandes, caisse et stock pour les maquis</title>
     <meta name="description" content="Commandes, comptoir, caisse, stock et crédits clients pour les maquis, bars et restaurants de Côte d'Ivoire. Espèces, Wave, Orange Money, et le rapport du soir sur WhatsApp.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -154,7 +154,7 @@
         <div class="foot-inner">
             <div>
                 <div class="foot-brand"><div class="nav-brand"><div class="badge">ME</div></div> Maquis Express</div>
-                <div style="font-size: 13px; margin-top: 8px;">La gestion de votre maquis, simplifiée. © {{ date('Y') }}</div>
+                <div style="font-size: 13px; margin-top: 8px;">Commandes, caisse et stock pour les maquis de Côte d'Ivoire. © {{ date('Y') }}</div>
             </div>
             <div class="foot-links">
                 <a href="{{ route('login') }}">Connexion</a>

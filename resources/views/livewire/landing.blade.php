@@ -335,7 +335,7 @@
             <div class="card reveal"><div class="icon">🍺</div><h3>Des boissons jamais payées</h3><p>Une tournée oubliée, une bouteille « offerte » aux amis… et le soir, le compte n'y est pas.</p></div>
             <div class="card reveal d1"><div class="icon">💸</div><h3>Une caisse qui ne tombe pas juste</h3><p>Il manque 5 000 F, et personne ne sait d'où vient l'écart.</p></div>
             <div class="card reveal d2"><div class="icon">📒</div><h3>Des crédits oubliés</h3><p>« Mets ça sur mon compte » : trois semaines après, plus personne ne sait combien il doit.</p></div>
-            <div class="card reveal d3"><div class="icon">📦</div><h3>Un stock qui fond tout seul</h3><p>Les casiers arrivent, les bouteilles disparaissent, et le bénéfice reste un mystère.</p></div>
+            <div class="card reveal d3"><div class="icon">📦</div><h3>Un stock qui fond tout seul</h3><p>Les casiers arrivent, des bouteilles disparaissent, et personne ne sait combien le maquis gagne.</p></div>
         </div>
     </section>
 
@@ -344,16 +344,16 @@
         <div class="wrap"><section id="fonctionnalites">
             <div class="center reveal"><span class="eyebrow">La solution</span></div>
             <h2 class="reveal">Tout votre maquis, dans une seule application</h2>
-            <p class="lead reveal">Pensé pour la façon dont on travaille vraiment dans un maquis : la tournée, le comptoir, les habitués, le Mobile Money. Touchez une fonction pour la voir.</p>
+            <p class="lead reveal">Fait pour le travail d'un maquis : la tournée, le comptoir, les habitués, le Mobile Money. Touchez une fonction pour la voir.</p>
 
             <div class="showcase reveal" id="showcase">
                 <div class="tabs" role="tablist">
                     <button class="tab active" role="tab" data-panel="p-comptoir"><div class="ti">🧾</div><div><strong>Bon de comptoir</strong><span class="d">La serveuse envoie la commande, le comptoir encaisse, puis on sert. Pas d'argent, pas de boisson.</span></div><span class="bar"></span></button>
-                    <button class="tab" role="tab" data-panel="p-caisse"><div class="ti">💰</div><div><strong>Une caisse qui tombe juste</strong><span class="d">On compte les billets ; l'application dit tout de suite s'il manque quelque chose.</span></div><span class="bar"></span></button>
+                    <button class="tab" role="tab" data-panel="p-caisse"><div class="ti">💰</div><div><strong>Une caisse qui tombe juste</strong><span class="d">On compte les billets. L'application dit tout de suite s'il manque de l'argent, et combien.</span></div><span class="bar"></span></button>
                     <button class="tab" role="tab" data-panel="p-mobile"><div class="ti">📱</div><div><strong>Espèces et Mobile Money</strong><span class="d">Wave, Orange, MTN, Moov, ou mixte avec la monnaie à rendre.</span></div><span class="bar"></span></button>
-                    <button class="tab" role="tab" data-panel="p-credit"><div class="ti">📒</div><div><strong>Crédits clients</strong><span class="d">Qui doit combien, ce qu'il a pris, et relance WhatsApp en un clic.</span></div><span class="bar"></span></button>
+                    <button class="tab" role="tab" data-panel="p-credit"><div class="ti">📒</div><div><strong>Crédits clients</strong><span class="d">Qui doit combien et pour quoi. Un clic envoie le rappel sur WhatsApp.</span></div><span class="bar"></span></button>
                     <button class="tab" role="tab" data-panel="p-stock"><div class="ti">📦</div><div><strong>Stock surveillé</strong><span class="d">Livraisons, casse, inventaire : ce qui manque, en bouteilles et en francs.</span></div><span class="bar"></span></button>
-                    <button class="tab" role="tab" data-panel="p-benef"><div class="ti">📊</div><div><strong>Votre vrai bénéfice</strong><span class="d">Ventes, prix d'achat, dépenses, pertes : combien vous gagnez vraiment.</span></div><span class="bar"></span></button>
+                    <button class="tab" role="tab" data-panel="p-benef"><div class="ti">📊</div><div><strong>Votre vrai bénéfice</strong><span class="d">Les ventes, moins les prix d'achat, les dépenses et les pertes : ce qui vous reste.</span></div><span class="bar"></span></button>
                 </div>
 
                 <div class="device">
@@ -454,11 +454,11 @@
     <section>
         <div class="center reveal"><span class="eyebrow">Et aussi</span></div>
         <h2 class="reveal">Le contrôle, même à distance</h2>
-        <p class="lead reveal">Les petits détails qui changent tout pour un patron.</p>
+        <p class="lead reveal">Vous savez ce qui se passe au maquis sans y être.</p>
         <div class="grid-3">
-            <div class="card reveal"><div class="icon" style="background: #E7F6EF;">💬</div><h3>Le rapport du soir sur WhatsApp</h3><p>À la fermeture : ventes, caisse, chaque serveuse et ce qu'il faut surveiller, directement sur votre téléphone.</p></div>
+            <div class="card reveal"><div class="icon" style="background: #E7F6EF;">💬</div><h3>Le rapport du soir sur WhatsApp</h3><p>À la fermeture, vous recevez les ventes, l'écart de caisse, le chiffre de chaque serveuse et ce qu'il faut surveiller.</p></div>
             <div class="card reveal d1"><div class="icon" style="background: #FDEFE6;">🎁</div><h3>Offerts et remises tracés</h3><p>Seuls le patron et la gérante peuvent offrir, avec un motif. Fini le « c'était offert » invérifiable.</p></div>
-            <div class="card reveal d2"><div class="icon" style="background: #EEF2FB;">📥</div><h3>Vos chiffres dans Excel</h3><p>Ventes, dépenses, caisse, crédits, stock : tout se télécharge, pour vous ou votre comptable.</p></div>
+            <div class="card reveal d2"><div class="icon" style="background: #EEF2FB;">📥</div><h3>Vos chiffres dans Excel</h3><p>Ventes, dépenses, caisse, crédits et stock se téléchargent en fichier Excel, pour vous ou votre comptable.</p></div>
         </div>
     </section>
 
@@ -467,7 +467,7 @@
         <div class="wrap"><section>
             <div class="center reveal"><span class="eyebrow">Chacun son écran</span></div>
             <h2 class="reveal">Simple pour l'équipe, clair pour le patron</h2>
-            <p class="lead reveal">Chacun ne voit que ce dont il a besoin. Et si vous êtes seul à tout faire, l'application s'adapte.</p>
+            <p class="lead reveal">Chacun ne voit que ce dont il a besoin. Si vous êtes seul à tout faire, un seul écran sert à prendre la commande, encaisser et servir.</p>
             <div class="grid-4">
                 <div class="card role reveal"><span class="emoji">🧑🏾‍🍳</span><div class="who">La serveuse</div><h3>Prend la commande</h3><ul><li>Choisit la table</li><li>Touche les boissons</li><li>Envoie au comptoir</li></ul></div>
                 <div class="card role reveal d1"><span class="emoji">🧾</span><div class="who">Le comptoir</div><h3>Encaisse et sert</h3><ul><li>Voit les bons arriver</li><li>Espèces ou Mobile Money</li><li>Clôture la caisse</li></ul></div>
@@ -481,12 +481,12 @@
     <section id="comment-ca-marche">
         <div class="center reveal"><span class="eyebrow">Démarrer</span></div>
         <h2 class="reveal">On installe votre maquis avec vous</h2>
-        <p class="lead reveal">Pas besoin d'être à l'aise avec l'informatique : notre équipe s'occupe de la mise en route.</p>
+        <p class="lead reveal">Pas besoin de connaître l'informatique. Notre équipe fait la mise en route avec vous.</p>
         <div class="steps">
             <div class="step reveal"><div class="step-n">1</div><h3>Demandez une démo</h3><p>Laissez votre nom et votre numéro : on vous appelle.</p></div>
-            <div class="step reveal d1"><div class="step-n">2</div><h3>On prépare votre maquis</h3><p>Votre compte, puis votre menu, vos tables et votre équipe, ensemble.</p></div>
+            <div class="step reveal d1"><div class="step-n">2</div><h3>On prépare votre maquis</h3><p>On crée votre compte, puis on saisit avec vous le menu, les tables et l'équipe.</p></div>
             <div class="step reveal d2"><div class="step-n">3</div><h3>Essayez gratuitement</h3><p>{{ $trialDays }} jours pour l'utiliser en vrai, pendant le service.</p></div>
-            <div class="step reveal d3"><div class="step-n">4</div><h3>Choisissez votre formule</h3><p>Vous payez par Wave ou Orange Money, au mois ou plus.</p></div>
+            <div class="step reveal d3"><div class="step-n">4</div><h3>Choisissez votre formule</h3><p>Vous payez par Wave ou Orange Money, pour un mois ou plusieurs.</p></div>
         </div>
     </section>
 
@@ -496,7 +496,7 @@
             <div class="wrap"><section id="tarifs">
                 <div class="center reveal"><span class="eyebrow">Tarifs</span></div>
                 <h2 class="reveal">Un prix clair, selon la taille de votre équipe</h2>
-                <p class="lead reveal">Le cœur de l'application dans chaque formule : seuls le nombre de personnes et le rapport automatique changent. {{ $trialDays }} jours d'essai gratuit pour commencer.</p>
+                <p class="lead reveal">Chaque formule contient toutes les fonctions. Seuls le nombre de personnes et le rapport automatique changent. Vous commencez par {{ $trialDays }} jours d'essai gratuit.</p>
                 <div class="plans" style="--cols: {{ min(3, $plans->count()) }};">
                     @foreach ($plans as $i => $plan)
                         @php $featured = $plans->count() >= 3 && $i === 1; @endphp
@@ -523,7 +523,7 @@
                     @endforeach
                 </div>
                 <p class="center reveal" style="font-size: 14px; color: var(--color-text-secondary); margin-top: 26px;">
-                    Paiement d'avance par Mobile Money, sans engagement : vous arrêtez quand vous voulez.
+                    Vous payez d'avance par Mobile Money, sans engagement. Vous arrêtez quand vous voulez.
                 </p>
             </section></div>
         </div>
@@ -535,19 +535,19 @@
         <h2 class="reveal">Vos questions</h2>
         <p class="lead reveal">Ce que les patrons nous demandent le plus souvent.</p>
         <div class="faq reveal">
-            <details><summary>Je dois acheter du matériel ?</summary><p>Non. L'application marche sur les téléphones Android que votre équipe a déjà, sur une tablette ou sur un ordinateur. Il suffit d'un navigateur internet.</p></details>
-            <details><summary>Et s'il n'y a pas internet ?</summary><p>L'application a besoin d'une connexion pendant le service : une connexion mobile (3G ou 4G) suffit.</p></details>
-            <details><summary>Mon petit maquis, c'est juste moi. Ça marche quand même ?</summary><p>Oui. Si vous êtes seul à tout faire, l'écran s'adapte : vous prenez la commande, vous encaissez, vous servez. Vous ajoutez du personnel quand vous voulez.</p></details>
-            <details><summary>Mes serveuses vont-elles s'en sortir ?</summary><p>Oui : choisir la table, toucher les boissons, envoyer. On forme votre équipe à l'installation.</p></details>
-            <details><summary>Mes chiffres sont-ils protégés ?</summary><p>Chaque maquis ne voit que ses propres données, chacun dans l'équipe n'accède qu'à ce que son rôle permet, et les mots de passe sont chiffrés. Voir notre <a href="{{ route('legal.privacy') }}">politique de confidentialité</a>.</p></details>
-            <details><summary>Et si je ne paie pas à temps ?</summary><p>Vous êtes prévenu à l'avance, puis vous avez quelques jours de tolérance. Ensuite, votre maquis passe en lecture seule : vous voyez toujours vos chiffres, rien n'est supprimé, et tout revient dès le paiement.</p></details>
+            <details><summary>Je dois acheter du matériel ?</summary><p>Non. L'application marche sur les téléphones Android ou iPhone que votre équipe a déjà, sur une tablette ou sur un ordinateur.</p></details>
+            <details><summary>Et s'il n'y a pas internet ?</summary><p>L'application a besoin d'internet pendant le service. La 3G ou la 4G du téléphone suffit.</p></details>
+            <details><summary>Mon petit maquis, c'est juste moi. Ça marche quand même ?</summary><p>Oui. Si vous êtes seul, le même écran sert à prendre la commande, encaisser et servir. Vous ajoutez du personnel quand vous voulez.</p></details>
+            <details><summary>Mes serveuses vont-elles s'en sortir ?</summary><p>Oui. Elles choisissent la table, touchent les boissons et envoient. On forme votre équipe le jour de l'installation.</p></details>
+            <details><summary>Mes chiffres sont-ils protégés ?</summary><p>Chaque maquis ne voit que ses propres données. Dans l'équipe, chacun n'ouvre que les écrans de son rôle. Les mots de passe sont chiffrés. Détails dans notre <a href="{{ route('legal.privacy') }}">politique de confidentialité</a>.</p></details>
+            <details><summary>Et si je ne paie pas à temps ?</summary><p>Vous êtes prévenu {{ \App\Models\Restaurant::REMINDER_DAYS }} jours avant, puis vous avez {{ \App\Models\Restaurant::GRACE_DAYS }} jours de tolérance. Ensuite, votre maquis passe en lecture seule. Vous voyez toujours vos chiffres et rien n'est supprimé. Tout revient dès le paiement.</p></details>
         </div>
     </section>
 
     {{-- ================= APPEL FINAL ================= --}}
     <div class="final reveal">
         <h2>Prêt à savoir où passe votre argent ?</h2>
-        <p>Demandez une démo : on vous appelle, on installe votre maquis avec vous, et vous essayez {{ $trialDays }} jours gratuitement.</p>
+        <p>Demandez une démo. On vous appelle, on installe votre maquis avec vous, puis vous l'essayez {{ $trialDays }} jours gratuitement.</p>
         <div class="ctas" style="justify-content: center;">
             <a href="{{ route('demo.request') }}" class="btn-primary">Demander une démo gratuite →</a>
             @if ($whatsappUrl)
