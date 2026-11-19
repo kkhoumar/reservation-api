@@ -30,6 +30,7 @@ class ProductsManage extends Component
     public bool $isAvailable = true;
 
     public string $newCategoryName = '';
+    public string $newCategoryKind = '';
 
     protected function rules(): array
     {
@@ -42,11 +43,21 @@ class ProductsManage extends Component
                 'required',
                 Rule::exists('categories', 'id')->where('restaurant_id', auth()->user()->currentRestaurantId()),
             ],
-            'costPrice' => 'nullable|integer|min:0|max:10000000',
+            // Obligatoire : sans prix d'achat, pas de bénéfice juste ni de comptage chiffré
+            'costPrice' => 'required|integer|min:0|max:10000000|lte:sellingPrice',
             // Le stock ne se saisit qu'à la création ; ensuite il ne bouge que
             // par les ventes, livraisons, pertes et inventaires (écran Stock)
             'stockQuantity' => $this->editingProductId ? 'nullable' : 'required|integer|min:0|max:1000000',
             'stockAlertThreshold' => 'nullable|integer|min:0',
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'sellingPrice.required' => 'Entrez le prix de vente.',
+            'costPrice.required' => 'Entrez le prix d\'achat : il sert à calculer votre bénéfice.',
+            'costPrice.lte' => 'Le prix d\'achat dépasse le prix de vente : vous perdriez de l\'argent à chaque vente. Vérifiez les deux prix.',
         ];
     }
 
@@ -81,7 +92,7 @@ class ProductsManage extends Component
             'category_id' => $this->categoryId,
             'name' => $this->name,
             'selling_price' => $this->sellingPrice,
-            'cost_price' => $this->costPrice !== '' ? (int) $this->costPrice : null,
+            'cost_price' => (int) $this->costPrice,
             'stock_alert_threshold' => $this->stockAlertThreshold !== '' ? $this->stockAlertThreshold : null,
             'is_available' => $this->isAvailable,
         ];
@@ -110,17 +121,31 @@ class ProductsManage extends Component
 
     public function saveCategory()
     {
-        $this->validate(['newCategoryName' => 'required|string|max:255']);
+        $this->validate([
+            'newCategoryName' => 'required|string|max:255',
+            'newCategoryKind' => 'nullable|in:' . implode(',', array_keys(Category::KINDS)),
+        ]);
 
         Category::create([
             'restaurant_id' => auth()->user()->currentRestaurantId(),
             'name' => $this->newCategoryName,
+            'kind' => $this->newCategoryKind ?: Category::guessKind($this->newCategoryName),
             'sort_order' => Category::where('restaurant_id', auth()->user()->currentRestaurantId())->count() + 1,
         ]);
 
         $this->newCategoryName = '';
+        $this->newCategoryKind = '';
         $this->showCategoryForm = false;
         session()->flash('success', 'Catégorie ajoutée.');
+    }
+
+    public function setCategoryKind($categoryId, string $kind): void
+    {
+        if (! array_key_exists($kind, Category::KINDS)) {
+            return;
+        }
+
+        Category::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($categoryId)->update(['kind' => $kind]);
     }
 
     public function render()

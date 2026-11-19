@@ -7,8 +7,10 @@ use App\Models\CashRegister;
 use App\Models\Expense;
 use App\Models\Product;
 use App\Models\StockCount;
+use App\Models\StockCountLine;
 use App\Models\StockMovement;
 use App\Models\User;
+use App\Support\StockCountSheet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -167,14 +169,16 @@ class StockService
     }
 
     /**
-     * Inventaire : on saisit ce qui est réellement compté ; l'application
-     * corrige le stock et calcule ce qui manque (ou ce qu'il y a en trop).
+     * Comptage du stock : on saisit ce qui est réellement là ; l'application
+     * compare avec son stock, corrige, et garde la photo de chaque produit
+     * (prix du jour, livraisons / ventes / pertes depuis le comptage précédent).
      *
      * @param  array<int, int|string|null>  $counted  quantité comptée par id de produit (vide = non compté)
+     * @param  array<int, string|null>  $reasons  raison de l'écart par id de produit (voir StockCountLine::REASONS)
      *
      * @throws BusinessRuleException
      */
-    public function recordInventory(User $by, array $counted, ?string $note = null): StockCount
+    public function recordInventory(User $by, array $counted, ?string $note = null, array $reasons = []): StockCount
     {
         $this->guard($by);
 
@@ -190,23 +194,31 @@ class StockService
             }
         }
 
-        return DB::transaction(function () use ($by, $counted, $note) {
+        return DB::transaction(function () use ($by, $counted, $note, $reasons) {
+            $restaurantId = $by->currentRestaurantId();
+            $sheet = new StockCountSheet($restaurantId);
+            $delivered = $sheet->delivered();
+            $sold = $sheet->sold();
+            $lost = $sheet->lost();
+
             $count = StockCount::create([
-                'restaurant_id' => $by->currentRestaurantId(),
+                'restaurant_id' => $restaurantId,
                 'user_id' => $by->id,
                 'note' => $note ? mb_substr(trim($note), 0, 255) : null,
+                'previous_count_at' => $sheet->since,
             ]);
 
-            $qtyGap = 0;
-            $valueGap = 0;
+            $totals = ['qty' => 0, 'gap_cost' => 0, 'gap_sale' => 0, 'cost' => 0, 'sale' => 0];
 
             foreach ($counted as $productId => $real) {
-                $product = Product::whereKey($productId)->lockForUpdate()->firstOrFail();
+                $product = Product::with('category')->whereKey($productId)->lockForUpdate()->firstOrFail();
+                $real = (int) $real;
                 $before = $product->stock_quantity;
-                $diff = (int) $real - $before;
+                $diff = $real - $before;
+                $reason = $diff !== 0 && array_key_exists($reasons[$productId] ?? '', StockCountLine::REASONS) ? $reasons[$productId] : null;
 
                 if ($diff !== 0) {
-                    $product->update(['stock_quantity' => (int) $real]);
+                    $product->update(['stock_quantity' => $real]);
 
                     StockMovement::create([
                         'restaurant_id' => $product->restaurant_id,
@@ -215,23 +227,45 @@ class StockService
                         'type' => 'inventory',
                         'quantity' => $diff,
                         'stock_before' => $before,
-                        'stock_after' => (int) $real,
+                        'stock_after' => $real,
                         'unit_cost' => $product->unitValue(),
+                        'reason' => $reason ? StockCountLine::REASONS[$reason] : null,
                         'stock_count_id' => $count->id,
                     ]);
                 }
 
-                $qtyGap += $diff;
-                $valueGap += $diff * $product->unitValue();
+                $count->lines()->create([
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'kind' => $product->category?->kind ?? 'food',
+                    'expected' => $before,
+                    'counted' => $real,
+                    'gap' => $diff,
+                    'unit_cost' => $product->cost_price,
+                    'unit_price' => $product->selling_price,
+                    'delivered' => (int) ($delivered[$product->id] ?? 0),
+                    'sold' => (int) ($sold[$product->id] ?? 0),
+                    'lost' => (int) ($lost[$product->id] ?? 0),
+                    'reason' => $reason,
+                ]);
+
+                $totals['qty'] += $diff;
+                $totals['gap_cost'] += $diff * $product->unitValue();
+                $totals['gap_sale'] += $diff * $product->selling_price;
+                $totals['cost'] += $real * $product->unitValue();
+                $totals['sale'] += $real * $product->selling_price;
             }
 
             $count->update([
                 'products_counted' => count($counted),
-                'quantity_gap' => $qtyGap,
-                'value_gap' => $valueGap,
+                'quantity_gap' => $totals['qty'],
+                'value_gap' => $totals['gap_cost'],
+                'gap_sale_value' => $totals['gap_sale'],
+                'cost_value' => $totals['cost'],
+                'sale_value' => $totals['sale'],
             ]);
 
-            Log::info('Stock : inventaire', ['user_id' => $by->id, 'stock_count_id' => $count->id, 'value_gap' => $valueGap]);
+            Log::info('Stock : comptage', ['user_id' => $by->id, 'stock_count_id' => $count->id, 'value_gap' => $totals['gap_cost']]);
 
             return $count;
         });

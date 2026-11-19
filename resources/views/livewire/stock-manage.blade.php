@@ -18,9 +18,10 @@
 
     <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
         @foreach ($tabs as $key => $label)
-            @continue(\App\Support\ReadOnlyGuard::isReadOnly() && in_array($key, ['delivery', 'loss', 'inventory'], true))
+            @continue(\App\Support\ReadOnlyGuard::isReadOnly() && in_array($key, ['delivery', 'loss'], true))
             <button wire:click="setTab('{{ $key }}')" class="btn {{ $tab === $key ? 'btn-secondary' : 'btn-ghost' }}" style="padding: 8px 14px; font-size: 13px;">{{ $label }}</button>
         @endforeach
+        <a href="{{ route('stock.count') }}" class="btn btn-primary" style="padding: 8px 14px; font-size: 13px; margin-left: auto;"><x-icon name="clipboard" size="15" /> Compter le stock</a>
     </div>
 
     {{-- ================= VUE D'ENSEMBLE ================= --}}
@@ -71,14 +72,14 @@
 
         @if ($recentCounts->isNotEmpty())
             <div class="card" style="margin-top: 16px;">
-                <h3 style="margin-top: 0;">Derniers inventaires</h3>
+                <h3 style="margin-top: 0;">Derniers comptages</h3>
                 @foreach ($recentCounts as $c)
-                    <div style="display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                    <a href="{{ route('stock.count.show', $c) }}" style="display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--color-border); font-size: 14px; color: inherit; text-decoration: none;">
                         <span>{{ $c->created_at->format('d/m/Y H:i') }} · {{ $c->products_counted }} {{ $c->products_counted > 1 ? 'produits comptés' : 'produit compté' }} · par {{ $c->user?->first_name }}</span>
                         <strong style="color: {{ $c->value_gap < 0 ? 'var(--color-danger)' : ($c->value_gap > 0 ? 'var(--color-primary-300)' : 'inherit') }};">
                             {{ $c->value_gap === 0 ? 'juste' : ($c->value_gap < 0 ? 'manque ' . $fcfa(abs($c->value_gap)) : 'en trop ' . $fcfa($c->value_gap)) . ' F' }}
                         </strong>
-                    </div>
+                    </a>
                 @endforeach
             </div>
         @endif
@@ -149,62 +150,6 @@
             @error('lossReason') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 8px;">{{ $message }}</div> @enderror
 
             <button wire:click="saveLoss" class="btn btn-danger">Enregistrer la perte</button>
-        </div>
-    @endif
-
-    {{-- ================= INVENTAIRE ================= --}}
-    @if ($tab === 'inventory')
-        @if ($lastCount)
-            <div class="card" style="margin-bottom: 16px; border-left: 6px solid {{ $lastCount->value_gap < 0 ? 'var(--color-danger)' : 'var(--color-primary-300)' }};">
-                <h3 style="margin-top: 0;">Résultat de l'inventaire</h3>
-                <p style="font-size: 15px; margin: 0 0 10px 0;">
-                    {{ $lastCount->products_counted }} {{ $lastCount->products_counted > 1 ? 'produits comptés' : 'produit compté' }}.
-                    @if ($lastCount->value_gap === 0 && $lastCount->movements->isEmpty())
-                        <strong style="color: var(--color-primary-300);">Tout est juste.</strong>
-                    @elseif ($lastCount->value_gap < 0)
-                        <strong style="color: var(--color-danger);">Il manque l'équivalent de {{ $fcfa(abs($lastCount->value_gap)) }} FCFA.</strong>
-                    @else
-                        <strong>Écart de {{ $fcfa($lastCount->value_gap) }} FCFA.</strong>
-                    @endif
-                </p>
-                @foreach ($lastCount->movements as $m)
-                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
-                        <span>{{ $m->product?->name }} <span style="{{ $small }}">· attendu {{ $m->stock_before }}, compté {{ $m->stock_after }}</span></span>
-                        <strong style="color: {{ $m->quantity < 0 ? 'var(--color-danger)' : 'var(--color-primary-300)' }};">
-                            {{ $m->quantity > 0 ? '+' : '' }}{{ $m->quantity }} ({{ $m->quantity > 0 ? '+' : '−' }}{{ $fcfa(abs($m->quantity) * $m->unit_cost) }} F)
-                        </strong>
-                    </div>
-                @endforeach
-                <p style="{{ $small }} margin-bottom: 0;">Le stock de l'application a été corrigé selon le comptage.</p>
-            </div>
-        @endif
-
-        <div class="card">
-            <h3 style="margin-top: 0;">Compter le stock</h3>
-            <p style="{{ $small }} margin-top: 0;">
-                Comptez ce qui est réellement présent (frigo, réserve, casiers). Le stock attendu est <strong>caché</strong> pour que le comptage soit honnête.
-                Laissez vide un produit que vous ne comptez pas.
-            </p>
-
-            @foreach ($categories as $category)
-                @php $catProducts = $products->where('category_id', $category->id); @endphp
-                @if ($catProducts->isNotEmpty())
-                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--color-text-secondary); margin: 12px 0 4px 0;">{{ $category->name }}</div>
-                    @foreach ($catProducts as $p)
-                        <div style="display: grid; grid-template-columns: 1fr 110px; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
-                            <span>{{ $p->name }}</span>
-                            <input type="number" min="0" wire:model="counts.{{ $p->id }}" placeholder="Compté" style="padding: 6px 8px;">
-                        </div>
-                    @endforeach
-                @endif
-            @endforeach
-            @error('counts.*') <div style="color: var(--color-danger); font-size: 13px; margin-top: 8px;">{{ $message }}</div> @enderror
-
-            <label style="font-size: 13px; font-weight: 600; display: block; margin-top: 14px;">Note (facultatif)</label>
-            <input type="text" wire:model="inventoryNote" maxlength="255" placeholder="Ex : inventaire de fin de mois" style="width: 100%; max-width: 420px; margin: 4px 0 14px 0;">
-            @error('inventory') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 10px;">{{ $message }}</div> @enderror
-
-            <button wire:click="saveInventory" wire:confirm="Valider l'inventaire ? Le stock de l'application sera remplacé par les quantités comptées." class="btn btn-primary">Valider l'inventaire</button>
         </div>
     @endif
 

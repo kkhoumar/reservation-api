@@ -44,6 +44,23 @@
             @endif
         </a>
 
+        @if ($hasProducts)
+            @php
+                $late = $stockCountDays === null || $stockCountDays > \App\Models\StockCount::REMIND_AFTER_DAYS;
+                $stockAgo = match (true) {
+                    $stockCountDays === null => 'Jamais',
+                    $stockCountDays === 0 => "Aujourd'hui",
+                    $stockCountDays === 1 => 'Hier',
+                    default => "Il y a {$stockCountDays} j",
+                };
+            @endphp
+            <a href="{{ route('stock.count') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit; border-left: 4px solid {{ $late ? 'var(--color-danger)' : ($stockCountDays > 3 ? 'var(--color-warning)' : 'var(--color-primary-300)') }};">
+                <div style="{{ $small }}">Stock compté</div>
+                <div style="{{ $big }} color: {{ $late ? 'var(--color-danger)' : 'inherit' }};">{{ $stockAgo }}</div>
+                <div style="{{ $small }}">{{ $late ? 'Comptez le frigo et les casiers →' : 'Compter de nouveau →' }}</div>
+            </a>
+        @endif
+
         @if ($showCounter)
             <a href="{{ route('counter') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit; border-left: 4px solid {{ $pendingCount > 0 ? 'var(--color-accent)' : 'var(--color-border)' }};">
                 <div style="{{ $small }}">Au comptoir</div>

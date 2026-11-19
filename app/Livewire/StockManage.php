@@ -8,13 +8,12 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\StockCount;
 use App\Models\StockMovement;
-use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * Stock (patron et gérante) : vue d'ensemble, livraisons, pertes,
- * inventaire et historique de tous les mouvements.
+ * Stock (patron et gérante) : vue d'ensemble, livraisons, pertes et
+ * historique de tous les mouvements. Le comptage a son propre écran (/comptage).
  */
 class StockManage extends Component
 {
@@ -26,7 +25,6 @@ class StockManage extends Component
         'overview' => 'Stock',
         'delivery' => 'Livraison',
         'loss' => 'Perte / casse',
-        'inventory' => 'Inventaire',
         'history' => 'Historique',
     ];
 
@@ -42,13 +40,6 @@ class StockManage extends Component
     public ?int $lossProductId = null;
     public ?int $lossQuantity = 1;
     public string $lossReason = '';
-
-    // Inventaire (comptage « à l'aveugle » : le stock attendu n'est pas affiché)
-    /** @var array<int, string> */
-    public array $counts = [];
-    public string $inventoryNote = '';
-    #[Locked]
-    public ?int $lastCountId = null;
 
     // Historique
     public string $historyType = '';
@@ -146,29 +137,6 @@ class StockManage extends Component
         $this->tab = 'overview';
     }
 
-    public function saveInventory(StockService $stock): void
-    {
-        $this->validate([
-            'counts.*' => 'nullable|integer|min:0|max:1000000',
-            'inventoryNote' => 'nullable|string|max:255',
-        ], [
-            'counts.*.integer' => 'Nombre entier attendu.',
-            'counts.*.min' => 'Nombre invalide.',
-        ]);
-
-        try {
-            $count = $stock->recordInventory(auth()->user(), $this->counts, trim($this->inventoryNote) ?: null);
-        } catch (BusinessRuleException $e) {
-            $this->addError('inventory', $e->getMessage());
-
-            return;
-        }
-
-        $this->counts = [];
-        $this->inventoryNote = '';
-        $this->lastCountId = $count->id;
-    }
-
     public function render()
     {
         $products = $this->products();
@@ -179,9 +147,6 @@ class StockManage extends Component
             'categories' => Category::orderBy('sort_order')->get(),
             'stockValue' => $products->sum(fn (Product $p) => max(0, $p->stock_quantity) * $p->unitValue()),
             'missingCost' => $products->whereNull('cost_price')->count(),
-            'lastCount' => $this->lastCountId
-                ? StockCount::with(['movements.product', 'user'])->find($this->lastCountId)
-                : null,
             'recentCounts' => StockCount::with('user')->latest()->limit(5)->get(),
             'movements' => $this->tab === 'history'
                 ? StockMovement::with(['product', 'user'])

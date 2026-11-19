@@ -1,0 +1,387 @@
+@php
+    $fcfa = fn ($n) => number_format((int) $n, 0, ',', ' ');
+    $days = $sheet->daysSince();
+    $since = $sheet->since?->copy()->locale('fr');
+    $tone = $days === null ? 'danger' : ($days <= 3 ? 'ok' : ($days <= \App\Models\StockCount::REMIND_AFTER_DAYS ? 'warn' : 'danger'));
+    $ago = match (true) {
+        $days === null => 'Jamais compté',
+        $days === 0 => "Aujourd'hui",
+        $days === 1 => 'Hier',
+        default => "Il y a {$days} jours",
+    };
+    $kinds = \App\Models\Category::KINDS;
+    $byKind = $rows->groupBy('kind');
+    $totalDelivered = $rows->sum('delivered');
+    $totalSold = $rows->sum('sold');
+    $totalLost = $rows->sum('lost');
+    $draftKey = 'me-count-' . auth()->user()->currentRestaurantId() . '-' . ($sheet->previous?->id ?? 0);
+@endphp
+
+<div class="sc">
+    @include('partials.stock-count-styles')
+
+    {{-- ================= En-tête ================= --}}
+    <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;">
+        <div>
+            <div class="eyebrow">Stock</div>
+            <h1>Comptage du stock</h1>
+            <p class="lead">Regardez le frigo et les casiers, tapez ce que vous voyez. L'application compare avec ses calculs depuis le dernier comptage.</p>
+        </div>
+        <a href="{{ route('stock.index') }}" class="btn btn-ghost"><x-icon name="arrow-left" size="16" /> Stock</a>
+    </div>
+
+    <div class="sc-top">
+        <div class="sc-card">
+            <h3><x-icon name="calendar" size="16" /> Dernier comptage</h3>
+            <div class="sc-last">
+                <div>
+                    @if ($since)
+                        <div class="when">{{ ucfirst($since->isoFormat('dddd D MMMM')) }}</div>
+                        <div class="muted small">à {{ $since->format('H\hi') }}@if ($sheet->previous?->user) · par {{ $sheet->previous->user->first_name }}@endif</div>
+                    @else
+                        <div class="when">Aucun comptage</div>
+                        <div class="muted small">L'application part du stock qu'elle connaît aujourd'hui.</div>
+                    @endif
+                </div>
+                <span class="sc-pill {{ $tone }}">
+                    <x-icon :name="$tone === 'ok' ? 'check-circle' : ($tone === 'warn' ? 'clock' : 'alert')" size="15" /> {{ $ago }}
+                </span>
+            </div>
+            @if ($days !== null && $days > \App\Models\StockCount::REMIND_AFTER_DAYS)
+                <p class="small" style="color: var(--sc-miss); margin: 10px 0 0;">Plus de {{ \App\Models\StockCount::REMIND_AFTER_DAYS }} jours : un écart sera difficile à expliquer.</p>
+            @endif
+        </div>
+
+        <div class="sc-card">
+            <h3><x-icon name="box" size="16" /> {{ $since ? 'Depuis le ' . $since->isoFormat('D MMMM') : 'Ce que sait l\'application' }}</h3>
+            @if ($since)
+                <div class="sc-moves">
+                    <div class="sc-move"><strong style="color: var(--sc-ok);">+{{ $fcfa($totalDelivered) }}</strong><span>{{ $totalDelivered > 1 ? 'articles livrés' : 'article livré' }}</span></div>
+                    <div class="sc-move"><strong>−{{ $fcfa($totalSold) }}</strong><span>{{ $totalSold > 1 ? 'articles vendus' : 'article vendu' }}</span></div>
+                    <div class="sc-move"><strong>−{{ $fcfa($totalLost) }}</strong><span>{{ $totalLost > 1 ? 'pertes déclarées' : 'perte déclarée' }}</span></div>
+                </div>
+                @if ($registers->isNotEmpty())
+                    <div class="muted small" style="margin-bottom: 6px; display: flex; align-items: center; gap: 6px;"><x-icon name="users" size="14" /> Qui tenait la caisse pendant cette période</div>
+                    <div class="sc-team">
+                        @foreach ($registers as $r)
+                            <span>{{ $r->opened_at->locale('fr')->isoFormat('ddd D MMM') }} · {{ $r->openedByUser?->first_name ?? '—' }}@if ($r->closedByUser && $r->closed_by !== $r->opened_by) → {{ $r->closedByUser->first_name }}@endif</span>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="muted small">Aucune caisse ouverte pendant cette période.</div>
+                @endif
+            @else
+                <p class="muted" style="font-size: 14px; margin: 0; line-height: 1.5;">
+                    Après ce premier comptage, l'application vous montrera pour chaque produit ce qui a été livré, vendu et perdu entre deux comptages, et qui tenait la caisse.
+                </p>
+            @endif
+        </div>
+    </div>
+
+    @if ($missingCost > 0)
+        <div class="sc-warn">
+            <x-icon name="alert" size="18" style="margin-top: 1px;" />
+            <div>
+                <strong>{{ $missingCost }} {{ $missingCost > 1 ? 'produits n\'ont' : 'produit n\'a' }} pas de prix d'achat.</strong>
+                Leur bénéfice ne peut pas être calculé : ils sont chiffrés au prix de vente.
+                <a href="{{ route('products.manage') }}">Compléter les prix</a>
+            </div>
+        </div>
+    @endif
+
+    @if (! $hasProducts)
+        <div class="sc-card" style="text-align: center; padding: 32px 18px;">
+            <x-icon name="box" size="32" style="color: var(--color-text-secondary);" />
+            <p style="font-size: 15px; margin: 10px 0 14px;">Ajoutez d'abord vos produits pour pouvoir les compter.</p>
+            <a href="{{ route('products.manage') }}" class="btn btn-primary">Ajouter des produits</a>
+        </div>
+    @elseif ($readOnly)
+        <div class="sc-warn"><x-icon name="lock" size="18" /> <div>{{ \App\Support\ReadOnlyGuard::MESSAGE }}</div></div>
+    @else
+        {{-- ================= Comptage (calculs dans le téléphone) ================= --}}
+        <div wire:ignore x-data="stockCount(@js($rows->keyBy('id')), @js($draftKey))">
+            <div class="sc-bar">
+                <div class="sc-seg" role="tablist">
+                    <button type="button" :class="{ on: kind === 'all' }" @click="kind = 'all'">Tout</button>
+                    @foreach ($kinds as $k => $label)
+                        @if ($byKind->has($k))
+                            <button type="button" :class="{ on: kind === '{{ $k }}' }" @click="kind = '{{ $k }}'">{{ $label }}</button>
+                        @endif
+                    @endforeach
+                    <button type="button" :class="{ on: kind === 'gaps' }" @click="kind = 'gaps'">Écarts <span x-show="gapCount() > 0" x-text="'(' + gapCount() + ')'"></span></button>
+                </div>
+                <div class="sc-progress">
+                    <div class="small" style="display: flex; justify-content: space-between;">
+                        <span><strong x-text="countedCount()"></strong> / {{ $rows->count() }} produits comptés</span>
+                        <button type="button" x-show="countedCount() > 0" @click="clearAll()" style="border: 0; background: none; color: var(--color-text-secondary); text-decoration: underline; cursor: pointer; font: inherit; font-size: 12px; padding: 0;">Tout effacer</button>
+                    </div>
+                    <div class="track"><div class="fill" :style="'width:' + (countedCount() / {{ max(1, $rows->count()) }} * 100) + '%'"></div></div>
+                </div>
+            </div>
+
+            <div x-show="restored" x-transition class="sc-warn" style="background: var(--color-mint); color: var(--color-primary);">
+                <x-icon name="clock" size="18" /> <div>Votre comptage en cours a été repris là où vous l'aviez laissé.</div>
+            </div>
+
+            @foreach ($kinds as $k => $label)
+                @continue(! $byKind->has($k))
+                <section class="sc-section" x-show="kind === 'all' || kind === '{{ $k }}' || (kind === 'gaps' && kindGapCount('{{ $k }}') > 0)">
+                    <div class="sc-section-head">
+                        <h2>{{ $label }}</h2>
+                        <span class="muted small"><span x-text="kindCounted('{{ $k }}')"></span> / {{ $byKind[$k]->count() }} comptés</span>
+                    </div>
+                    <div class="sc-list">
+                        @foreach ($byKind[$k] as $r)
+                            @php $start = $r['expected'] - $r['delivered'] + $r['sold'] + $r['lost']; @endphp
+                            <div class="sc-row" :class="state({{ $r['id'] }})" x-show="kind !== 'gaps' || (gap({{ $r['id'] }}) ?? 0) !== 0" wire:key="row-{{ $r['id'] }}">
+                                <div class="sc-info">
+                                    <div class="sc-name">{{ $r['name'] }}@if ($r['category'])<span class="cat">{{ $r['category'] }}</span>@endif @if ($r['cost'] === null)<span class="sc-tag">prix d'achat manquant</span>@endif</div>
+                                    <div class="sc-calc">
+                                        @if ($since)
+                                            Le {{ $since->isoFormat('D MMM') }} : <span class="out">{{ $start }}</span>
+                                            @if ($r['delivered']) · <span class="in">+{{ $r['delivered'] }} {{ $r['delivered'] > 1 ? 'livrés' : 'livré' }}</span>@endif
+                                            @if ($r['sold']) · <span class="out">−{{ $r['sold'] }} {{ $r['sold'] > 1 ? 'vendus' : 'vendu' }}</span>@endif
+                                            @if ($r['lost']) · <span class="out">−{{ $r['lost'] }} {{ $r['lost'] > 1 ? 'perdus' : 'perdu' }}</span>@endif
+                                            @if (! $r['delivered'] && ! $r['sold'] && ! $r['lost']) · aucun mouvement @endif
+                                        @else
+                                            {{ $fcfa($r['price']) }} F la vente @if ($r['cost'] !== null) · {{ $fcfa($r['cost']) }} F l'achat @endif
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="sc-expected"><small>Doit rester</small><strong>{{ $r['expected'] }}</strong></div>
+                                <div class="sc-input">
+                                    <button type="button" class="sc-step" aria-label="Un de moins" @click="step({{ $r['id'] }}, -1)"><x-icon name="minus" size="18" stroke="2.4" /></button>
+                                    <input type="text" inputmode="numeric" autocomplete="off" enterkeyhint="next" placeholder="—" aria-label="Compté : {{ $r['name'] }}"
+                                           :value="counts[{{ $r['id'] }}] ?? ''" @input="type({{ $r['id'] }}, $event)" @focus="$event.target.select()">
+                                    <button type="button" class="sc-step" aria-label="Un de plus" @click="step({{ $r['id'] }}, 1)"><x-icon name="plus" size="18" stroke="2.4" /></button>
+                                </div>
+                                <button type="button" class="sc-exact" :class="{ on: gap({{ $r['id'] }}) === 0 }" @click="exact({{ $r['id'] }})" title="Le compte est bon"><x-icon name="check" size="15" stroke="2.6" /> Juste</button>
+                                <div class="sc-result" x-show="(gap({{ $r['id'] }}) ?? 0) !== 0" x-cloak>
+                                    <span class="sc-badge" :class="state({{ $r['id'] }})" x-html="badge({{ $r['id'] }})"></span>
+                                    <div class="sc-reasons" x-show="gap({{ $r['id'] }}) !== 0">
+                                        <span>Pourquoi ?</span>
+                                        @foreach (\App\Models\StockCountLine::REASONS as $rk => $rl)
+                                            <button type="button" class="sc-chip" :class="{ on: reasons[{{ $r['id'] }}] === '{{ $rk }}' }" @click="reason({{ $r['id'] }}, '{{ $rk }}')">{{ $rl }}</button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="sc-list" style="margin-top: 8px;" x-show="kindCounted('{{ $k }}') > 0" x-cloak>
+                        <div class="sc-sub" style="border-top: 0;">
+                            <span>Total {{ mb_strtolower($label) }} comptés : <strong x-text="money(totals('{{ $k }}').sale)"></strong> <span class="muted">au prix de vente</span></span>
+                            <span>Écart : <strong :style="'color:' + tone(totals('{{ $k }}').gapSale)" x-text="signed(totals('{{ $k }}').gapSale)"></strong></span>
+                        </div>
+                    </div>
+                </section>
+            @endforeach
+
+            {{-- ================= Résumé et validation ================= --}}
+            <section id="sc-resume" class="sc-section" style="scroll-margin-top: 16px;">
+                <div class="sc-section-head"><h2>Résumé du comptage</h2></div>
+                <div class="sc-summary">
+                    <template x-for="g in groups()" :key="g.key">
+                        <div class="sc-sum" :class="{ total: g.key === 'total' }">
+                            <h3><span style="font-size: 16px; font-weight: 800;" x-text="g.label"></span><span class="muted" x-text="g.counted + ' / ' + g.size + ' comptés'"></span></h3>
+                            <div class="line"><span class="muted">Valeur au prix d'achat</span><strong x-text="money(g.cost)"></strong></div>
+                            <div class="line"><span class="muted">Valeur au prix de vente</span><strong x-text="money(g.sale)"></strong></div>
+                            <div class="line"><span class="muted">Bénéfice possible</span><strong x-text="money(g.sale - g.cost)"></strong></div>
+                            <div class="gap" :class="g.counted === 0 ? 'none' : (g.gapSale < 0 ? 'miss' : (g.gapSale > 0 ? 'over' : 'ok'))">
+                                <span x-text="g.counted === 0 ? 'Rien de compté' : (g.gapSale < 0 ? 'Manque' : (g.gapSale > 0 ? 'En trop' : 'Tout est juste'))"></span>
+                                <span x-show="g.counted > 0 && g.gapSale !== 0" x-text="signed(g.gapSale)"></span>
+                            </div>
+                            <div class="small muted" style="margin-top: 6px;" x-show="g.counted > 0 && g.gapSale !== 0" x-text="'Soit ' + signed(g.gapCost) + ' au prix d\'achat'"></div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="sc-card">
+                    <div class="sc-validate">
+                        <div>
+                            <label for="sc-note" style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Note <span class="muted" style="font-weight: 500;">(facultatif)</span></label>
+                            <input id="sc-note" type="text" maxlength="255" x-model="note" placeholder="Ex : un casier de Flag rendu au dépôt">
+                        </div>
+                        <button type="button" class="btn btn-primary" style="height: 46px; padding: 0 22px;" :disabled="sending || countedCount() === 0" @click="submit()">
+                            <x-icon name="check-circle" size="18" />
+                            <span x-text="sending ? 'Validation…' : 'Valider le comptage'"></span>
+                        </button>
+                    </div>
+                    <p class="small muted" style="margin: 10px 0 0; line-height: 1.5;">
+                        Les produits laissés vides ne sont pas comptés et gardent leur stock. Après validation, le stock de l'application devient celui que vous avez compté.
+                    </p>
+                    <div class="sc-error" x-show="error" x-text="error" x-cloak></div>
+                </div>
+            </section>
+
+            {{-- Barre en bas de l'écran : où j'en suis --}}
+            <div class="sc-sticky" x-show="countedCount() > 0" x-transition.opacity x-cloak>
+                <div class="sc-sticky-in">
+                    <div class="info">
+                        <strong x-text="countedCount() + ' / {{ $rows->count() }}'"></strong> <span class="muted">comptés</span><br>
+                        <span class="muted">Écart :</span> <strong :style="'color:' + tone(totals('all').gapSale)" x-text="signed(totals('all').gapSale)"></strong>
+                    </div>
+                    <button type="button" class="btn btn-primary" @click="document.getElementById('sc-resume').scrollIntoView({ behavior: 'smooth' })">Voir le résumé</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ================= Comptages précédents ================= --}}
+    @if ($history->isNotEmpty())
+        <section class="sc-section" style="margin-top: 28px;">
+            <div class="sc-section-head"><h2>Comptages précédents</h2></div>
+            <div class="sc-list sc-hist">
+                @foreach ($history as $c)
+                    @php $d = $c->created_at->copy()->locale('fr'); @endphp
+                    <a href="{{ route('stock.count.show', $c) }}">
+                        <div style="min-width: 0;">
+                            <div class="d">{{ ucfirst($d->isoFormat('dddd D MMMM YYYY')) }}</div>
+                            <div class="small muted">{{ $d->format('H\hi') }} · {{ $c->products_counted }} {{ $c->products_counted > 1 ? 'produits' : 'produit' }} · par {{ $c->user?->first_name ?? '—' }}</div>
+                        </div>
+                        @php $g = $c->gap_sale_value ?: $c->value_gap; @endphp
+                        <div class="r" style="color: {{ $g < 0 ? 'var(--sc-miss)' : ($g > 0 ? 'var(--sc-over)' : 'var(--sc-ok)') }};">
+                            {{ $g === 0 ? 'Juste' : ($g > 0 ? '+' : '−') . $fcfa(abs($g)) . ' F' }}
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    <script>
+        window.stockCount = (rows, draftKey) => ({
+            rows,
+            counts: {},
+            reasons: {},
+            note: '',
+            kind: 'all',
+            sending: false,
+            error: '',
+            restored: false,
+
+            init() {
+                try {
+                    const draft = JSON.parse(localStorage.getItem(draftKey) || 'null');
+                    if (draft && draft.counts && Object.keys(draft.counts).length) {
+                        for (const id in draft.counts) if (this.rows[id]) this.counts[id] = draft.counts[id];
+                        this.reasons = draft.reasons || {};
+                        this.note = draft.note || '';
+                        this.restored = true;
+                        setTimeout(() => this.restored = false, 6000);
+                    }
+                } catch (e) {}
+                this.$watch('counts', () => this.saveDraft());
+                this.$watch('reasons', () => this.saveDraft());
+                this.$watch('note', () => this.saveDraft());
+            },
+
+            saveDraft() {
+                try { localStorage.setItem(draftKey, JSON.stringify({ counts: this.counts, reasons: this.reasons, note: this.note })); } catch (e) {}
+            },
+
+            value(id) {
+                const v = this.counts[id];
+                return v === undefined || v === '' ? null : parseInt(v, 10);
+            },
+            gap(id) {
+                const v = this.value(id);
+                return v === null ? null : v - this.rows[id].expected;
+            },
+            state(id) {
+                const g = this.gap(id);
+                return g === null ? '' : (g === 0 ? 'ok' : (g < 0 ? 'miss' : 'over'));
+            },
+            type(id, e) {
+                const d = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 6);
+                e.target.value = d;
+                if (d === '') { delete this.counts[id]; this.counts = { ...this.counts }; } else { this.counts[id] = d; }
+                this.error = '';
+            },
+            step(id, delta) {
+                // Premier appui : on part de ce qui doit rester (34 → − → 33)
+                const base = this.value(id) ?? Math.max(0, this.rows[id].expected);
+                this.counts[id] = String(Math.max(0, base + delta));
+                this.error = '';
+            },
+            exact(id) {
+                this.counts[id] = String(Math.max(0, this.rows[id].expected));
+                delete this.reasons[id];
+                this.error = '';
+            },
+            reason(id, key) {
+                this.reasons[id] = this.reasons[id] === key ? null : key;
+            },
+            clearAll() {
+                if (!confirm('Effacer tout ce que vous avez compté ?')) return;
+                this.counts = {}; this.reasons = {}; this.note = '';
+            },
+
+            unitCost(r) { return r.cost ?? r.price; },
+            ids(kind) { return Object.keys(this.rows).filter(id => kind === 'all' || this.rows[id].kind === kind); },
+            countedCount() { return Object.keys(this.counts).filter(id => this.value(id) !== null).length; },
+            kindCounted(kind) { return this.ids(kind).filter(id => this.value(id) !== null).length; },
+            gapCount() { return Object.keys(this.rows).filter(id => (this.gap(id) ?? 0) !== 0).length; },
+            kindGapCount(kind) { return this.ids(kind).filter(id => (this.gap(id) ?? 0) !== 0).length; },
+
+            totals(kind) {
+                const t = { size: 0, counted: 0, cost: 0, sale: 0, gapSale: 0, gapCost: 0 };
+                for (const id of this.ids(kind)) {
+                    const r = this.rows[id], v = this.value(id);
+                    t.size++;
+                    if (v === null) continue;
+                    t.counted++;
+                    t.cost += v * this.unitCost(r);
+                    t.sale += v * r.price;
+                    t.gapSale += (v - r.expected) * r.price;
+                    t.gapCost += (v - r.expected) * this.unitCost(r);
+                }
+                return t;
+            },
+            groups() {
+                const labels = @js($kinds);
+                const out = [];
+                for (const k in labels) {
+                    if (this.ids(k).length) out.push({ key: k, label: labels[k], ...this.totals(k) });
+                }
+                out.push({ key: 'total', label: 'Total', ...this.totals('all') });
+                return out;
+            },
+
+            money(n) { return (n < 0 ? '−' : '') + Math.abs(n).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' F'; },
+            signed(n) { return n === 0 ? '0 F' : (n > 0 ? '+' : '−') + Math.abs(n).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' F'; },
+            tone(n) { return n < 0 ? 'var(--color-danger)' : (n > 0 ? '#2463B5' : 'var(--color-success)'); },
+            badge(id) {
+                const g = this.gap(id), r = this.rows[id];
+                if (g === null) return '';
+                if (g === 0) return 'Juste';
+                const n = Math.abs(g);
+                return (g < 0 ? 'Il manque ' + n : n + ' en trop') + ' · ' + this.signed(g * r.price);
+            },
+
+            async submit() {
+                const n = this.countedCount();
+                const gap = this.totals('all').gapSale;
+                const msg = 'Valider le comptage de ' + n + ' produit' + (n > 1 ? 's' : '') + ' ?\n'
+                    + (gap === 0 ? 'Tout est juste.' : 'Écart : ' + this.signed(gap) + '.')
+                    + '\nLe stock de l\'application sera remplacé par vos chiffres.';
+                if (!confirm(msg)) return;
+
+                this.sending = true;
+                this.error = '';
+                const counts = {}, reasons = {};
+                for (const id in this.counts) if (this.value(id) !== null) counts[id] = String(this.value(id));
+                for (const id in this.reasons) if (this.reasons[id] && counts[id] !== undefined) reasons[id] = this.reasons[id];
+
+                try {
+                    const error = await this.$wire.save(counts, reasons, this.note);
+                    if (error) { this.error = error; this.sending = false; return; }
+                    try { localStorage.removeItem(draftKey); } catch (e) {}
+                } catch (e) {
+                    this.error = 'La connexion a coupé. Vos chiffres sont gardés : réessayez.';
+                    this.sending = false;
+                }
+            },
+        });
+    </script>
+</div>

@@ -206,30 +206,6 @@ class StockTest extends TestCase
         $this->assertSame(-1000, $count->value_gap);
     }
 
-    public function test_ecran_inventaire_a_l_aveugle_puis_resultat(): void
-    {
-        Livewire::test(StockManage::class)
-            ->call('setTab', 'inventory')
-            ->assertDontSee('stock 20')
-            ->set("counts.{$this->biere->id}", '18')
-            ->call('saveInventory')
-            ->assertHasNoErrors()
-            ->assertSee("Il manque l'équivalent de 1 200 FCFA", false)
-            ->assertSee('attendu 20, compté 18');
-
-        $this->assertSame(1, StockCount::count());
-    }
-
-    public function test_une_quantite_comptee_negative_est_refusee(): void
-    {
-        Livewire::test(StockManage::class)
-            ->set("counts.{$this->biere->id}", '-4')
-            ->call('saveInventory')
-            ->assertHasErrors("counts.{$this->biere->id}");
-
-        $this->assertSame(20, $this->biere->fresh()->stock_quantity);
-    }
-
     // ---------- Droits et isolation ----------
 
     public function test_la_caissiere_ne_gere_pas_le_stock(): void

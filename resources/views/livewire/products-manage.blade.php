@@ -18,12 +18,27 @@
         </div>
     </div>
 
+    @php $missingCostCount = $categories->flatMap->products->whereNull('cost_price')->count(); @endphp
+    @if ($missingCostCount > 0)
+        <div class="card" style="border-left: 6px solid var(--color-accent); margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start;">
+            <x-icon name="alert" size="18" style="color: var(--color-accent); margin-top: 2px;" />
+            <div><strong>{{ $missingCostCount }} {{ $missingCostCount > 1 ? 'produits n\'ont' : 'produit n\'a' }} pas de prix d'achat.</strong>
+                <span style="display: block; font-size: 14px; color: var(--color-text-secondary); margin-top: 2px;">Touchez « Modifier » sur chaque produit marqué « prix d'achat manquant » pour le compléter. Sans lui, le bénéfice et la valeur du stock sont faux.</span></div>
+        </div>
+    @endif
+
     @if ($showCategoryForm)
         <div class="card" style="max-width: 400px; margin-bottom: 20px;">
             <h3 style="margin-top: 0;">Nouvelle catégorie</h3>
             <label style="font-size: 13px; font-weight: 600;">Nom</label>
             <input type="text" wire:model="newCategoryName" placeholder="Ex : Grillades" style="width: 100%; margin: 6px 0 14px 0;">
             @error('newCategoryName') <div style="color: var(--color-danger); font-size: 12px; margin-bottom: 10px;">{{ $message }}</div> @enderror
+            <label style="font-size: 13px; font-weight: 600;">Famille <span style="font-weight: 500; color: var(--color-text-secondary);">(pour séparer les totaux du comptage)</span></label>
+            <div style="display: flex; gap: 8px; margin: 6px 0 16px 0;">
+                @foreach (\App\Models\Category::KINDS as $kind => $kindLabel)
+                    <button type="button" wire:click="$set('newCategoryKind', '{{ $kind }}')" class="btn {{ $newCategoryKind === $kind ? 'btn-secondary' : 'btn-ghost' }}" style="flex: 1; justify-content: center;">{{ $kindLabel }}</button>
+                @endforeach
+            </div>
             <div style="display: flex; gap: 10px;">
                 <button wire:click="saveCategory" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
                 <button wire:click="$set('showCategoryForm', false)" class="btn btn-ghost" style="flex: 1;">Annuler</button>
@@ -55,17 +70,17 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Prix de vente (FCFA)</label>
-                    <x-money-input model="sellingPrice" style="width: 100%; margin-top: 6px;" />
+                    <x-money-input model="sellingPrice" :empty="''" style="width: 100%; margin-top: 6px;" />
                     @error('sellingPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
                 </div>
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Prix d'achat (FCFA)</label>
-                    <x-money-input model="costPrice" placeholder="Facultatif" style="width: 100%; margin-top: 6px;" />
+                    <x-money-input model="costPrice" :empty="''" placeholder="Obligatoire" style="width: 100%; margin-top: 6px;" />
                     @error('costPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
                 </div>
             </div>
             <div style="font-size: 12px; color: var(--color-text-secondary); margin: -8px 0 14px 0;">
-                Le prix d'achat sert à calculer le bénéfice. Il est mis à jour à chaque livraison.
+                Les deux prix sont obligatoires : ils servent à calculer le bénéfice et la valeur du stock au comptage. Le prix d'achat est mis à jour à chaque livraison.
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
@@ -101,7 +116,14 @@
     @endif
 
     @foreach ($categories as $category)
-        <h3 style="margin-top: 24px; color: var(--color-text-secondary);">{{ $category->name }}</h3>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 24px 0 10px;">
+            <h3 style="margin: 0; color: var(--color-text-secondary);">{{ $category->name }}</h3>
+            <div style="display: inline-flex; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 3px;" title="Famille de la catégorie, pour le comptage">
+                @foreach (\App\Models\Category::KINDS as $kind => $kindLabel)
+                    <button type="button" wire:click="setCategoryKind({{ $category->id }}, '{{ $kind }}')" style="border: 0; border-radius: 7px; padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; background: {{ $category->kind === $kind ? 'var(--color-primary)' : 'transparent' }}; color: {{ $category->kind === $kind ? '#fff' : 'var(--color-text-secondary)' }};">{{ $kindLabel }}</button>
+                @endforeach
+            </div>
+        </div>
 
         <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 16px;">
             @if ($category->products->isEmpty())

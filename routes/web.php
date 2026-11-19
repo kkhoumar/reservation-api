@@ -111,6 +111,8 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/users', UsersManage::class)->middleware('role:owner,manager')->name('users.manage');
     Route::get('/products', ProductsManage::class)->middleware('role:owner,manager')->name('products.manage');
     Route::get('/stock', \App\Livewire\StockManage::class)->middleware('role:owner,manager')->name('stock.index');
+    Route::get('/comptage', \App\Livewire\StockCountPage::class)->middleware('role:owner,manager')->name('stock.count');
+    Route::get('/comptage/{stockCount}', \App\Livewire\StockCountShow::class)->middleware('role:owner,manager')->name('stock.count.show');
     Route::get('/exports', [\App\Http\Controllers\ExportController::class, 'index'])->middleware('role:owner,manager')->name('exports.index');
     Route::get('/exports/{type}', [\App\Http\Controllers\ExportController::class, 'download'])->middleware('role:owner,manager')->name('exports.download');
     Route::get('/parametres', RestaurantSettings::class)->middleware('role:owner')->name('settings');

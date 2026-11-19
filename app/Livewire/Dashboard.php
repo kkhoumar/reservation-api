@@ -123,6 +123,8 @@ class Dashboard extends Component
 
         return view('livewire.dashboard', [
             'noRestaurant' => false,
+            'stockCountDays' => (new \App\Support\StockCountSheet($restaurantId))->daysSince(),
+            'hasProducts' => \App\Models\Product::exists(),
             'periods' => self::PERIODS,
             'sales' => $sales,
             'revenue' => $sales->total(),
