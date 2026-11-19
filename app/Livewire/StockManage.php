@@ -24,7 +24,7 @@ class StockManage extends Component
     public const TABS = [
         'overview' => 'Stock',
         'delivery' => 'Livraison',
-        'loss' => 'Perte / casse',
+        'loss' => 'Perte ou casse',
         'history' => 'Historique',
     ];
 
@@ -52,7 +52,9 @@ class StockManage extends Component
 
     protected function products()
     {
-        return Product::with('category')->orderBy('name')->get();
+        return Product::with('category')->get()
+            ->sortBy(fn (Product $p) => [($p->category?->kind ?? 'food') === 'drink' ? 0 : 1, $p->category?->sort_order ?? 999, mb_strtolower($p->name)])
+            ->values();
     }
 
     protected function resetDeliveryLines(): void
@@ -129,8 +131,8 @@ class StockManage extends Component
             return;
         }
 
-        session()->flash('success', 'Perte enregistrée : ' . abs($movement->quantity) . ' × ' . $movement->product->name
-            . ' (' . number_format(abs($movement->quantity) * $movement->unit_cost, 0, ',', ' ') . ' FCFA).');
+        session()->flash('success', 'Perte enregistrée : ' . abs($movement->quantity) . ' ' . $movement->product->name
+            . ', soit ' . number_format(abs($movement->quantity) * $movement->unit_cost, 0, ',', ' ') . ' FCFA.');
 
         $this->reset(['lossProductId', 'lossReason']);
         $this->lossQuantity = 1;
@@ -146,8 +148,11 @@ class StockManage extends Component
             'products' => $products,
             'categories' => Category::orderBy('sort_order')->get(),
             'stockValue' => $products->sum(fn (Product $p) => max(0, $p->stock_quantity) * $p->unitValue()),
+            'stockSaleValue' => $products->sum(fn (Product $p) => max(0, $p->stock_quantity) * $p->selling_price),
+            'lowCount' => $products->filter->isLowStock()->count(),
+            'countDays' => (new \App\Support\StockCountSheet(auth()->user()->currentRestaurantId()))->daysSince(),
             'missingCost' => $products->whereNull('cost_price')->count(),
-            'recentCounts' => StockCount::with('user')->latest()->limit(5)->get(),
+            'recentCounts' => StockCount::with('user')->latest()->latest('id')->limit(5)->get(),
             'movements' => $this->tab === 'history'
                 ? StockMovement::with(['product', 'user'])
                     ->when(array_key_exists($this->historyType, StockMovement::TYPES), fn ($q) => $q->where('type', $this->historyType))

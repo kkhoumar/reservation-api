@@ -230,7 +230,7 @@ class StockTest extends TestCase
 
         Livewire::test(StockManage::class)
             ->call('setTab', 'history')
-            ->assertSee('Perte / casse')
+            ->assertSee('Perte ou casse')
             ->assertSee('Périmé')
             ->assertSee('par Mariam');
     }

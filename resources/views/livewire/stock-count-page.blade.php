@@ -48,12 +48,12 @@
                 </span>
             </div>
             @if ($days !== null && $days > \App\Models\StockCount::REMIND_AFTER_DAYS)
-                <p class="small" style="color: var(--sc-miss); margin: 10px 0 0;">Plus de {{ \App\Models\StockCount::REMIND_AFTER_DAYS }} jours : un écart sera difficile à expliquer.</p>
+                <p class="small" style="color: var(--sc-miss); margin: 10px 0 0;">Plus de {{ \App\Models\StockCount::REMIND_AFTER_DAYS }} jours sans comptage. Plus la période est longue, plus un écart est difficile à expliquer.</p>
             @endif
         </div>
 
         <div class="sc-card">
-            <h3><x-icon name="box" size="16" /> {{ $since ? 'Depuis le ' . $since->isoFormat('D MMMM') : 'Ce que sait l\'application' }}</h3>
+            <h3><x-icon name="box" size="16" /> {{ $since ? 'Depuis le ' . $since->isoFormat('D MMMM') : 'Premier comptage' }}</h3>
             @if ($since)
                 <div class="sc-moves">
                     <div class="sc-move"><strong style="color: var(--sc-ok);">+{{ $fcfa($totalDelivered) }}</strong><span>{{ $totalDelivered > 1 ? 'articles livrés' : 'article livré' }}</span></div>
@@ -72,7 +72,7 @@
                 @endif
             @else
                 <p class="muted" style="font-size: 14px; margin: 0; line-height: 1.5;">
-                    Après ce premier comptage, l'application vous montrera pour chaque produit ce qui a été livré, vendu et perdu entre deux comptages, et qui tenait la caisse.
+                    Dès le deuxième comptage, vous verrez pour chaque produit ce qui a été livré, vendu et perdu entre deux comptages. Vous verrez aussi qui tenait la caisse chaque jour.
                 </p>
             @endif
         </div>
@@ -83,7 +83,7 @@
             <x-icon name="alert" size="18" style="margin-top: 1px;" />
             <div>
                 <strong>{{ $missingCost }} {{ $missingCost > 1 ? 'produits n\'ont' : 'produit n\'a' }} pas de prix d'achat.</strong>
-                Leur bénéfice ne peut pas être calculé : ils sont chiffrés au prix de vente.
+                L'application ne peut pas calculer leur bénéfice. Elle les compte au prix de vente.
                 <a href="{{ route('products.manage') }}">Compléter les prix</a>
             </div>
         </div>
@@ -120,7 +120,7 @@
             </div>
 
             <div x-show="restored" x-transition class="sc-warn" style="background: var(--color-mint); color: var(--color-primary);">
-                <x-icon name="clock" size="18" /> <div>Votre comptage en cours a été repris là où vous l'aviez laissé.</div>
+                <x-icon name="clock" size="18" /> <div>Vos chiffres non validés sont revenus. Continuez là où vous en étiez.</div>
             </div>
 
             @foreach ($kinds as $k => $label)
@@ -208,7 +208,7 @@
                         </button>
                     </div>
                     <p class="small muted" style="margin: 10px 0 0; line-height: 1.5;">
-                        Les produits laissés vides ne sont pas comptés et gardent leur stock. Après validation, le stock de l'application devient celui que vous avez compté.
+                        Un produit laissé vide garde son stock. Après validation, l'application remplace son stock par vos chiffres.
                     </p>
                     <div class="sc-error" x-show="error" x-text="error" x-cloak></div>
                 </div>
@@ -378,7 +378,7 @@
                     if (error) { this.error = error; this.sending = false; return; }
                     try { localStorage.removeItem(draftKey); } catch (e) {}
                 } catch (e) {
-                    this.error = 'La connexion a coupé. Vos chiffres sont gardés : réessayez.';
+                    this.error = 'La connexion a coupé. Vos chiffres sont gardés. Réessayez.';
                     this.sending = false;
                 }
             },

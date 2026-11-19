@@ -37,6 +37,9 @@
         'users'        => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20.5a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.3a6.5 6.5 0 0 1 3.5 6.2"/>',
         'plus'         => '<path d="M12 5v14"/><path d="M5 12h14"/>',
         'minus'        => '<path d="M5 12h14"/>',
+        'truck'        => '<path d="M2 5.5h11v10H2z"/><path d="M13 9h4.5l3.5 3.5v3H13z"/><circle cx="6" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/>',
+        'history'      => '<path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 7.5V12l3 2"/>',
+        'tag'          => '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><path d="M7.5 7.5h.01"/>',
         'arrow-left'   => '<path d="M19 12H5"/><path d="m11 18-6-6 6-6"/>',
         'share'        => '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4"/><path d="m15.4 6.5-6.8 4"/>',
 

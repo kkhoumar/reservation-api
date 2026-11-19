@@ -17,8 +17,8 @@ class StockMovement extends Model
     public const TYPES = [
         'initial' => 'Stock de départ',
         'delivery' => 'Livraison',
-        'loss' => 'Perte / casse',
-        'inventory' => 'Inventaire',
+        'loss' => 'Perte ou casse',
+        'inventory' => 'Comptage',
     ];
 
     protected $fillable = [

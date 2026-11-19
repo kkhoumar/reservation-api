@@ -1,193 +1,395 @@
 @php
     $fcfa = fn ($n) => number_format((int) $n, 0, ',', ' ');
-    $small = 'font-size: 12px; color: var(--color-text-secondary);';
+    $readOnly = \App\Support\ReadOnlyGuard::isReadOnly();
+    $kinds = \App\Models\Category::KINDS;
+    $byKind = $products->groupBy(fn ($p) => $p->category?->kind ?? 'food');
+    $countTone = $countDays === null || $countDays > \App\Models\StockCount::REMIND_AFTER_DAYS ? 'danger' : ($countDays > 3 ? 'warn' : 'ok');
+    $countAgo = match (true) {
+        $countDays === null => 'Jamais',
+        $countDays === 0 => "Aujourd'hui",
+        $countDays === 1 => 'Hier',
+        default => "Il y a {$countDays} jours",
+    };
+    $tabIcons = ['overview' => 'box', 'delivery' => 'truck', 'loss' => 'alert', 'history' => 'history'];
+    $typeStyle = [
+        'initial' => ['box', 'var(--color-text-secondary)', 'var(--color-bg)'],
+        'delivery' => ['truck', 'var(--color-success)', 'var(--color-success-bg)'],
+        'loss' => ['alert', 'var(--color-danger)', 'var(--color-danger-bg)'],
+        'inventory' => ['clipboard', '#2463B5', '#EAF1FB'],
+    ];
 @endphp
 
-<div>
+<div class="sc st">
+    @include('partials.stock-count-styles')
+    <style>
+        .st { padding-bottom: 24px; }
+        .st-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0 14px; }
+        .st-kpi { background: #fff; border: 1px solid var(--color-border); border-radius: 16px; padding: 14px 16px; min-width: 0; color: inherit; text-decoration: none; display: block; }
+        .st-kpi .k { font-size: 12.5px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; font-weight: 600; }
+        .st-kpi .v { font-size: 23px; font-weight: 800; letter-spacing: -.01em; margin-top: 4px; white-space: nowrap; }
+        .st-kpi .v small { font-size: 13px; font-weight: 700; color: var(--color-text-secondary); }
+        .st-kpi .s { font-size: 12.5px; color: var(--color-text-secondary); margin-top: 2px; }
+        .st-kpi.hl { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+        .st-kpi.hl .k, .st-kpi.hl .s, .st-kpi.hl .v small { color: rgba(255,255,255,.75); }
+        a.st-kpi:hover { border-color: var(--color-primary-300); }
+        .st-alerts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .st-alert { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; padding: 8px 12px; border-radius: 12px; text-decoration: none; }
+        .st-alert.red { background: var(--color-danger-bg); color: var(--color-danger); }
+        .st-alert.orange { background: var(--color-warning-bg); color: #8A5A12; }
+
+        .st-tabs { display: flex; gap: 4px; background: #fff; border: 1px solid var(--color-border); border-radius: 14px; padding: 4px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+        .st-tabs::-webkit-scrollbar { display: none; }
+        .st-tabs button { flex: 1 0 auto; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; color: var(--color-text-secondary); padding: 9px 14px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; }
+        .st-tabs button.on { background: var(--color-primary); color: #fff; }
+
+        /* Liste des produits */
+        .st-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px 110px 120px; gap: 6px 14px; align-items: center; padding: 13px 18px; border-top: 1px solid var(--color-border); }
+        .st-row:first-child { border-top: 0; }
+        .st-row.head { font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .03em; padding-top: 10px; padding-bottom: 10px; background: var(--color-bg); }
+        .st-row > * { min-width: 0; }
+        .st-cell { text-align: right; font-size: 14.5px; }
+        .st-cell small { display: none; font-size: 11px; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .03em; }
+        .st-qty { font-size: 18px; font-weight: 800; }
+        .st-qty.low { color: var(--color-danger); }
+        .st-low { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: var(--color-danger); background: var(--color-danger-bg); padding: 2px 8px; border-radius: 6px; margin-left: 6px; vertical-align: 2px; }
+        .st-missing { color: var(--color-warning); font-weight: 700; font-size: 13px; }
+
+        /* Formulaires */
+        .st-form { max-width: 760px; }
+        .st-field { margin-bottom: 14px; }
+        .st-field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+        .st-field label span { font-weight: 500; color: var(--color-text-secondary); }
+        .st-field input, .st-field select { width: 100%; }
+        .st-line { display: grid; grid-template-columns: minmax(0, 1fr) 96px 140px; gap: 10px; align-items: center; padding: 10px 18px; border-top: 1px solid var(--color-border); }
+        .st-line:first-child { border-top: 0; }
+        .st-line input { width: 100%; text-align: right; font-weight: 700; }
+        .st-line .stock { font-size: 12.5px; color: var(--color-text-secondary); }
+        .st-m { display: none; font-size: 11px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
+        .st-toggle { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 14px; background: #fff; cursor: pointer; margin: 14px 0; }
+        .st-toggle input { margin-top: 3px; }
+        .st-total { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--color-mint); border-radius: 14px; padding: 12px 16px; margin-top: 12px; font-size: 14px; }
+        .st-total strong { font-size: 18px; color: var(--color-primary); }
+        .st-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+        /* Historique */
+        .st-move { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--color-border); }
+        .st-move:first-child { border-top: 0; }
+        .st-move .ic { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; }
+        .st-move .t { font-weight: 700; font-size: 14.5px; }
+        .st-move .d { font-size: 12.5px; color: var(--color-text-secondary); margin-top: 2px; line-height: 1.45; }
+        .st-move .q { font-weight: 800; font-size: 17px; white-space: nowrap; text-align: right; }
+
+        @media (max-width: 980px) { .st-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 760px) {
+            .st-row { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 14px; gap: 8px; }
+            .st-row.head { display: none; }
+            .st-row .sc-info { grid-column: 1 / -1; }
+            .st-cell { text-align: left; background: var(--color-bg); border-radius: 10px; padding: 7px 10px; }
+            .st-cell small { display: block; }
+            .st-cell.qtycell { order: -1; }
+            .st-row .sc-info { order: -2; }
+            .st-cell.value { display: none; }
+            .st-line { grid-template-columns: 1fr 1fr; padding: 12px 14px; }
+            .st-line > :first-child { grid-column: 1 / -1; }
+            .st-line.st-head { display: none; }
+            .st-m { display: block; }
+            .st .sc-seg { flex-wrap: wrap; }
+            .st-move { padding: 12px 14px; gap: 10px; }
+        }
+        @media (max-width: 520px) {
+            .st-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 420px) {
+            .st-kpi .v { font-size: 20px; }
+            .st-kpi { padding: 12px 13px; }
+        }
+    </style>
+
     @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">{{ session('success') }}</div>
+        <div class="sc-warn" style="background: var(--color-success-bg); color: var(--color-success);">
+            <x-icon name="check-circle" size="18" /> <div><strong>{{ session('success') }}</strong></div>
+        </div>
     @endif
 
-    <div style="margin-bottom: 16px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Boissons et produits</div>
-        <h1>Stock</h1>
-        <p style="font-size: 14px; color: var(--color-text-secondary); margin: 6px 0 0 0;">
-            Le stock ne bouge que par une vente, une livraison, une perte ou un inventaire, et chaque mouvement est tracé.
-        </p>
+    {{-- ================= En-tête ================= --}}
+    <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;">
+        <div>
+            <div class="eyebrow">Boissons et nourriture</div>
+            <h1>Stock</h1>
+            <p class="lead">Chaque vente, livraison, perte ou comptage change le stock. L'application garde la trace de chacun.</p>
+        </div>
+        @unless ($readOnly)
+            <a href="{{ route('stock.count') }}" class="btn btn-primary"><x-icon name="clipboard" size="17" /> Compter le stock</a>
+        @endunless
     </div>
 
-    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
-        @foreach ($tabs as $key => $label)
-            @continue(\App\Support\ReadOnlyGuard::isReadOnly() && in_array($key, ['delivery', 'loss'], true))
-            <button wire:click="setTab('{{ $key }}')" class="btn {{ $tab === $key ? 'btn-secondary' : 'btn-ghost' }}" style="padding: 8px 14px; font-size: 13px;">{{ $label }}</button>
-        @endforeach
-        <a href="{{ route('stock.count') }}" class="btn btn-primary" style="padding: 8px 14px; font-size: 13px; margin-left: auto;"><x-icon name="clipboard" size="15" /> Compter le stock</a>
+    {{-- ================= Chiffres clés ================= --}}
+    <div class="st-kpis">
+        <div class="st-kpi hl">
+            <div class="k"><x-icon name="tag" size="15" /> Au prix de vente</div>
+            <div class="v">{{ $fcfa($stockSaleValue) }} <small>F</small></div>
+            <div class="s">si tout le stock est vendu</div>
+        </div>
+        <div class="st-kpi">
+            <div class="k"><x-icon name="wallet" size="15" /> Au prix d'achat</div>
+            <div class="v">{{ $fcfa($stockValue) }} <small>F</small></div>
+            <div class="s">l'argent placé dans le stock</div>
+        </div>
+        <div class="st-kpi">
+            <div class="k"><x-icon name="chart" size="15" /> Bénéfice possible</div>
+            <div class="v" style="color: var(--color-success);">{{ $fcfa($stockSaleValue - $stockValue) }} <small>F</small></div>
+            <div class="s">vente moins achat</div>
+        </div>
+        <a href="{{ route('stock.count') }}" class="st-kpi">
+            <div class="k"><x-icon name="calendar" size="15" /> Dernier comptage</div>
+            <div class="v" style="color: {{ $countTone === 'danger' ? 'var(--color-danger)' : ($countTone === 'warn' ? 'var(--color-warning)' : 'inherit') }};">{{ $countAgo }}</div>
+            <div class="s">{{ $countTone === 'danger' ? 'Comptez le frigo et les casiers' : 'Voir les comptages' }}</div>
+        </a>
     </div>
 
-    {{-- ================= VUE D'ENSEMBLE ================= --}}
-    @if ($tab === 'overview')
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px;">
-            <div class="card" style="padding: 14px 16px;">
-                <div style="{{ $small }}">Valeur du stock</div>
-                <div style="font-size: 22px; font-weight: 800;">{{ $fcfa($stockValue) }} FCFA</div>
-                <div style="{{ $small }}">au prix d'achat (ou de vente s'il manque)</div>
-            </div>
-            <div class="card" style="padding: 14px 16px; border-left: 4px solid {{ $products->filter->isLowStock()->isNotEmpty() ? 'var(--color-danger)' : 'var(--color-border)' }};">
-                <div style="{{ $small }}">Bientôt en rupture</div>
-                <div style="font-size: 22px; font-weight: 800;">{{ $products->filter->isLowStock()->count() }}</div>
-            </div>
+    @if ($lowCount > 0 || $missingCost > 0)
+        <div class="st-alerts">
+            @if ($lowCount > 0)
+                <span class="st-alert red">
+                    <x-icon name="alert" size="16" /> {{ $lowCount }} {{ $lowCount > 1 ? 'produits bientôt en rupture' : 'produit bientôt en rupture' }}
+                </span>
+            @endif
             @if ($missingCost > 0)
-                <div class="card" style="padding: 14px 16px; border-left: 4px solid var(--color-accent);">
-                    <div style="{{ $small }}">Prix d'achat manquant</div>
-                    <div style="font-size: 22px; font-weight: 800;">{{ $missingCost }}</div>
-                    <div style="{{ $small }}">à renseigner pour un bénéfice juste</div>
-                </div>
+                <a href="{{ route('products.manage') }}" class="st-alert orange">
+                    <x-icon name="tag" size="16" /> {{ $missingCost }} {{ $missingCost > 1 ? 'prix d\'achat manquants' : 'prix d\'achat manquant' }}, à compléter
+                </a>
             @endif
         </div>
+    @endif
 
-        <div class="card" style="padding: 0; overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                <thead>
-                    <tr style="text-align: left; border-bottom: 1px solid var(--color-border);">
-                        <th style="padding: 10px 16px; {{ $small }} font-weight: 600;">Produit</th>
-                        <th style="padding: 10px 16px; {{ $small }} font-weight: 600; text-align: right;">En stock</th>
-                        <th style="padding: 10px 16px; {{ $small }} font-weight: 600; text-align: right;">Prix d'achat</th>
-                        <th style="padding: 10px 16px; {{ $small }} font-weight: 600; text-align: right;">Valeur</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($products as $p)
-                        <tr style="border-bottom: 1px solid var(--color-border);">
-                            <td style="padding: 10px 16px;"><strong>{{ $p->name }}</strong> <span style="{{ $small }}">{{ $p->category?->name }}</span></td>
-                            <td style="padding: 10px 16px; text-align: right; font-weight: 700; color: {{ $p->isLowStock() ? 'var(--color-danger)' : 'inherit' }};">
-                                {{ $p->stock_quantity }} @if ($p->isLowStock()) <x-icon name="alert" size="14" style="color: var(--color-warning);" /> @endif
-                            </td>
-                            <td style="padding: 10px 16px; text-align: right;">{{ $p->cost_price !== null ? $fcfa($p->cost_price) : '—' }}</td>
-                            <td style="padding: 10px 16px; text-align: right;">{{ $fcfa(max(0, $p->stock_quantity) * $p->unitValue()) }}</td>
-                        </tr>
+    {{-- ================= Onglets ================= --}}
+    <div class="st-tabs" role="tablist">
+        @foreach ($tabs as $key => $label)
+            @continue($readOnly && in_array($key, ['delivery', 'loss'], true))
+            <button type="button" role="tab" wire:click="setTab('{{ $key }}')" class="{{ $tab === $key ? 'on' : '' }}">
+                <x-icon :name="$tabIcons[$key] ?? 'box'" size="16" /> {{ $label }}
+            </button>
+        @endforeach
+    </div>
+
+    {{-- ================= STOCK ================= --}}
+    @if ($tab === 'overview')
+        @if ($products->isEmpty())
+            <div class="sc-card" style="text-align: center; padding: 32px 18px;">
+                <x-icon name="box" size="32" style="color: var(--color-text-secondary);" />
+                <p style="font-size: 15px; margin: 10px 0 14px;">Aucun produit pour le moment.</p>
+                <a href="{{ route('products.manage') }}" class="btn btn-primary">Ajouter des produits</a>
+            </div>
+        @endif
+
+        @foreach ($kinds as $k => $label)
+            @continue(! $byKind->has($k))
+            @php
+                $group = $byKind[$k];
+                $groupSale = $group->sum(fn ($p) => max(0, $p->stock_quantity) * $p->selling_price);
+                $groupCost = $group->sum(fn ($p) => max(0, $p->stock_quantity) * $p->unitValue());
+            @endphp
+            <section class="sc-section">
+                <div class="sc-section-head">
+                    <h2>{{ $label }}</h2>
+                    <span class="muted small">{{ $group->count() }} {{ $group->count() > 1 ? 'produits' : 'produit' }}</span>
+                </div>
+                <div class="sc-list">
+                    <div class="st-row head">
+                        <span>Produit</span><span style="text-align: right;">En stock</span><span style="text-align: right;">Prix d'achat</span><span style="text-align: right;">Prix de vente</span><span style="text-align: right;">Valeur</span>
+                    </div>
+                    @foreach ($group as $p)
+                        <div class="st-row">
+                            <div class="sc-info">
+                                <div class="sc-name">{{ $p->name }}@if ($p->category && mb_strtolower($p->category->name) !== mb_strtolower($label))<span class="cat">{{ $p->category->name }}</span>@endif@if ($p->isLowStock())<span class="st-low"><x-icon name="alert" size="12" stroke="2.4" /> Bientôt en rupture</span>@endif</div>
+                                @if ($p->stock_alert_threshold !== null)
+                                    <div class="sc-calc">Alerte à {{ $p->stock_alert_threshold }}</div>
+                                @endif
+                            </div>
+                            <div class="st-cell qtycell"><small>En stock</small><span class="st-qty {{ $p->isLowStock() ? 'low' : '' }}">{{ $p->stock_quantity }}</span></div>
+                            <div class="st-cell"><small>Achat</small>@if ($p->cost_price !== null){{ $fcfa($p->cost_price) }} F @else<span class="st-missing">Manquant</span>@endif</div>
+                            <div class="st-cell"><small>Vente</small>{{ $fcfa($p->selling_price) }} F</div>
+                            <div class="st-cell value"><strong>{{ $fcfa(max(0, $p->stock_quantity) * $p->selling_price) }} F</strong></div>
+                        </div>
                     @endforeach
-                </tbody>
-            </table>
-        </div>
+                    <div class="sc-sub">
+                        <span>{{ $label }} à la vente : <strong>{{ $fcfa($groupSale) }} F</strong></span>
+                        <span>Bénéfice possible : <strong style="color: var(--color-success);">{{ $fcfa($groupSale - $groupCost) }} F</strong></span>
+                    </div>
+                </div>
+            </section>
+        @endforeach
 
         @if ($recentCounts->isNotEmpty())
-            <div class="card" style="margin-top: 16px;">
-                <h3 style="margin-top: 0;">Derniers comptages</h3>
-                @foreach ($recentCounts as $c)
-                    <a href="{{ route('stock.count.show', $c) }}" style="display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--color-border); font-size: 14px; color: inherit; text-decoration: none;">
-                        <span>{{ $c->created_at->format('d/m/Y H:i') }} · {{ $c->products_counted }} {{ $c->products_counted > 1 ? 'produits comptés' : 'produit compté' }} · par {{ $c->user?->first_name }}</span>
-                        <strong style="color: {{ $c->value_gap < 0 ? 'var(--color-danger)' : ($c->value_gap > 0 ? 'var(--color-primary-300)' : 'inherit') }};">
-                            {{ $c->value_gap === 0 ? 'juste' : ($c->value_gap < 0 ? 'manque ' . $fcfa(abs($c->value_gap)) : 'en trop ' . $fcfa($c->value_gap)) . ' F' }}
-                        </strong>
-                    </a>
-                @endforeach
-            </div>
+            <section class="sc-section">
+                <div class="sc-section-head">
+                    <h2>Derniers comptages</h2>
+                    <a href="{{ route('stock.count') }}" class="small" style="color: var(--color-accent); font-weight: 700;">Tous les comptages</a>
+                </div>
+                <div class="sc-list sc-hist">
+                    @foreach ($recentCounts as $c)
+                        @php $d = $c->created_at->copy()->locale('fr'); $g = $c->gap_sale_value ?: $c->value_gap; @endphp
+                        <a href="{{ route('stock.count.show', $c) }}">
+                            <div style="min-width: 0;">
+                                <div class="d">{{ ucfirst($d->isoFormat('dddd D MMMM')) }}</div>
+                                <div class="small muted">{{ $d->format('H\hi') }} · {{ $c->products_counted }} {{ $c->products_counted > 1 ? 'produits' : 'produit' }} · par {{ $c->user?->first_name ?? 'inconnu' }}</div>
+                            </div>
+                            <div class="r" style="color: {{ $g < 0 ? 'var(--sc-miss)' : ($g > 0 ? 'var(--sc-over)' : 'var(--sc-ok)') }};">
+                                {{ $g === 0 ? 'Juste' : ($g > 0 ? '+' : '−') . $fcfa(abs($g)) . ' F' }}
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
         @endif
     @endif
 
     {{-- ================= LIVRAISON ================= --}}
     @if ($tab === 'delivery')
-        <div class="card">
-            <h3 style="margin-top: 0;">Enregistrer une livraison</h3>
-            <p style="{{ $small }} margin-top: 0;">Saisissez seulement les produits livrés. Le prix d'achat devient le nouveau prix d'achat du produit.</p>
+        <div class="st-form"
+             x-data="{
+                lines() { return Object.values(this.$wire.deliveryLines || {}); },
+                qty() { return this.lines().reduce((s, l) => s + (parseInt(l.quantity) || 0), 0); },
+                cost() { return this.lines().reduce((s, l) => s + (parseInt(l.quantity) || 0) * (parseInt(l.unit_cost) || 0), 0); },
+                money(n) { return n.toLocaleString('fr-FR').replace(/ | /g, ' ') + ' F'; },
+             }">
+            <div class="sc-card" style="margin-bottom: 14px;">
+                <h3><x-icon name="truck" size="16" /> Nouvelle livraison</h3>
+                <p class="muted" style="font-size: 14px; margin: 0 0 14px; line-height: 1.5;">Remplissez seulement les produits livrés. Le prix d'achat saisi remplace l'ancien prix d'achat du produit.</p>
+                <div class="st-field" style="margin-bottom: 0;">
+                    <label for="supplier">Fournisseur <span>facultatif</span></label>
+                    <input id="supplier" type="text" wire:model="supplier" maxlength="120" placeholder="Ex : Solibra, dépôt du quartier">
+                </div>
+            </div>
 
-            <label style="font-size: 13px; font-weight: 600;">Fournisseur (facultatif)</label>
-            <input type="text" wire:model="supplier" maxlength="120" placeholder="Ex : Solibra, dépôt du quartier" style="width: 100%; max-width: 360px; display: block; margin: 4px 0 14px 0;">
-
-            @foreach ($categories as $category)
-                @php $catProducts = $products->where('category_id', $category->id); @endphp
-                @if ($catProducts->isNotEmpty())
-                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--color-text-secondary); margin: 12px 0 4px 0;">{{ $category->name }}</div>
-                    @foreach ($catProducts as $p)
-                        <div style="display: grid; grid-template-columns: 1fr 100px 130px; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--color-border); font-size: 14px;">
-                            <span>{{ $p->name }} <span style="{{ $small }}">· stock {{ $p->stock_quantity }}</span></span>
-                            <input type="number" min="0" wire:model="deliveryLines.{{ $p->id }}.quantity" placeholder="Qté" style="padding: 6px 8px;">
-                            <x-money-input model="deliveryLines.{{ $p->id }}.unit_cost" placeholder="Prix d'achat" style="padding: 6px 8px;" />
+            @foreach ($kinds as $k => $label)
+                @continue(! $byKind->has($k))
+                <section class="sc-section" style="margin-bottom: 14px;">
+                    <div class="sc-section-head"><h2>{{ $label }}</h2></div>
+                    <div class="sc-list">
+                        <div class="st-line st-head" style="font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .03em; background: var(--color-bg);">
+                            <span>Produit</span><span style="text-align: right;">Quantité</span><span class="cost" style="text-align: right;">Prix d'achat</span>
                         </div>
-                    @endforeach
-                @endif
+                        @foreach ($byKind[$k] as $p)
+                            <div class="st-line">
+                                <div style="min-width: 0;">
+                                    <div style="font-weight: 700;">{{ $p->name }}</div>
+                                    <div class="stock">{{ $p->stock_quantity }} en stock</div>
+                                </div>
+                                <div><small class="st-m">Quantité</small><input type="number" min="0" inputmode="numeric" wire:model="deliveryLines.{{ $p->id }}.quantity" placeholder="0" aria-label="Quantité livrée : {{ $p->name }}"></div>
+                                <div class="cost"><small class="st-m">Prix d'achat</small><x-money-input model="deliveryLines.{{ $p->id }}.unit_cost" :empty="''" placeholder="Prix d'achat" aria-label="Prix d'achat : {{ $p->name }}" style="width: 100%; text-align: right; font-weight: 700;" /></div>
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
             @endforeach
-            @error('deliveryLines.*') <div style="color: var(--color-danger); font-size: 13px; margin-top: 8px;">{{ $message }}</div> @enderror
+            @error('deliveryLines.*') <div class="sc-error">{{ $message }}</div> @enderror
 
-            <label style="display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; cursor: pointer; font-size: 14px;">
-                <input type="checkbox" wire:model="paidFromRegister" style="margin-top: 3px;">
+            <label class="st-toggle">
+                <input type="checkbox" wire:model="paidFromRegister">
                 <span><strong>Payée avec l'argent de la caisse</strong>
-                    <span style="display: block; {{ $small }}">Crée automatiquement la dépense « Achat de marchandises » dans la caisse ouverte.</span>
+                    <span class="muted" style="display: block; font-size: 13px; margin-top: 2px;">L'application crée la dépense « Achat de marchandises » dans la caisse ouverte.</span>
                 </span>
             </label>
-            @error('delivery') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 10px;">{{ $message }}</div> @enderror
 
-            <button wire:click="saveDelivery" class="btn btn-primary">Enregistrer la livraison</button>
+            <div class="st-total">
+                <span><strong x-text="qty()">0</strong> <span x-text="qty() > 1 ? 'articles livrés' : 'article livré'">article livré</span></span>
+                <span>Total payé : <strong x-text="money(cost())">0 F</strong></span>
+            </div>
+            @error('delivery') <div class="sc-error">{{ $message }}</div> @enderror
+
+            <button wire:click="saveDelivery" class="btn btn-primary" style="margin-top: 14px; height: 46px; padding: 0 22px;"><x-icon name="check-circle" size="18" /> Enregistrer la livraison</button>
         </div>
     @endif
 
-    {{-- ================= PERTE ================= --}}
+    {{-- ================= PERTE OU CASSE ================= --}}
     @if ($tab === 'loss')
-        <div class="card" style="max-width: 480px;">
-            <h3 style="margin-top: 0;">Perte ou casse</h3>
-            <p style="{{ $small }} margin-top: 0;">Bouteille cassée, produit périmé ou renversé… La perte apparaît dans le tableau de bord.</p>
+        <div class="sc-card" style="max-width: 520px;"
+             x-data="{ costs: @js($products->mapWithKeys(fn ($p) => [$p->id => $p->unitValue()])) }">
+            <h3><x-icon name="alert" size="16" /> Déclarer une perte</h3>
+            <p class="muted" style="font-size: 14px; margin: 0 0 16px; line-height: 1.5;">Bouteille cassée, produit périmé ou renversé. La perte baisse le stock et apparaît dans le tableau de bord.</p>
 
-            <label style="font-size: 13px; font-weight: 600;">Produit</label>
-            <select wire:model="lossProductId" style="width: 100%; margin: 4px 0 12px 0;">
-                <option value="">— Choisir —</option>
-                @foreach ($products as $p)
-                    <option value="{{ $p->id }}">{{ $p->name }} (stock {{ $p->stock_quantity }})</option>
-                @endforeach
-            </select>
-            @error('lossProductId') <div style="color: var(--color-danger); font-size: 13px; margin: -6px 0 8px 0;">{{ $message }}</div> @enderror
-
-            <label style="font-size: 13px; font-weight: 600;">Quantité perdue</label>
-            <input type="number" min="1" wire:model="lossQuantity" style="width: 100%; margin: 4px 0 12px 0;">
-            @error('lossQuantity') <div style="color: var(--color-danger); font-size: 13px; margin: -6px 0 8px 0;">{{ $message }}</div> @enderror
-
-            <label style="font-size: 13px; font-weight: 600;">Motif</label>
-            <input type="text" wire:model="lossReason" maxlength="255" placeholder="Ex : casier tombé, bière périmée" style="width: 100%; margin: 4px 0 4px 0;">
-            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
-                @foreach (['Casse', 'Périmé', 'Renversé', 'Offert au personnel'] as $r)
-                    <button type="button" wire:click="$set('lossReason', @js($r))" style="background: white; border: 1px solid var(--color-border); border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer;">{{ $r }}</button>
-                @endforeach
+            <div class="st-field">
+                <label for="lossProduct">Produit</label>
+                <select id="lossProduct" wire:model="lossProductId">
+                    <option value="">Choisir un produit</option>
+                    @foreach ($kinds as $k => $label)
+                        @continue(! $byKind->has($k))
+                        <optgroup label="{{ $label }}">
+                            @foreach ($byKind[$k] as $p)
+                                <option value="{{ $p->id }}">{{ $p->name }}, {{ $p->stock_quantity }} en stock</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </select>
+                @error('lossProductId') <div class="sc-error" style="margin-top: 8px;">{{ $message }}</div> @enderror
             </div>
-            @error('lossReason') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 8px;">{{ $message }}</div> @enderror
 
-            <button wire:click="saveLoss" class="btn btn-danger">Enregistrer la perte</button>
+            <div class="st-field">
+                <label for="lossQty">Quantité perdue</label>
+                <input id="lossQty" type="number" min="1" inputmode="numeric" wire:model="lossQuantity">
+                @error('lossQuantity') <div class="sc-error" style="margin-top: 8px;">{{ $message }}</div> @enderror
+            </div>
+
+            <div class="st-field">
+                <label for="lossReason">Motif</label>
+                <input id="lossReason" type="text" wire:model="lossReason" maxlength="255" placeholder="Ex : casier tombé, bière périmée">
+                <div class="st-chips">
+                    @foreach (['Casse', 'Périmé', 'Renversé', 'Offert au personnel'] as $r)
+                        <button type="button" class="sc-chip {{ $lossReason === $r ? 'on' : '' }}" wire:click="$set('lossReason', @js($r))">{{ $r }}</button>
+                    @endforeach
+                </div>
+                @error('lossReason') <div class="sc-error" style="margin-top: 8px;">{{ $message }}</div> @enderror
+            </div>
+
+            <div class="st-total" style="background: var(--color-danger-bg);" x-show="$wire.lossProductId && costs[$wire.lossProductId]" x-cloak>
+                <span>Valeur perdue au prix d'achat</span>
+                <strong style="color: var(--color-danger);" x-text="((parseInt($wire.lossQuantity) || 0) * (costs[$wire.lossProductId] || 0)).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' F'"></strong>
+            </div>
+
+            <button wire:click="saveLoss" class="btn btn-danger" style="margin-top: 14px; height: 46px; padding: 0 22px;">Enregistrer la perte</button>
         </div>
     @endif
 
     {{-- ================= HISTORIQUE ================= --}}
     @if ($tab === 'history')
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
-                <h3 style="margin: 0;">Tous les mouvements</h3>
-                <select wire:model.live="historyType">
-                    <option value="">Tous</option>
-                    @foreach ($movementTypes as $value => $label)
-                        <option value="{{ $value }}">{{ $label }}</option>
-                    @endforeach
-                </select>
+        <div class="sc-bar">
+            <div class="sc-seg" style="overflow-x: auto; max-width: 100%;">
+                <button type="button" class="{{ $historyType === '' ? 'on' : '' }}" wire:click="$set('historyType', '')">Tout</button>
+                @foreach ($movementTypes as $value => $label)
+                    <button type="button" class="{{ $historyType === $value ? 'on' : '' }}" wire:click="$set('historyType', '{{ $value }}')">{{ $label }}</button>
+                @endforeach
             </div>
-            <p style="{{ $small }} margin-top: 0;">Les ventes ne sont pas listées ici : elles sont dans « Ventes du jour » et dans la caisse.</p>
+        </div>
+        <p class="small muted" style="margin: 0 0 12px;">Les ventes n'apparaissent pas ici. Vous les trouvez dans « Ventes du jour » et dans la caisse.</p>
 
+        <div class="sc-list">
             @forelse ($movements as $m)
-                <div style="display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
-                    <span>
-                        <strong>{{ $m->created_at->format('d/m/Y H:i') }}</strong> · {{ $m->typeLabel() }} · {{ $m->product?->name }}
-                        <span style="display: block; {{ $small }}">
-                            {{ $m->stock_before }} → {{ $m->stock_after }}
+                @php [$ic, $fg, $bg] = $typeStyle[$m->type] ?? $typeStyle['initial']; @endphp
+                <div class="st-move">
+                    <div class="ic" style="background: {{ $bg }}; color: {{ $fg }};"><x-icon :name="$ic" size="19" /></div>
+                    <div style="min-width: 0;">
+                        <div class="t">{{ $m->product?->name ?? 'Produit supprimé' }} <span class="cat muted" style="font-weight: 500; font-size: 12.5px;">{{ $m->typeLabel() }}</span></div>
+                        <div class="d">
+                            {{ $m->created_at->locale('fr')->isoFormat('ddd D MMM, HH[h]mm') }} · par {{ $m->user?->first_name ?? 'inconnu' }}
+                            · stock {{ $m->stock_before }} puis {{ $m->stock_after }}
                             @if ($m->supplier) · {{ $m->supplier }} @endif
                             @if ($m->unit_cost !== null) · {{ $fcfa($m->unit_cost) }} F l'unité @endif
                             @if ($m->reason) · {{ $m->reason }} @endif
-                            · par {{ $m->user?->first_name ?? '—' }}
-                        </span>
-                    </span>
-                    <strong style="white-space: nowrap; color: {{ $m->quantity < 0 ? 'var(--color-danger)' : 'var(--color-primary-300)' }};">{{ $m->quantity > 0 ? '+' : '' }}{{ $m->quantity }}</strong>
+                        </div>
+                    </div>
+                    <div class="q" style="color: {{ $m->quantity < 0 ? 'var(--color-danger)' : 'var(--color-success)' }};">{{ $m->quantity > 0 ? '+' : '−' }}{{ abs($m->quantity) }}</div>
                 </div>
             @empty
-                <p style="{{ $small }}">Aucun mouvement.</p>
+                <div style="padding: 28px 18px; text-align: center;" class="muted">
+                    <x-icon name="history" size="28" />
+                    <p style="margin: 8px 0 0;">Aucun mouvement pour le moment.</p>
+                </div>
             @endforelse
-
-            @if ($movements && $movements->hasPages())
-                <div style="margin-top: 12px;">{{ $movements->links() }}</div>
-            @endif
         </div>
+
+        @if ($movements && $movements->hasPages())
+            <div style="margin-top: 12px;">{{ $movements->links() }}</div>
+        @endif
     @endif
 </div>

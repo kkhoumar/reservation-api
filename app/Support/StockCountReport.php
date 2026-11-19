@@ -78,7 +78,7 @@ class StockCountReport
         $out[] = '📦 *Comptage du stock · ' . ($c->restaurant?->name ?? 'Maquis') . '*';
         $out[] = ucfirst($date->isoFormat('dddd D MMMM YYYY [à] HH[h]mm')) . ($c->user ? ', par ' . $c->user->first_name : '');
         $out[] = $c->previous_count_at
-            ? 'Depuis le comptage du ' . $c->previous_count_at->locale('fr')->isoFormat('D MMMM') . ' (' . $this->periodLabel() . ')'
+            ? 'Période : ' . $this->periodLabel() . ' depuis le comptage du ' . $c->previous_count_at->locale('fr')->isoFormat('D MMMM')
             : 'Premier comptage';
 
         foreach ($this->summary() as $kind => $g) {

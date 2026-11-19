@@ -23,7 +23,7 @@
         <div class="card" style="border-left: 6px solid var(--color-accent); margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start;">
             <x-icon name="alert" size="18" style="color: var(--color-accent); margin-top: 2px;" />
             <div><strong>{{ $missingCostCount }} {{ $missingCostCount > 1 ? 'produits n\'ont' : 'produit n\'a' }} pas de prix d'achat.</strong>
-                <span style="display: block; font-size: 14px; color: var(--color-text-secondary); margin-top: 2px;">Touchez « Modifier » sur chaque produit marqué « prix d'achat manquant » pour le compléter. Sans lui, le bénéfice et la valeur du stock sont faux.</span></div>
+                <span style="display: block; font-size: 14px; color: var(--color-text-secondary); margin-top: 2px;">Touchez « Modifier » sur chaque produit marqué « prix d'achat manquant ». Sans ce prix, le bénéfice et la valeur du stock sont faux.</span></div>
         </div>
     @endif
 
@@ -33,7 +33,8 @@
             <label style="font-size: 13px; font-weight: 600;">Nom</label>
             <input type="text" wire:model="newCategoryName" placeholder="Ex : Grillades" style="width: 100%; margin: 6px 0 14px 0;">
             @error('newCategoryName') <div style="color: var(--color-danger); font-size: 12px; margin-bottom: 10px;">{{ $message }}</div> @enderror
-            <label style="font-size: 13px; font-weight: 600;">Famille <span style="font-weight: 500; color: var(--color-text-secondary);">(pour séparer les totaux du comptage)</span></label>
+            <label style="font-size: 13px; font-weight: 600;">Famille</label>
+            <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">Le comptage sépare les totaux des boissons et de la nourriture.</div>
             <div style="display: flex; gap: 8px; margin: 6px 0 16px 0;">
                 @foreach (\App\Models\Category::KINDS as $kind => $kindLabel)
                     <button type="button" wire:click="$set('newCategoryKind', '{{ $kind }}')" class="btn {{ $newCategoryKind === $kind ? 'btn-secondary' : 'btn-ghost' }}" style="flex: 1; justify-content: center;">{{ $kindLabel }}</button>
@@ -80,7 +81,7 @@
                 </div>
             </div>
             <div style="font-size: 12px; color: var(--color-text-secondary); margin: -8px 0 14px 0;">
-                Les deux prix sont obligatoires : ils servent à calculer le bénéfice et la valeur du stock au comptage. Le prix d'achat est mis à jour à chaque livraison.
+                Les deux prix sont obligatoires. L'application s'en sert pour calculer le bénéfice et la valeur du stock. Chaque livraison met à jour le prix d'achat.
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">

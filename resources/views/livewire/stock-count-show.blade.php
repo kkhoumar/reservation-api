@@ -88,7 +88,7 @@
                         <div class="small muted" style="margin-top: 6px;">Soit {{ $signed($g['gap_cost']) }} au prix d'achat</div>
                     @endif
                     @if ($g['missing_cost'] > 0 && $key !== 'total')
-                        <div class="small muted" style="margin-top: 6px;">{{ $g['missing_cost'] }} sans prix d'achat, chiffrés au prix de vente</div>
+                        <div class="small muted" style="margin-top: 6px;">{{ $g['missing_cost'] }} sans prix d'achat, comptés au prix de vente</div>
                     @endif
                 </div>
             @endforeach
@@ -105,7 +105,7 @@
         @if ($gaps->isEmpty())
             <div class="sc-card" style="display: flex; align-items: center; gap: 12px; color: var(--color-success);">
                 <x-icon name="check-circle" size="26" />
-                <div><strong>Tout ce qui a été compté correspond à l'application.</strong></div>
+                <div><strong>Chaque produit compté correspond au stock de l'application.</strong></div>
             </div>
         @else
             <div class="sc-list">

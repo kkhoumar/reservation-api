@@ -57,7 +57,7 @@
             <a href="{{ route('stock.count') }}" class="card" style="{{ $tile }} text-decoration: none; color: inherit; border-left: 4px solid {{ $late ? 'var(--color-danger)' : ($stockCountDays > 3 ? 'var(--color-warning)' : 'var(--color-primary-300)') }};">
                 <div style="{{ $small }}">Stock compté</div>
                 <div style="{{ $big }} color: {{ $late ? 'var(--color-danger)' : 'inherit' }};">{{ $stockAgo }}</div>
-                <div style="{{ $small }}">{{ $late ? 'Comptez le frigo et les casiers →' : 'Compter de nouveau →' }}</div>
+                <div style="{{ $small }}">{{ $late ? 'Comptez le frigo et les casiers' : 'Voir le comptage' }}</div>
             </a>
         @endif
 
