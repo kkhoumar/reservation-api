@@ -23,7 +23,13 @@ class CashRegisterClosed extends Component
     public function mount($register)
     {
         // La caisse doit appartenir au restaurant de l'utilisateur (sinon 404)
-        $this->registerId = CashRegister::findOrFail($register)->id;
+        $found = CashRegister::findOrFail($register);
+        $this->registerId = $found->id;
+
+        // Caisse encore ouverte : pas de bilan de clôture, on renvoie à la caisse
+        if ($found->closed_at === null) {
+            $this->redirect(route('cash-register.manage'), navigate: false);
+        }
     }
 
     /** Relancer l'envoi automatique (après un échec, ou s'il n'a pas eu lieu). */

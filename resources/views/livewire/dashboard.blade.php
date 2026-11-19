@@ -9,7 +9,7 @@
     @if ($noRestaurant)
         <div class="card">Choisissez d'abord un maquis.</div>
     @else
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+    <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
         <div>
             <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
                 Vue d'ensemble

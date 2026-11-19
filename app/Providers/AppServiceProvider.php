@@ -23,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Dates relatives en français (« il y a 2 heures » et non « 2 hours ago »)
+        \Carbon\Carbon::setLocale('fr');
+
         if ($proxies = config('app.trusted_proxies')) {
             \Illuminate\Http\Middleware\TrustProxies::at(
                 $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies))

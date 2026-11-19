@@ -211,6 +211,10 @@
         div.card[style*="border-left: 6px solid var(--color-primary-300)"] { background: var(--color-success-bg); border-color: #C6E8D4; }
         div.card[style*="border-left: 6px solid var(--color-accent)"] { background: var(--color-warning-bg); border-color: #F3DDB8; }
 
+        /* Lignes « libellé … montant » : le montant ne se coupe jamais en deux */
+        main [style*="justify-content: space-between"] > strong:last-child,
+        main [style*="justify-content: space-between"] > b:last-child { white-space: nowrap; flex-shrink: 0; }
+
         /* Pagination Livewire (sans Tailwind) */
         nav[role=navigation] svg { width: 16px; height: 16px; }
         nav[role=navigation] { font-size: 13px; }
@@ -237,7 +241,53 @@
             div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
             div[style*="grid-template-columns: repeat(2, 1fr)"] { grid-template-columns: 1fr !important; }
             div[style*="grid-template-columns: repeat(auto-fill"] { grid-template-columns: repeat(2, 1fr) !important; }
-            table { display: block; overflow-x: auto; white-space: nowrap; }
+            .btn { white-space: nowrap; }
+            /* En-têtes « titre + boutons » : les boutons passent dessous au lieu de déborder */
+            .page-head { flex-wrap: wrap !important; row-gap: 12px !important; }
+            /* Lignes « libellé … montant » : le montant reste sur une seule ligne */
+            .amount, .nowrap { white-space: nowrap; flex-shrink: 0; }
+        }
+
+        /* ---------- Tableaux sur téléphone : chaque ligne devient une fiche ----------
+           Les libellés des colonnes sont recopiés automatiquement (script en bas). */
+        @media (max-width: 640px) {
+            main table:not(.keep-table) { display: block; width: 100% !important; border: 0; }
+            main table:not(.keep-table) thead { display: none; }
+            main table:not(.keep-table) tbody, main table:not(.keep-table) tfoot { display: block; }
+            main table:not(.keep-table) tr {
+                display: block; padding: 14px 16px !important;
+                border-bottom: 1px solid var(--color-border) !important;
+            }
+            main table:not(.keep-table) tbody tr:last-child { border-bottom: 0 !important; }
+            main table:not(.keep-table) tbody tr:hover { background: transparent; }
+            main table:not(.keep-table) td, main table:not(.keep-table) tfoot th {
+                display: flex !important; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 4px 10px;
+                padding: 4px 0 !important; border: 0 !important; text-align: right !important;
+                white-space: normal !important; width: auto !important; min-height: 0;
+            }
+            /* Tableau déjà dans une carte avec marge : pas de double marge */
+            main .card:not([style*="padding: 0"]) > table:not(.keep-table) tr,
+            main .card:not([style*="padding: 0"]) > div > table:not(.keep-table) tr { padding-left: 0 !important; padding-right: 0 !important; }
+            main table:not(.keep-table) td::before {
+                content: attr(data-label); flex-shrink: 0; text-align: left; margin-right: auto;
+                font-size: 12px; font-weight: 600; color: var(--color-text-secondary);
+            }
+            /* Première colonne = le nom : en titre de la fiche */
+            main table:not(.keep-table) td:first-child {
+                justify-content: flex-start; text-align: left !important;
+                font-size: 15px; padding-bottom: 6px !important;
+            }
+            main table:not(.keep-table) td:first-child::before { content: none; }
+            /* Colonne sans titre (boutons) : boutons alignés, sur toute la largeur */
+            main table:not(.keep-table) td[data-label=""] { justify-content: flex-start; flex-wrap: wrap; padding-top: 8px !important; }
+            main table:not(.keep-table) td[data-label=""]::before { content: none; }
+            main table:not(.keep-table) td[data-label=""] { gap: 8px; }
+            main table:not(.keep-table) td[data-label=""] > * { flex: 0 0 auto; margin: 0 !important; }
+            main table:not(.keep-table) td:first-child > * { margin-left: 0 !important; }
+            main table:not(.keep-table) td:empty { display: none !important; }
+            /* Ligne vide « aucun résultat » (une seule cellule) */
+            main table:not(.keep-table) td[colspan] { justify-content: center; text-align: center !important; }
+            main table:not(.keep-table) td[colspan]::before { content: none; }
         }
     </style>
 </head>
@@ -422,7 +472,7 @@
                             @endif
                         @endif
                     </div>
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         @php $newDemos = \App\Models\DemoRequest::where('status', 'new')->count(); @endphp
                         @if ($newDemos > 0)
                             <a href="{{ route('admin.restaurants') }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">
@@ -497,6 +547,38 @@
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('open');
         }
+
+        // Tableaux sur téléphone : chaque cellule reçoit le nom de sa colonne
+        // (affiché devant la valeur quand la ligne devient une fiche).
+        (function () {
+            function label() {
+                document.querySelectorAll('main table').forEach(function (table) {
+                    var heads = Array.prototype.map.call(table.querySelectorAll('thead th'), function (th) {
+                        return th.textContent.trim();
+                    });
+                    // Sans en-têtes : cellules sans libellé (alignées à gauche)
+                    table.querySelectorAll('tbody tr').forEach(function (tr) {
+                        var col = 0;
+                        Array.prototype.forEach.call(tr.children, function (td) {
+                            var text = heads[col] || '';
+                            if (td.getAttribute('data-label') !== text) td.setAttribute('data-label', text);
+                            col += parseInt(td.getAttribute('colspan') || '1', 10);
+                        });
+                    });
+                });
+            }
+            var pending = false;
+            function schedule() {
+                if (pending) return;
+                pending = true;
+                requestAnimationFrame(function () { pending = false; label(); });
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                label();
+                var main = document.querySelector('main');
+                if (main) new MutationObserver(schedule).observe(main, { childList: true, subtree: true });
+            });
+        })();
     </script>
 
     @livewireScripts

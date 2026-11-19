@@ -118,6 +118,16 @@ class CashRegisterScreenTest extends TestCase
             ->assertSee('hors tiroir');
     }
 
+    public function test_le_bilan_d_une_caisse_encore_ouverte_renvoie_a_la_caisse(): void
+    {
+        $this->soiree();
+
+        // Avant : erreur 500 (« format() on null ») en ouvrant ce lien
+        $this->actingAs($this->jean)
+            ->get(route('cash-register.closed', $this->caisse->id))
+            ->assertRedirect(route('cash-register.manage'));
+    }
+
     public function test_cloture_par_billetage(): void
     {
         $this->soiree();

@@ -5,7 +5,7 @@
         </div>
     @endif
 
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+    <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 24px;">
         <div>
             <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
                 Carte
@@ -108,23 +108,32 @@
                 <p style="padding: 16px 20px; color: var(--color-text-secondary); font-size: 13px;">Aucun produit dans cette catégorie.</p>
             @else
                 <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--color-border); text-align: left;">
+                            <th style="padding: 10px 20px;">Produit</th>
+                            <th style="padding: 10px 20px;">Prix</th>
+                            <th style="padding: 10px 20px;">Stock</th>
+                            <th style="padding: 10px 20px;">État</th>
+                            <th style="padding: 10px 20px;"></th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @foreach ($category->products as $product)
                             <tr style="border-bottom: 1px solid var(--color-border);">
                                 <td style="padding: 12px 20px; font-weight: 600;">{{ $product->name }}</td>
-                                <td style="padding: 12px 20px; color: var(--color-text-secondary);">
+                                <td style="padding: 12px 20px; color: var(--color-text-secondary);"><div>
                                     {{ number_format($product->selling_price, 0, ',', ' ') }} FCFA
                                     @if ($product->cost_price !== null)
                                         <span style="display: block; font-size: 12px;">achat {{ number_format($product->cost_price, 0, ',', ' ') }} · marge {{ number_format($product->unitMargin(), 0, ',', ' ') }}</span>
                                     @else
                                         <span style="display: block; font-size: 12px; color: var(--color-accent);">prix d'achat manquant</span>
                                     @endif
-                                </td>
+                                </div></td>
                                 <td style="padding: 12px 20px;">
                                     @if ($product->isLowStock())
-                                        <span style="color: var(--color-danger); font-weight: 600;">⚠️ Stock : {{ $product->stock_quantity }}</span>
+                                        <span style="color: var(--color-danger); font-weight: 600;">⚠️ {{ $product->stock_quantity }}</span>
                                     @else
-                                        <span style="color: var(--color-text-secondary);">Stock : {{ $product->stock_quantity }}</span>
+                                        <span style="color: var(--color-text-secondary);">{{ $product->stock_quantity }}</span>
                                     @endif
                                 </td>
                                 <td style="padding: 12px 20px;">
@@ -132,7 +141,7 @@
                                         {{ $product->is_available ? 'Disponible' : 'Indisponible' }}
                                     </span>
                                 </td>
-                                <td style="padding: 12px 20px; text-align: right;">
+                                <td style="padding: 12px 20px; text-align: right; white-space: nowrap;">
                                     <button wire:click="editProduct({{ $product->id }})" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">Modifier</button>
                                     <button wire:click="toggleAvailability({{ $product->id }})" class="btn {{ $product->is_available ? 'btn-danger' : 'btn-primary' }}" style="padding: 6px 12px; font-size: 12px;">
                                         {{ $product->is_available ? 'Désactiver' : 'Activer' }}
