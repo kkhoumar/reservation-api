@@ -216,7 +216,19 @@
             .lp .hero-grid { padding-top: 44px; padding-bottom: 80px; gap: 40px; }
             .lp .hero h1 { font-size: 30px; }
             .lp .grid-3, .lp .grid-4, .lp .steps { grid-template-columns: 1fr; }
-            .lp .phone { width: 280px; transform: none; }
+            /* Sur téléphone : pas de « téléphone dans le téléphone ».
+               On garde seulement le message WhatsApp, dans une carte simple. */
+            .lp .phone { width: 100%; max-width: 420px; transform: none; background: none; padding: 0; border-radius: 20px; box-shadow: 0 24px 50px rgba(0,0,0,.35); }
+            .lp .phone::before { display: none; }
+            .lp .screen { min-height: 0; border-radius: 20px; }
+            .lp .wa-head { padding: 12px 16px; }
+            .lp .wa-body { padding: 12px 10px 14px; }
+            .lp .bubble { font-size: 13.5px; line-height: 1.5; }
+            .lp .bubble .line:empty, .lp .bubble .line.gap { height: 6px; }
+            /* Message affiché d'emblée, complet : la page ne « saute » pas */
+            .lp #waTyping { display: none !important; }
+            .lp #waBubble { display: block !important; }
+            .lp .bubble .line { opacity: 1; transform: none; transition: none; }
             .lp .float { display: none; }
             .lp .plan.featured { transform: none; }
         }
@@ -263,19 +275,19 @@
                             <div class="bubble" id="waBubble" style="display: none;">
                                 <div class="line"><strong>Maquis Chez Koffi</strong> — samedi</div>
                                 <div class="line">Caisse 18:02 → 23:47 · clôturée par Jean</div>
-                                <div class="line">&nbsp;</div>
+                                <div class="line gap">&nbsp;</div>
                                 <div class="line"><strong>Ventes : 186 500 FCFA</strong> (64 bons)</div>
                                 <div class="line">• Espèces : 121 000</div>
                                 <div class="line">• Wave : 48 500</div>
                                 <div class="line">• À crédit : 17 000</div>
                                 <div class="line">• Dépenses : 9 000</div>
-                                <div class="line">&nbsp;</div>
+                                <div class="line gap">&nbsp;</div>
                                 <div class="line"><strong>Caisse</strong> · Écart : 0 ✅</div>
-                                <div class="line">&nbsp;</div>
+                                <div class="line gap">&nbsp;</div>
                                 <div class="line"><strong>Par serveuse</strong></div>
                                 <div class="line">• Aya : 23 bons · 71 000</div>
                                 <div class="line">• Awa : 19 bons · 58 500</div>
-                                <div class="line">&nbsp;</div>
+                                <div class="line gap">&nbsp;</div>
                                 <div class="line"><strong>À surveiller</strong> · Offerts : 3 000 F</div>
                                 <div class="time">23:48 ✓✓</div>
                             </div>
