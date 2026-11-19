@@ -9,7 +9,7 @@
     @if ($created)
         {{-- Identifiants affichés une seule fois --}}
         <div class="card" style="max-width: 560px; border-left: 6px solid var(--color-primary-300);">
-            <h3 style="margin-top: 0;">✅ {{ $created['restaurant_name'] }} est prêt</h3>
+            <h3 style="margin-top: 0;"><x-icon name="check-circle" size="20" style="color: var(--color-success);" /> {{ $created['restaurant_name'] }} est prêt</h3>
             <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: 0;">
                 Transmets ces identifiants au propriétaire. <strong>Le mot de passe ne sera plus affiché</strong> après avoir quitté cette page.
             </p>

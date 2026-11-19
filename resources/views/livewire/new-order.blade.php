@@ -62,7 +62,7 @@
                     <div style="font-size: 11px; color: var(--color-danger); font-weight: 600; margin-bottom: 6px;">Rupture de stock</div>
                     <button class="btn btn-ghost" style="width: 100%; opacity: 0.5; cursor: not-allowed;" disabled>Indisponible</button>
                 @elseif ($product->isLowStock())
-                    <div style="font-size: 11px; color: var(--color-accent); font-weight: 600; margin-bottom: 6px;">⚠️ Stock faible ({{ $product->stock_quantity }})</div>
+                    <div style="font-size: 11px; color: var(--color-accent); font-weight: 600; margin-bottom: 6px;"><x-icon name="alert" size="12" /> Stock faible ({{ $product->stock_quantity }})</div>
                     <button wire:click="addProduct({{ $product->id }})" class="btn btn-primary" style="width: 100%;">Ajouter</button>
                 @else
                     <button wire:click="addProduct({{ $product->id }})" class="btn btn-primary" style="width: 100%;">Ajouter</button>
@@ -90,7 +90,7 @@
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span>{{ number_format($item->total, 0, ',', ' ') }} FCFA</span>
-                            <button wire:click="removeItem({{ $item->id }})" aria-label="Retirer" style="background: var(--color-danger-bg); border: none; color: var(--color-danger); cursor: pointer; width: 34px; height: 34px; border-radius: 10px; font-size: 15px; flex-shrink: 0;">✕</button>
+                            <button wire:click="removeItem({{ $item->id }})" aria-label="Retirer" style="background: var(--color-danger-bg); border: none; color: var(--color-danger); cursor: pointer; width: 34px; height: 34px; border-radius: 10px; font-size: 15px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;"><x-icon name="x" size="16" stroke="2.4" /></button>
                         </div>
                     </div>
                 @endforeach

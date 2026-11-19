@@ -131,7 +131,7 @@
                                 </div></td>
                                 <td style="padding: 12px 20px;">
                                     @if ($product->isLowStock())
-                                        <span style="color: var(--color-danger); font-weight: 600;">⚠️ {{ $product->stock_quantity }}</span>
+                                        <span style="color: var(--color-danger); font-weight: 600;"><x-icon name="alert" size="14" /> {{ $product->stock_quantity }}</span>
                                     @else
                                         <span style="color: var(--color-text-secondary);">{{ $product->stock_quantity }}</span>
                                     @endif

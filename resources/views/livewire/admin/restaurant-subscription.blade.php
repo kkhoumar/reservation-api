@@ -159,7 +159,7 @@
                 </p>
                 @if ($activity['paid'] > 0)
                     <div style="background: var(--color-danger-bg); color: #8E2222; border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px;">
-                        ⚠️ Ce maquis a déjà payé {{ $fcfa($activity['paid']) }} FCFA d'abonnement. Vérifiez qu'il s'agit bien d'un maquis de test.
+                        <x-icon name="alert" size="15" style="color: var(--color-warning);" /> Ce maquis a déjà payé {{ $fcfa($activity['paid']) }} FCFA d'abonnement. Vérifiez qu'il s'agit bien d'un maquis de test.
                     </div>
                 @endif
                 <input type="text" wire:model="deleteConfirm" placeholder="Nom du maquis pour confirmer" autocomplete="off" style="width: 100%; margin-bottom: 6px;">

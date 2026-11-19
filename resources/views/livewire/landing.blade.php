@@ -15,7 +15,7 @@
         .lp .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: rgba(94,191,160,.6); }
         .lp .card h3 { font-size: 18px; margin: 0 0 8px; }
         .lp .card p { font-size: 15px; color: var(--color-text-secondary); line-height: 1.6; margin: 0; }
-        .lp .icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 22px; }
+        .lp .icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--color-primary); }
         .lp .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
         .lp .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
@@ -118,18 +118,18 @@
         .lp .fact span { font-size: 14px; color: var(--color-text-secondary); }
 
         /* ====== Douleurs ====== */
-        .lp .pain .icon { background: #FDEDEA; }
+        .lp .pain .icon { background: #FDEDEA; color: #C2452D; }
 
         /* ====== Présentoir interactif ====== */
         .lp .showcase { display: grid; grid-template-columns: .9fr 1.1fr; gap: 40px; align-items: center; }
         .lp .tabs { display: flex; flex-direction: column; gap: 10px; }
         .lp .tab { text-align: left; background: white; border: 1.5px solid var(--color-border); border-radius: 16px; padding: 16px 18px; cursor: pointer; font-family: inherit; display: flex; gap: 14px; align-items: flex-start; transition: border-color .2s, box-shadow .2s, transform .2s; position: relative; overflow: hidden; }
         .lp .tab:hover { transform: translateX(3px); }
-        .lp .tab .ti { width: 40px; height: 40px; border-radius: 12px; background: var(--color-mint); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+        .lp .tab .ti { width: 40px; height: 40px; border-radius: 12px; background: var(--color-mint); display: flex; align-items: center; justify-content: center; color: var(--color-primary); flex-shrink: 0; transition: background .2s, color .2s; }
         .lp .tab strong { display: block; font-size: 16px; color: var(--color-text); font-family: var(--font-display); }
         .lp .tab span.d { display: block; font-size: 14px; color: var(--color-text-secondary); line-height: 1.5; margin-top: 3px; }
         .lp .tab.active { border-color: var(--color-primary); box-shadow: var(--shadow-md); }
-        .lp .tab.active .ti { background: var(--color-primary); }
+        .lp .tab.active .ti { background: var(--color-primary); color: white; }
         .lp .tab .bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--color-accent); }
         .lp .tab.active .bar { animation: fill 6s linear forwards; }
         .lp .showcase.paused .tab.active .bar { animation: none; width: 0; }
@@ -161,7 +161,9 @@
         .lp .role .who { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--color-accent); margin-bottom: 8px; }
         .lp .role ul { list-style: none; padding: 0; margin: 12px 0 0; font-size: 14px; color: var(--color-text-secondary); line-height: 2; }
         .lp .role li::before { content: '→  '; color: var(--color-primary-300); font-weight: 800; }
-        .lp .role .emoji { position: absolute; right: -6px; top: -6px; font-size: 64px; opacity: .09; }
+        .lp .role .icon { background: var(--color-mint); color: var(--color-primary); width: 44px; height: 44px; margin-bottom: 14px; }
+        .lp .ui-ico { display: inline-flex; vertical-align: -2px; color: inherit; }
+        .lp .ui-row > .ui-ico { margin-right: 6px; }
 
         /* ====== Étapes ====== */
         .lp .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; position: relative; }
@@ -182,7 +184,7 @@
         .lp .plan .price { font-family: var(--font-display); font-size: 42px; font-weight: 800; margin: 10px 0 0; letter-spacing: -0.03em; }
         .lp .plan .per { font-size: 14px; color: var(--color-text-secondary); }
         .lp .plan ul { list-style: none; padding: 0; margin: 22px 0 26px; font-size: 15px; line-height: 2.1; flex: 1; }
-        .lp .plan li::before { content: '✓  '; color: var(--color-primary-300); font-weight: 900; }
+        .lp .plan li::before { content: ''; display: inline-block; width: 15px; height: 15px; margin-right: 8px; vertical-align: -2px; background: no-repeat center/15px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235EBFA0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); color: var(--color-primary-300); font-weight: 900; }
         .lp .plan .btn-primary, .lp .plan .btn-secondary-outline { width: 100%; }
 
         /* ====== FAQ ====== */
@@ -267,8 +269,8 @@
 
             <div class="phone-col">
             <div class="phone-zone">
-                <div class="float f1"><div class="dot" style="background: #E7F6EF;">✅</div><div><b>Caisse juste</b><small>Écart : 0 F</small></div></div>
-                <div class="float f2"><div class="dot" style="background: #FDEFE6;">💰</div><div><b>+ 71 000 F</b><small>apportés par Aya</small></div></div>
+                <div class="float f1"><div class="dot" style="background: #E7F6EF; color: #1E8E5A;"><x-icon name="check-circle" size="19" /></div><div><b>Caisse juste</b><small>Écart : 0 F</small></div></div>
+                <div class="float f2"><div class="dot" style="background: #FDEFE6; color: #D2622A;"><x-icon name="wallet" size="19" /></div><div><b>+ 71 000 F</b><small>apportés par Aya</small></div></div>
 
                 <div class="phone" aria-label="Exemple de rapport du soir reçu sur WhatsApp">
                     <div class="screen">
@@ -332,10 +334,10 @@
         <h2 class="reveal">Ce qui fait perdre de l'argent à un maquis</h2>
         <p class="lead reveal">Ce n'est pas un manque de clients. C'est tout ce qui se perd entre le frigo, la table et la caisse.</p>
         <div class="grid-4 pain">
-            <div class="card reveal"><div class="icon">🍺</div><h3>Des boissons jamais payées</h3><p>Une tournée oubliée, une bouteille « offerte » aux amis… et le soir, le compte n'y est pas.</p></div>
-            <div class="card reveal d1"><div class="icon">💸</div><h3>Une caisse qui ne tombe pas juste</h3><p>Il manque 5 000 F, et personne ne sait d'où vient l'écart.</p></div>
-            <div class="card reveal d2"><div class="icon">📒</div><h3>Des crédits oubliés</h3><p>« Mets ça sur mon compte » : trois semaines après, plus personne ne sait combien il doit.</p></div>
-            <div class="card reveal d3"><div class="icon">📦</div><h3>Un stock qui fond tout seul</h3><p>Les casiers arrivent, des bouteilles disparaissent, et personne ne sait combien le maquis gagne.</p></div>
+            <div class="card reveal"><div class="icon"><x-icon name="bottle" size="24" /></div><h3>Des boissons jamais payées</h3><p>Une tournée oubliée, une bouteille « offerte » aux amis… et le soir, le compte n'y est pas.</p></div>
+            <div class="card reveal d1"><div class="icon"><x-icon name="cash-missing" size="24" /></div><h3>Une caisse qui ne tombe pas juste</h3><p>Il manque 5 000 F, et personne ne sait d'où vient l'écart.</p></div>
+            <div class="card reveal d2"><div class="icon"><x-icon name="notebook" size="24" /></div><h3>Des crédits oubliés</h3><p>« Mets ça sur mon compte » : trois semaines après, plus personne ne sait combien il doit.</p></div>
+            <div class="card reveal d3"><div class="icon"><x-icon name="box" size="24" /></div><h3>Un stock qui fond tout seul</h3><p>Les casiers arrivent, des bouteilles disparaissent, et personne ne sait combien le maquis gagne.</p></div>
         </div>
     </section>
 
@@ -348,12 +350,12 @@
 
             <div class="showcase reveal" id="showcase">
                 <div class="tabs" role="tablist">
-                    <button class="tab active" role="tab" data-panel="p-comptoir"><div class="ti">🧾</div><div><strong>Bon de comptoir</strong><span class="d">La serveuse envoie la commande, le comptoir encaisse, puis on sert. Pas d'argent, pas de boisson.</span></div><span class="bar"></span></button>
-                    <button class="tab" role="tab" data-panel="p-caisse"><div class="ti">💰</div><div><strong>Une caisse qui tombe juste</strong><span class="d">On compte les billets. L'application dit tout de suite s'il manque de l'argent, et combien.</span></div><span class="bar"></span></button>
-                    <button class="tab" role="tab" data-panel="p-mobile"><div class="ti">📱</div><div><strong>Espèces et Mobile Money</strong><span class="d">Wave, Orange, MTN, Moov, ou mixte avec la monnaie à rendre.</span></div><span class="bar"></span></button>
-                    <button class="tab" role="tab" data-panel="p-credit"><div class="ti">📒</div><div><strong>Crédits clients</strong><span class="d">Qui doit combien et pour quoi. Un clic envoie le rappel sur WhatsApp.</span></div><span class="bar"></span></button>
-                    <button class="tab" role="tab" data-panel="p-stock"><div class="ti">📦</div><div><strong>Stock surveillé</strong><span class="d">Livraisons, casse, inventaire : ce qui manque, en bouteilles et en francs.</span></div><span class="bar"></span></button>
-                    <button class="tab" role="tab" data-panel="p-benef"><div class="ti">📊</div><div><strong>Votre vrai bénéfice</strong><span class="d">Les ventes, moins les prix d'achat, les dépenses et les pertes : ce qui vous reste.</span></div><span class="bar"></span></button>
+                    <button class="tab active" role="tab" data-panel="p-comptoir"><div class="ti"><x-icon name="receipt" size="20" /></div><div><strong>Bon de comptoir</strong><span class="d">La serveuse envoie la commande, le comptoir encaisse, puis on sert. Pas d'argent, pas de boisson.</span></div><span class="bar"></span></button>
+                    <button class="tab" role="tab" data-panel="p-caisse"><div class="ti"><x-icon name="cash" size="20" /></div><div><strong>Une caisse qui tombe juste</strong><span class="d">On compte les billets. L'application dit tout de suite s'il manque de l'argent, et combien.</span></div><span class="bar"></span></button>
+                    <button class="tab" role="tab" data-panel="p-mobile"><div class="ti"><x-icon name="phone" size="20" /></div><div><strong>Espèces et Mobile Money</strong><span class="d">Wave, Orange, MTN, Moov, ou mixte avec la monnaie à rendre.</span></div><span class="bar"></span></button>
+                    <button class="tab" role="tab" data-panel="p-credit"><div class="ti"><x-icon name="notebook" size="20" /></div><div><strong>Crédits clients</strong><span class="d">Qui doit combien et pour quoi. Un clic envoie le rappel sur WhatsApp.</span></div><span class="bar"></span></button>
+                    <button class="tab" role="tab" data-panel="p-stock"><div class="ti"><x-icon name="box" size="20" /></div><div><strong>Stock surveillé</strong><span class="d">Livraisons, casse, inventaire : ce qui manque, en bouteilles et en francs.</span></div><span class="bar"></span></button>
+                    <button class="tab" role="tab" data-panel="p-benef"><div class="ti"><x-icon name="chart" size="20" /></div><div><strong>Votre vrai bénéfice</strong><span class="d">Les ventes, moins les prix d'achat, les dépenses et les pertes : ce qui vous reste.</span></div><span class="bar"></span></button>
                 </div>
 
                 <div class="device">
@@ -372,7 +374,7 @@
                             <div class="ui-muted">Awa · CMD-00143 · à l'instant</div>
                             <div style="margin-top: 8px; font-size: 13px;">1 × Poulet braisé · 2 × Bière</div>
                         </div>
-                        <div class="ui-card" style="background: #F0FAF5; border-color: #CDEBDD;"><div class="ui-row"><span>✅ Table 2 encaissée : servez la commande</span></div></div>
+                        <div class="ui-card" style="background: #F0FAF5; border-color: #CDEBDD;"><div class="ui-row"><span class="ui-ico" style="color: var(--color-success);"><x-icon name="check-circle" size="16" /></span><span>Table 2 encaissée : servez la commande</span></div></div>
                     </div>
 
                     <div class="panel" id="p-caisse">
@@ -387,7 +389,7 @@
                             <div class="ui-row"><span>+ Remboursements de crédits</span><strong class="ok">+9 000</strong></div>
                             <div class="ui-row"><span>− Dépenses</span><strong class="warn">−9 000</strong></div>
                         </div>
-                        <div class="ui-card"><div class="ui-row"><span>Compté au billetage</span><strong>131 000</strong></div><div class="ui-row"><span>Écart</span><strong class="ok">0 F · la caisse est juste ✅</strong></div></div>
+                        <div class="ui-card"><div class="ui-row"><span>Compté au billetage</span><strong>131 000</strong></div><div class="ui-row"><span>Écart</span><strong class="ok">0 F · la caisse est juste <span class="ui-ico"><x-icon name="check-circle" size="15" /></span></strong></div></div>
                     </div>
 
                     <div class="panel" id="p-mobile">
@@ -411,7 +413,7 @@
                         <div class="ui-card"><div class="ui-row"><strong>Tantie Awa</strong><strong style="color: var(--color-accent);">14 500 F</strong></div>
                             <div style="font-size: 13px; margin-top: 6px;">12/11 · 3 × Bière, 1 × Alloco · Table 3 · servi par Aya</div></div>
                         <div class="ui-card"><div class="ui-row"><strong>Ibrahim</strong><strong style="color: var(--color-accent);">10 000 F</strong></div></div>
-                        <span class="ui-btn" style="display: inline-block;">💬 Relancer sur WhatsApp</span>
+                        <span class="ui-btn" style="display: inline-flex; align-items: center; gap: 6px;"><x-icon name="message" size="15" /> Relancer sur WhatsApp</span>
                     </div>
 
                     <div class="panel" id="p-stock">
@@ -423,7 +425,7 @@
                         </div>
                         <div class="ui-card">
                             <div class="ui-row" style="margin-bottom: 6px;"><span>Bière</span><span class="ui-muted">42 restantes</span></div><div class="ui-bar"><i style="width: 70%"></i></div>
-                            <div class="ui-row" style="margin: 10px 0 6px;"><span>Jus de Bissap</span><span class="warn" style="font-size: 12px;">4 restants ⚠️</span></div><div class="ui-bar"><i style="width: 12%; background: var(--color-danger);"></i></div>
+                            <div class="ui-row" style="margin: 10px 0 6px;"><span>Jus de Bissap</span><span class="warn" style="font-size: 12px;">4 restants <span class="ui-ico"><x-icon name="alert" size="13" /></span></span></div><div class="ui-bar"><i style="width: 12%; background: var(--color-danger);"></i></div>
                         </div>
                     </div>
 
@@ -456,9 +458,9 @@
         <h2 class="reveal">Le contrôle, même à distance</h2>
         <p class="lead reveal">Vous savez ce qui se passe au maquis sans y être.</p>
         <div class="grid-3">
-            <div class="card reveal"><div class="icon" style="background: #E7F6EF;">💬</div><h3>Le rapport du soir sur WhatsApp</h3><p>À la fermeture, vous recevez les ventes, l'écart de caisse, le chiffre de chaque serveuse et ce qu'il faut surveiller.</p></div>
-            <div class="card reveal d1"><div class="icon" style="background: #FDEFE6;">🎁</div><h3>Offerts et remises tracés</h3><p>Seuls le patron et la gérante peuvent offrir, avec un motif. Fini le « c'était offert » invérifiable.</p></div>
-            <div class="card reveal d2"><div class="icon" style="background: #EEF2FB;">📥</div><h3>Vos chiffres dans Excel</h3><p>Ventes, dépenses, caisse, crédits et stock se téléchargent en fichier Excel, pour vous ou votre comptable.</p></div>
+            <div class="card reveal"><div class="icon" style="background: #E7F6EF; color: #1E8E5A;"><x-icon name="message" size="24" /></div><h3>Le rapport du soir sur WhatsApp</h3><p>À la fermeture, vous recevez les ventes, l'écart de caisse, le chiffre de chaque serveuse et ce qu'il faut surveiller.</p></div>
+            <div class="card reveal d1"><div class="icon" style="background: #FDEFE6; color: #D2622A;"><x-icon name="gift" size="24" /></div><h3>Offerts et remises tracés</h3><p>Seuls le patron et la gérante peuvent offrir, avec un motif. Fini le « c'était offert » invérifiable.</p></div>
+            <div class="card reveal d2"><div class="icon" style="background: #EEF2FB; color: #3B5BA9;"><x-icon name="sheet" size="24" /></div><h3>Vos chiffres dans Excel</h3><p>Ventes, dépenses, caisse, crédits et stock se téléchargent en fichier Excel, pour vous ou votre comptable.</p></div>
         </div>
     </section>
 
@@ -469,10 +471,10 @@
             <h2 class="reveal">Simple pour l'équipe, clair pour le patron</h2>
             <p class="lead reveal">Chacun ne voit que ce dont il a besoin. Si vous êtes seul à tout faire, un seul écran sert à prendre la commande, encaisser et servir.</p>
             <div class="grid-4">
-                <div class="card role reveal"><span class="emoji">🧑🏾‍🍳</span><div class="who">La serveuse</div><h3>Prend la commande</h3><ul><li>Choisit la table</li><li>Touche les boissons</li><li>Envoie au comptoir</li></ul></div>
-                <div class="card role reveal d1"><span class="emoji">🧾</span><div class="who">Le comptoir</div><h3>Encaisse et sert</h3><ul><li>Voit les bons arriver</li><li>Espèces ou Mobile Money</li><li>Clôture la caisse</li></ul></div>
-                <div class="card role reveal d2"><span class="emoji">📋</span><div class="who">La gérante</div><h3>Organise</h3><ul><li>Crédits et offerts</li><li>Stock et livraisons</li><li>Équipe et dépenses</li></ul></div>
-                <div class="card role reveal d3"><span class="emoji">👑</span><div class="who">Le patron</div><h3>Contrôle</h3><ul><li>Bénéfice et tableau de bord</li><li>Rapport du soir WhatsApp</li><li>Exports Excel</li></ul></div>
+                <div class="card role reveal"><div class="icon"><x-icon name="service" size="24" /></div><div class="who">La serveuse</div><h3>Prend la commande</h3><ul><li>Choisit la table</li><li>Touche les boissons</li><li>Envoie au comptoir</li></ul></div>
+                <div class="card role reveal d1"><div class="icon"><x-icon name="receipt" size="24" /></div><div class="who">Le comptoir</div><h3>Encaisse et sert</h3><ul><li>Voit les bons arriver</li><li>Espèces ou Mobile Money</li><li>Clôture la caisse</li></ul></div>
+                <div class="card role reveal d2"><div class="icon"><x-icon name="clipboard" size="24" /></div><div class="who">La gérante</div><h3>Organise</h3><ul><li>Crédits et offerts</li><li>Stock et livraisons</li><li>Équipe et dépenses</li></ul></div>
+                <div class="card role reveal d3"><div class="icon"><x-icon name="crown" size="24" /></div><div class="who">Le patron</div><h3>Contrôle</h3><ul><li>Bénéfice et tableau de bord</li><li>Rapport du soir WhatsApp</li><li>Exports Excel</li></ul></div>
             </div>
         </section></div>
     </div>
@@ -564,7 +566,7 @@
         </span>
         <span class="txt"><strong>Maquis Express sur votre téléphone</strong><small>Gratuit, sans Play Store</small></span>
         <button type="button" class="go" id="installStickyGo">Installer</button>
-        <button type="button" class="close" id="installStickyClose" aria-label="Fermer">✕</button>
+        <button type="button" class="close" id="installStickyClose" aria-label="Fermer"><x-icon name="x" size="18" /></button>
     </div>
 
     <script>

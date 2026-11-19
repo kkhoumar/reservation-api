@@ -49,7 +49,7 @@
         .brand p { font-size: 16px; color: rgba(255,255,255,.75); line-height: 1.6; margin: 0 0 28px; max-width: 420px; }
         .perks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
         .perks li { display: flex; gap: 12px; align-items: center; font-size: 15px; color: rgba(255,255,255,.9); }
-        .perks .i { width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .perks .i { width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; color: #FFB37F; flex-shrink: 0; }
         .mini { margin-top: 36px; background: white; color: var(--color-text); border-radius: 18px; padding: 16px 18px; max-width: 340px; box-shadow: 0 24px 50px rgba(0,0,0,.3); }
         .mini .row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
         .mini .big { font-family: var(--font-display); font-weight: 800; font-size: 26px; color: var(--color-primary); }
@@ -107,16 +107,16 @@
                 <h2>Chaque bouteille vendue, <span>chaque franc encaissé.</span></h2>
                 <p>Commandes, comptoir, caisse, stock et crédits clients, au même endroit.</p>
                 <ul class="perks">
-                    <li><span class="i">🧾</span> Pas d'argent, pas de boisson : tout passe par le comptoir</li>
-                    <li><span class="i">💰</span> Une caisse qui tombe juste, chaque soir</li>
-                    <li><span class="i">💬</span> Le rapport du soir sur le WhatsApp du patron</li>
+                    <li><span class="i"><x-icon name="receipt" size="18" /></span> Pas d'argent, pas de boisson : tout passe par le comptoir</li>
+                    <li><span class="i"><x-icon name="cash" size="18" /></span> Une caisse qui tombe juste, chaque soir</li>
+                    <li><span class="i"><x-icon name="message" size="18" /></span> Le rapport du soir sur le WhatsApp du patron</li>
                 </ul>
                 <div class="mini" aria-hidden="true">
                     <div style="font-size: 12px; color: var(--color-text-secondary);">Ventes de la soirée</div>
                     <div class="big">186 500 FCFA</div>
                     <div class="row"><span>Espèces</span><strong>121 000</strong></div>
                     <div class="row"><span>Wave · Orange Money</span><strong>48 500</strong></div>
-                    <div class="row"><span>Écart de caisse</span><strong style="color: #1E8E5A;">0 F ✅</strong></div>
+                    <div class="row"><span>Écart de caisse</span><strong style="color: #1E8E5A;">0 F <x-icon name="check-circle" size="15" style="vertical-align: -2px;" /></strong></div>
                 </div>
             </div>
 

@@ -61,14 +61,14 @@
         @if ($register->report_status)
             @php
                 $statusStyle = match ($register->report_status) {
-                    'sent' => ['var(--color-primary-300)', '✅'],
-                    'pending' => ['var(--color-accent)', '⏳'],
-                    default => ['var(--color-danger)', '⚠️'],
+                    'sent' => ['var(--color-success)', 'check-circle'],
+                    'pending' => ['var(--color-accent)', 'clock'],
+                    default => ['var(--color-danger)', 'alert'],
                 };
             @endphp
             <div @if ($register->report_status === 'pending') wire:poll.4s @endif
                  style="border-left: 4px solid {{ $statusStyle[0] }}; background: var(--color-bg); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px;">
-                {{ $statusStyle[1] }}
+                <x-icon :name="$statusStyle[1]" size="16" style="color: {{ $statusStyle[0] }};" />
                 @switch ($register->report_status)
                     @case('sent')
                         <strong>Envoyé automatiquement</strong> sur WhatsApp au {{ $register->report_phone }}

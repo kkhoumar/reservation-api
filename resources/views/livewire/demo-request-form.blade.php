@@ -10,7 +10,7 @@
         .demo .step strong { display: block; font-size: 15px; }
         .demo .step span { font-size: 14px; color: var(--color-text-secondary); line-height: 1.5; }
         .demo .reassure { background: white; border: 1px solid var(--color-border); border-radius: 14px; padding: 16px 18px; font-size: 14px; line-height: 1.9; }
-        .demo .reassure div::before { content: '✓  '; color: var(--color-primary-300); font-weight: 800; }
+        .demo .reassure div::before { content: ''; display: inline-block; width: 15px; height: 15px; margin-right: 8px; vertical-align: -2px; background: no-repeat center/15px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235EBFA0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); color: var(--color-primary-300); font-weight: 800; }
 
         .demo .form-card { background: white; border: 1px solid var(--color-border); border-radius: 20px; padding: 28px; box-shadow: 0 24px 48px rgba(11,77,60,0.10); }
         .demo .form-card h2 { font-size: 22px; margin: 0 0 4px; }
@@ -70,7 +70,7 @@
     <div class="form-card">
         @if ($sent)
             <div class="done">
-                <div class="ok">✓</div>
+                <div class="ok"><x-icon name="check" size="30" stroke="2.4" /></div>
                 <h2>Merci, c'est noté !</h2>
                 <p style="font-size: 15px; color: var(--color-text-secondary); line-height: 1.6; margin: 10px 0 22px;">
                     Nous vous appelons au numéro indiqué pour vous présenter Maquis Express et préparer votre maquis.

@@ -12,8 +12,8 @@
     </p>
 
     <div style="background: #FBF6EC; border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
-        📄 <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener">Conditions d'utilisation</a><br>
-        🔒 <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener">Politique de confidentialité</a>
+        <x-icon name="file" size="17" style="color: var(--color-primary);" /> <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener">Conditions d'utilisation</a><br>
+        <x-icon name="lock" size="17" style="color: var(--color-primary);" /> <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener">Politique de confidentialité</a>
     </div>
 
     <form wire:submit="accept">

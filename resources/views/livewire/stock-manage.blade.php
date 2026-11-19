@@ -59,7 +59,7 @@
                         <tr style="border-bottom: 1px solid var(--color-border);">
                             <td style="padding: 10px 16px;"><strong>{{ $p->name }}</strong> <span style="{{ $small }}">{{ $p->category?->name }}</span></td>
                             <td style="padding: 10px 16px; text-align: right; font-weight: 700; color: {{ $p->isLowStock() ? 'var(--color-danger)' : 'inherit' }};">
-                                {{ $p->stock_quantity }} @if ($p->isLowStock()) ⚠️ @endif
+                                {{ $p->stock_quantity }} @if ($p->isLowStock()) <x-icon name="alert" size="14" style="color: var(--color-warning);" /> @endif
                             </td>
                             <td style="padding: 10px 16px; text-align: right;">{{ $p->cost_price !== null ? $fcfa($p->cost_price) : '—' }}</td>
                             <td style="padding: 10px 16px; text-align: right;">{{ $fcfa(max(0, $p->stock_quantity) * $p->unitValue()) }}</td>

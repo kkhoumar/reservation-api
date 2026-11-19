@@ -36,7 +36,7 @@
                                 @php $hasIssue = abs($register->discrepancy) >= 500; @endphp
                                 <span style="font-weight: 700; color: {{ $hasIssue ? 'var(--color-danger)' : 'var(--color-primary-300)' }};">
                                     {{ $register->discrepancy > 0 ? '+' : '' }}{{ number_format($register->discrepancy, 0, ',', ' ') }}
-                                    @if ($hasIssue) ⚠️ @endif
+                                    @if ($hasIssue) <x-icon name="alert" size="14" /> @endif
                                 </span>
                             </td>
                             <td style="padding: 12px 20px; text-align: right;">

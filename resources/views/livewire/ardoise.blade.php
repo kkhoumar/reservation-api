@@ -91,7 +91,7 @@
             @if ($selected)
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
                     <h3 style="margin: 0;">{{ $selected->name }}</h3>
-                    <button wire:click="closeCustomer" style="background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 18px;">✕</button>
+                    <button wire:click="closeCustomer" style="background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 18px;" aria-label="Fermer"><x-icon name="x" size="20" /></button>
                 </div>
                 <div style="font-size: 26px; font-weight: 800; margin: 8px 0 4px 0; color: {{ $selectedBalance > 0 ? 'var(--color-accent)' : 'var(--color-primary-300)' }};">
                     {{ number_format($selectedBalance, 0, ',', ' ') }} FCFA
