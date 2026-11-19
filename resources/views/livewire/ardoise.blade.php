@@ -48,7 +48,7 @@
 
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start;">
         <div class="card">
-            <input type="search" wire:model.live.debounce.300ms="search" placeholder="Rechercher un client (nom ou numéro)" style="width: 100%; margin-bottom: 12px;">
+            <input type="search" wire:model.live.debounce.300ms="search" placeholder="Nom ou numéro du client" style="width: 100%; margin-bottom: 12px;">
 
             @if ($customers->isEmpty())
                 <p style="color: var(--color-text-secondary); font-size: 14px;">Aucun client{{ $search !== '' ? ' trouvé' : ' pour le moment' }}.</p>

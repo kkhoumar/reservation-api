@@ -53,7 +53,7 @@
                 <h3 style="color: var(--color-text-secondary);">{{ $category->name }}</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;">
                     @foreach ($category->products as $product)
-                                        <div class="card product-card" style="text-align: center;">
+                                        <div class="card product-card" style="text-align: center; display: flex; flex-direction: column;">
                                             <div style="font-weight: 600;">{{ $product->name }}</div>
                 <div style="color: var(--color-accent); font-weight: 700; margin: 6px 0;">
                     {{ number_format($product->selling_price, 0, ',', ' ') }} FCFA
@@ -63,9 +63,9 @@
                     <button class="btn btn-ghost" style="width: 100%; opacity: 0.5; cursor: not-allowed;" disabled>Indisponible</button>
                 @elseif ($product->isLowStock())
                     <div style="font-size: 11px; color: var(--color-accent); font-weight: 600; margin-bottom: 6px;"><x-icon name="alert" size="12" /> Stock faible ({{ $product->stock_quantity }})</div>
-                    <button wire:click="addProduct({{ $product->id }})" class="btn btn-primary" style="width: 100%;">Ajouter</button>
+                    <button wire:click="addProduct({{ $product->id }})" class="btn btn-primary" style="width: 100%; margin-top: auto;">Ajouter</button>
                 @else
-                    <button wire:click="addProduct({{ $product->id }})" class="btn btn-primary" style="width: 100%;">Ajouter</button>
+                    <button wire:click="addProduct({{ $product->id }})" class="btn btn-primary" style="width: 100%; margin-top: auto;">Ajouter</button>
                 @endif
                         </div>
                     @endforeach

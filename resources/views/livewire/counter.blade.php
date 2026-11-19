@@ -39,7 +39,7 @@
                         <div>
                             <strong style="font-size: 16px;">{{ $order->restaurantTable?->label ?? 'À emporter' }}</strong>
                             <span style="color: var(--color-text-secondary); font-size: 13px;">
-                                · {{ $order->server?->first_name ?? '—' }} · {{ $order->order_number }} · {{ $order->updated_at->diffForHumans(short: true) }}
+                                · {{ $order->server?->first_name ?? '—' }} · {{ $order->order_number }} · {{ $order->updated_at->isToday() ? 'à ' . $order->updated_at->format('H\hi') : $order->updated_at->locale('fr')->isoFormat('D MMM [à] HH[h]mm') }}
                             </span>
                         </div>
                         <strong style="font-size: 20px; color: var(--color-primary);">{{ number_format($order->total, 0, ',', ' ') }} FCFA</strong>

@@ -27,7 +27,7 @@ class ExportController extends Controller
         'depenses' => ['Dépenses', 'Toutes les dépenses, par catégorie, avec qui les a saisies.'],
         'caisses' => ['Clôtures de caisse', 'Chaque session : fonds, attendu, compté, écart, note.'],
         'credits' => ['Crédits clients', 'Ce que chaque client doit, et tous les mouvements de crédit de la période.'],
-        'stock' => ['Stock', 'L\'état du stock aujourd\'hui, et les livraisons, pertes et inventaires de la période.'],
+        'stock' => ['Stock', 'L\'état du stock aujourd\'hui, et les livraisons, pertes et comptages de la période.'],
     ];
 
     public function index(Request $request)

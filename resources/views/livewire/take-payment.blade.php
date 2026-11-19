@@ -5,7 +5,10 @@
         </div>
     @endif
 
-    <h1 style="color: var(--color-primary);">Paiement — {{ $order->order_number }}</h1>
+    <div class="page-head" style="margin-bottom: 18px;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Bon {{ $order->order_number }}</div>
+        <h1>Paiement</h1>
+    </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div class="card">
@@ -65,7 +68,7 @@
                 <div style="border-top: 1px dashed var(--color-border); margin-top: 16px; padding-top: 14px;">
                     <label style="font-size: 13px; font-weight: 600;">Ou à crédit pour :</label>
                     <select wire:model="creditCustomerId" style="width: 100%; margin: 6px 0 8px 0;">
-                        <option value="">— Choisir le client —</option>
+                        <option value="">Choisir le client</option>
                         @foreach ($customers as $customer)
                             <option value="{{ $customer->id }}">{{ $customer->name }}{{ $customer->phone ? ' · ' . $customer->phone : '' }}</option>
                         @endforeach

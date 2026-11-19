@@ -293,6 +293,33 @@
             /* Ligne vide « aucun résultat » (une seule cellule) */
             main table:not(.keep-table) td[colspan] { justify-content: center; text-align: center !important; }
             main table:not(.keep-table) td[colspan]::before { content: none; }
+            /* Fiches : même taille pour toutes les valeurs */
+            main table:not(.keep-table) td:not(:first-child) { font-size: 14.5px !important; }
+            main table:not(.keep-table) td:first-child { font-size: 16px !important; font-weight: 700; }
+            /* Boutons des fiches : assez grands pour le pouce */
+            main table:not(.keep-table) td[data-label=""] .btn,
+            main table:not(.keep-table) td[data-label=""] button,
+            main table:not(.keep-table) td[data-label=""] a { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding-left: 14px !important; padding-right: 14px !important; }
+        }
+
+        /* ===== Téléphone : réglages communs à tous les écrans ===== */
+        @media (max-width: 640px) {
+            /* Cases de chiffres : 2 par ligne au lieu d'une longue colonne */
+            main [style*="minmax(140px, 1fr)"], main [style*="minmax(150px, 1fr)"], main [style*="minmax(160px, 1fr)"],
+            main [style*="minmax(170px, 1fr)"], main [style*="minmax(180px, 1fr)"], main [style*="minmax(190px, 1fr)"] {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important;
+            }
+            main [style*="minmax(170px, 1fr)"] > .card, main [style*="minmax(180px, 1fr)"] > .card, main [style*="minmax(190px, 1fr)"] > .card,
+            main [style*="minmax(150px, 1fr)"] > .card { padding: 12px 13px !important; min-width: 0; }
+            main [style*="minmax(170px, 1fr)"] > .card [style*="font-size: 22px"], main [style*="minmax(180px, 1fr)"] > .card [style*="font-size: 2"],
+            main [style*="minmax(190px, 1fr)"] > .card [style*="font-size: 2"], main [style*="minmax(170px, 1fr)"] > .card [style*="font-size: 2"] { font-size: 19px !important; overflow-wrap: anywhere; }
+            /* Boutons : hauteur confortable ; les longs textes passent à la ligne */
+            main .btn { min-height: 42px; }
+            main .btn[style*="width: 100%"], main .btn[style*="flex: 1"] { white-space: normal !important; text-align: center; }
+            /* Cases à cocher plus faciles à toucher */
+            main input[type=checkbox], main input[type=radio] { width: 20px; height: 20px; flex-shrink: 0; }
+            /* Bouton principal d'un formulaire : toute la largeur */
+            main form > .btn-primary:last-child, main .card > .btn-primary:last-child { width: 100%; justify-content: center; }
         }
     </style>
 </head>

@@ -40,7 +40,7 @@
                                 </span>
                             </td>
                             <td style="padding: 12px 20px; text-align: right;">
-                                <a href="{{ route('cash-register.closed', $register->id) }}" style="color: var(--color-accent); font-weight: 600; font-size: 13px; text-decoration: none;">Rapport →</a>
+                                <a href="{{ route('cash-register.closed', $register->id) }}" style="color: var(--color-accent); font-weight: 600; font-size: 13px; text-decoration: none;">Voir le rapport</a>
                             </td>
                         </tr>
                     @endforeach

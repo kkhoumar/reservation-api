@@ -43,7 +43,7 @@ class RestaurantDataManager
                 'mouvements de crédit' => DB::table('credit_transactions')->where('restaurant_id', $id)->count(),
                 'versements de sacoche' => DB::table('cash_remittances')->where('restaurant_id', $id)->count(),
                 'mouvements de stock' => DB::table('stock_movements')->where('restaurant_id', $id)->count(),
-                'inventaires' => DB::table('stock_counts')->where('restaurant_id', $id)->count(),
+                'comptages' => DB::table('stock_counts')->where('restaurant_id', $id)->count(),
             ];
 
             // Ordre : d'abord ce qui dépend des autres

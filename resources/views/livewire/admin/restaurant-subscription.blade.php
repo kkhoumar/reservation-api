@@ -97,7 +97,7 @@
                 Enregistrer le paiement
             </button>
             <button wire:click="changePlan" class="btn btn-ghost" style="width: 100%; justify-content: center; margin-top: 8px;">
-                Changer seulement la formule (sans paiement)
+                Changer la formule sans paiement
             </button>
         </div>
 
@@ -132,7 +132,7 @@
             <div class="card" style="border: 1.5px solid #F3DDB8;">
                 <h3 style="margin-top: 0;">Vider les données de test</h3>
                 <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: 0; line-height: 1.55;">
-                    Avant de remettre le maquis au client : efface les ventes, paiements, caisses, dépenses, crédits, versements, mouvements de stock et inventaires.
+                    Avant de remettre le maquis au client : efface les ventes, paiements, caisses, dépenses, crédits, versements, mouvements de stock et comptages.
                     <strong>Garde</strong> les réglages, l'équipe, le menu, les tables et l'abonnement.
                 </p>
                 <div style="background: var(--color-bg); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px;">

@@ -34,7 +34,7 @@
             <x-money-input model="amount" style="width: 100%; margin: 6px 0 14px 0;" />
             @error('amount') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 10px;">{{ $message }}</div> @enderror
 
-            <label style="font-size: 13px; font-weight: 600;">Description (optionnel)</label>
+            <label style="font-size: 13px; font-weight: 600;">Description <span style="font-weight: 500; color: var(--color-text-secondary);">facultatif</span></label>
             <input type="text" wire:model="description" placeholder="Ex : Achat tomates marché" style="width: 100%; margin: 6px 0 16px 0;">
 
             <button wire:click="addExpense" class="btn btn-primary" style="width: 100%;">
@@ -79,8 +79,8 @@
 
             <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
                 <h3 style="margin: 0;">{{ $rangeLabel }} <span style="font-weight: 500; color: var(--color-text-secondary); font-size: 13px;">· {{ $count }} dépense{{ $count > 1 ? 's' : '' }}</span></h3>
-                <div style="font-size: 20px; font-weight: 800; color: var(--color-danger);">
-                    -{{ number_format($total, 0, ',', ' ') }} FCFA
+                <div style="font-size: 20px; font-weight: 800; color: {{ $total > 0 ? 'var(--color-danger)' : 'var(--color-text-secondary)' }};">
+                    {{ $total > 0 ? '−' : '' }}{{ number_format($total, 0, ',', ' ') }} FCFA
                 </div>
             </div>
 
@@ -118,7 +118,7 @@
                             </div>
                         </div>
                         <div style="color: var(--color-danger); font-weight: 700; white-space: nowrap;">
-                            -{{ number_format($expense->amount, 0, ',', ' ') }} FCFA
+                            −{{ number_format($expense->amount, 0, ',', ' ') }} FCFA
                         </div>
                     </div>
                 @endforeach
