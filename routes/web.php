@@ -129,6 +129,13 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
 
         return \App\Support\PhotoStore::response($movement->photo_path);
     })->middleware('role:owner,manager,associate')->name('stock.photo');
+    Route::get('/depenses/recu/{expense}', function (\App\Models\Expense $expense) {
+        $user = auth()->user();
+        $canSee = $user->isPlatformAdmin() || in_array($user->role, ['owner', 'manager', 'associate'], true) || $expense->user_id === $user->id;
+        abort_unless($canSee && $expense->receipt_path, 404);
+
+        return \App\Support\PhotoStore::response($expense->receipt_path);
+    })->name('expenses.receipt');
     Route::get('/journal', \App\Livewire\ActivityJournal::class)->middleware('role:owner,manager,associate')->name('journal');
     Route::get('/comptage',\App\Livewire\StockCountPage::class)->middleware('role:owner,manager,associate')->name('stock.count');
     Route::get('/comptage/{stockCount}', \App\Livewire\StockCountShow::class)->middleware('role:owner,manager,associate')->name('stock.count.show');

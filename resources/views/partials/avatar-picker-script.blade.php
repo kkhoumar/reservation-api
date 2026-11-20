@@ -70,6 +70,10 @@
             preview: '',
             busy: false,
             error: '',
+            init() {
+                // Formulaire enregistré : le serveur vide la photo, on retire l'aperçu
+                this.$wire.$watch(model, (value) => { if (!value) this.preview = ''; });
+            },
             pick() { this.$refs.file.click(); },
             clear() { this.preview = ''; this.$wire.$set(model, '', false); },
             async chosen(event) {

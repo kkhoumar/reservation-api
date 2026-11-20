@@ -26,6 +26,8 @@ class ExpensesList extends Component
     public string $category = 'goods_purchase';
     public ?int $amount = null;
     public string $description = '';
+    /** Photo du reçu, déjà réduite par le téléphone (JPEG en base64). Obligatoire. */
+    public string $receiptPhoto = '';
 
     // Filtres de l'historique
     public string $period = 'today'; // today | 7days | month | last_month | custom
@@ -64,7 +66,18 @@ class ExpensesList extends Component
             'category' => ['required', 'string', Rule::in(array_keys($this->categories))],
             'amount' => 'required|integer|min:1|max:100000000',
             'description' => 'nullable|string|max:255',
+            'receiptPhoto' => 'required|string',
+        ], [
+            'receiptPhoto.required' => 'Prenez une photo du reçu. Sans reçu, photographiez ce qui a été acheté.',
         ]);
+
+        [$receiptPath, $photoError] = \App\Support\PhotoStore::store($this->receiptPhoto, 'recus', (string) auth()->user()->currentRestaurantId(), 1600, 900_000);
+
+        if ($photoError) {
+            $this->addError('receiptPhoto', $photoError);
+
+            return;
+        }
 
         $openRegister = CashRegister::where('restaurant_id', auth()->user()->currentRestaurantId())
             ->whereNull('closed_at')
@@ -79,12 +92,14 @@ class ExpensesList extends Component
             'amount' => $this->amount,
             'description' => $this->description ?: null,
             'expense_date' => now(),
+            'receipt_path' => $receiptPath,
         ]);
 
-        \App\Models\ActivityLog::record('expense', 'a enregistré une dépense de ' . \App\Models\ActivityLog::fcfa((int) $this->amount) . ' : ' . ($this->categories[$this->category] ?? $this->category) . ($this->description ? ', ' . trim($this->description) : '') . '.', ['amount' => -(int) $this->amount]);
+        \App\Models\ActivityLog::record('expense', 'a enregistré une dépense de ' . \App\Models\ActivityLog::fcfa((int) $this->amount) . ' : ' . ($this->categories[$this->category] ?? $this->category) . ($this->description ? ', ' . trim($this->description) : '') . '. Reçu joint.', ['amount' => -(int) $this->amount]);
 
         $this->amount = null;
         $this->description = '';
+        $this->receiptPhoto = '';
 
         session()->flash('success', 'Dépense enregistrée.');
     }

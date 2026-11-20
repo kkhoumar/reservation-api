@@ -118,12 +118,19 @@ class ReadOnlyAndRemindersTest extends TestCase
 
     public function test_l_ecran_affiche_le_message_au_lieu_de_planter(): void
     {
+        \Illuminate\Support\Facades\Storage::fake('local');
         $this->verrouiller();
         $this->actingAs($this->patron);
+
+        $img = imagecreatetruecolor(64, 64);
+        ob_start();
+        imagejpeg($img);
+        $photo = 'data:image/jpeg;base64,' . base64_encode(ob_get_clean());
 
         Livewire::test(ExpensesList::class)
             ->assertSee('Lecture seule')
             ->set('amount', 1000)
+            ->set('receiptPhoto', $photo)
             ->call('addExpense')
             ->assertHasErrors('business');
 

@@ -330,11 +330,15 @@
             @error('deliveryLines.*') <div class="sc-error">{{ $message }}</div> @enderror
 
             <label class="st-toggle">
-                <input type="checkbox" wire:model="paidFromRegister">
+                <input type="checkbox" wire:model.live="paidFromRegister">
                 <span><strong>Payée avec l'argent de la caisse</strong>
                     <span class="muted" style="display: block; font-size: 13px; margin-top: 2px;">L'application crée la dépense « Achat de marchandises » dans la caisse ouverte.</span>
                 </span>
             </label>
+
+            @if ($paidFromRegister)
+                @include('partials.photo-capture', ['model' => 'deliveryPhoto', 'label' => 'Photo du bon de livraison', 'hint' => 'Obligatoire : l\'argent sort de la caisse.'])
+            @endif
 
             <div class="st-total">
                 <span><strong x-text="qty()">0</strong> <span x-text="qty() > 1 ? 'articles livrés' : 'article livré'">article livré</span></span>

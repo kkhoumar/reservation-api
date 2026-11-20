@@ -26,7 +26,7 @@ class Expense extends Model
 
     protected $fillable = [
         'restaurant_id', 'user_id', 'cash_register_id',
-        'category', 'amount', 'description', 'expense_date',
+        'category', 'amount', 'description', 'expense_date', 'receipt_path',
     ];
 
     protected $casts = [

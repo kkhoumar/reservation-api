@@ -37,6 +37,8 @@
             <label style="font-size: 13px; font-weight: 600;">Description <span style="font-weight: 500; color: var(--color-text-secondary);">facultatif</span></label>
             <input type="text" wire:model="description" placeholder="Ex : Achat tomates marché" style="width: 100%; margin: 6px 0 16px 0;">
 
+            @include('partials.photo-capture', ['model' => 'receiptPhoto', 'label' => 'Photo du reçu', 'hint' => 'Obligatoire. Sans reçu, photographiez ce qui a été acheté.'])
+
             <button wire:click="addExpense" class="btn btn-primary" style="width: 100%;">
                 Enregistrer la dépense
             </button>
@@ -116,6 +118,13 @@
                                 · par {{ $expense->user?->first_name ?? '—' }}
                                 @if (! $expense->cash_register_id) · <em>hors caisse</em> @endif
                             </div>
+                            @if ($expense->receipt_path)
+                                <a href="{{ route('expenses.receipt', $expense) }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--color-accent); text-decoration: none;">
+                                    <img src="{{ route('expenses.receipt', $expense) }}" alt="" loading="lazy" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-border);"> Voir le reçu
+                                </a>
+                            @else
+                                <div style="font-size: 12px; color: #9A5B0C; margin-top: 4px;">Sans reçu</div>
+                            @endif
                         </div>
                         <div style="color: var(--color-danger); font-weight: 700; white-space: nowrap;">
                             −{{ number_format($expense->amount, 0, ',', ' ') }} FCFA

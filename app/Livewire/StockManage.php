@@ -33,6 +33,8 @@ class StockManage extends Component
     // Livraison
     public string $supplier = '';
     public bool $paidFromRegister = false;
+    /** Photo du bon de livraison : obligatoire si la livraison est payée avec l'argent de la caisse. */
+    public string $deliveryPhoto = '';
     /** @var array<int, array{quantity: string, unit_cost: string}> */
     public array $deliveryLines = [];
 
@@ -95,9 +97,28 @@ class StockManage extends Component
             ->map(fn ($l) => ['quantity' => (int) $l['quantity'], 'unit_cost' => $l['unit_cost'] === '' ? null : (int) $l['unit_cost']])
             ->all();
 
+        $receiptPath = null;
+
+        if ($this->paidFromRegister) {
+            if ($this->deliveryPhoto === '') {
+                $this->addError('deliveryPhoto', 'Prenez une photo du bon de livraison : l\'argent sort de la caisse.');
+
+                return;
+            }
+
+            [$receiptPath, $photoError] = \App\Support\PhotoStore::store($this->deliveryPhoto, 'recus', (string) auth()->user()->currentRestaurantId(), 1600, 900_000);
+
+            if ($photoError) {
+                $this->addError('deliveryPhoto', $photoError);
+
+                return;
+            }
+        }
+
         try {
-            $result = $stock->recordDelivery(auth()->user(), $lines, trim($this->supplier) ?: null, $this->paidFromRegister);
+            $result = $stock->recordDelivery(auth()->user(), $lines, trim($this->supplier) ?: null, $this->paidFromRegister, $receiptPath);
         } catch (BusinessRuleException $e) {
+            \App\Support\PhotoStore::delete($receiptPath);
             $this->addError('delivery', $e->getMessage());
 
             return;
@@ -114,6 +135,7 @@ class StockManage extends Component
 
         $this->supplier = '';
         $this->paidFromRegister = false;
+        $this->deliveryPhoto = '';
         $this->resetDeliveryLines();
         $this->tab = 'overview';
     }
