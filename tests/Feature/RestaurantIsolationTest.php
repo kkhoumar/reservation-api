@@ -243,14 +243,21 @@ class RestaurantIsolationTest extends TestCase
 
     /**
      * L'action doit être refusée : la donnée de l'autre maquis est
-     * introuvable (ModelNotFoundException, transformée en 404 en production).
+     * introuvable (ModelNotFoundException, transformée en 404 ; Livewire
+     * renvoie directement la page 404 dans les tests depuis la 4.4.8).
      */
     private function assertBlocked(callable $action): void
     {
         try {
-            $action();
+            $result = $action();
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             $this->addToAssertionCount(1);
+
+            return;
+        }
+
+        if ($result instanceof \Livewire\Features\SupportTesting\Testable) {
+            $result->assertStatus(404);
 
             return;
         }

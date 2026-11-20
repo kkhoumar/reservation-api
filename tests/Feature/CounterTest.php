@@ -199,8 +199,9 @@ class CounterTest extends TestCase
         $this->actingAs($this->jean);
         Livewire::test(Counter::class)->call('startPayment', $order->id)->call('confirmPayment');
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        Livewire::test(Counter::class)->call('cancelOrder', $order->id);
+        // Introuvable parmi les bons annulables : page 404
+        Livewire::test(Counter::class)->call('cancelOrder', $order->id)->assertStatus(404);
+        $this->assertNotSame('cancelled', $order->fresh()->status);
     }
 
     public function test_la_table_se_libere_seulement_quand_tout_est_regle(): void
@@ -241,8 +242,7 @@ class CounterTest extends TestCase
         $autre = Order::factory()->awaitingPayment(5000)->create();
         $this->actingAs($this->jean);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        Livewire::test(Counter::class)->call('startPayment', $autre->id);
+        Livewire::test(Counter::class)->call('startPayment', $autre->id)->assertStatus(404);
     }
 
     public function test_une_serveuse_n_a_pas_acces_au_comptoir(): void

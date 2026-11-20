@@ -92,13 +92,8 @@ Route::get('/mot-de-passe', ChangePassword::class)->middleware('auth')->name('pa
 Route::get('/mon-profil', \App\Livewire\Profile::class)->middleware('auth')->name('profile');
 Route::get('/photo/{user}', function (\App\Models\User $user) {
     abort_unless(auth()->user()->canSeeAvatarOf($user) && $user->avatar_path, 404);
-    abort_unless(\Illuminate\Support\Facades\Storage::disk('local')->exists($user->avatar_path), 404);
 
-    return \Illuminate\Support\Facades\Storage::disk('local')->response($user->avatar_path, null, [
-        'Content-Type' => 'image/jpeg',
-        'Cache-Control' => 'private, max-age=31536000, immutable',
-        'X-Content-Type-Options' => 'nosniff',
-    ]);
+    return \App\Support\PhotoStore::response($user->avatar_path);
 })->middleware('auth')->name('avatar.show');
 
 // Page affichée au personnel d'un maquis verrouillé (non-paiement, essai terminé)

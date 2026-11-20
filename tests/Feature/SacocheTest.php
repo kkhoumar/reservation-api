@@ -190,8 +190,7 @@ class SacocheTest extends TestCase
         $this->actingAs($this->caissier);
 
         // En production : page 404
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        Livewire::test(Sacoches::class)->call('startRemittance', $autre->id);
+        Livewire::test(Sacoches::class)->call('startRemittance', $autre->id)->assertStatus(404);
     }
 
     public function test_une_serveuse_n_a_pas_acces_a_l_ecran_des_sacoches(): void

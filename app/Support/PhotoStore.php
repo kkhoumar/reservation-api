@@ -33,24 +33,30 @@ class PhotoStore
         }
 
         $path = trim($folder, '/') . '/' . $prefix . '-' . Str::random(16) . '.jpg';
-        Storage::disk('local')->put($path, $binary);
+        static::disk()->put($path, $binary);
 
         return [$path, null];
+    }
+
+    /** Disque des photos : l'ordinateur en local, Supabase Storage sur le serveur (PHOTOS_DISK). */
+    public static function disk(): \Illuminate\Contracts\Filesystem\Filesystem
+    {
+        return Storage::disk(config('filesystems.photos_disk', 'local'));
     }
 
     public static function delete(?string $path): void
     {
         if ($path) {
-            Storage::disk('local')->delete($path);
+            static::disk()->delete($path);
         }
     }
 
     /** Réponse HTTP pour afficher une photo privée. */
     public static function response(string $path)
     {
-        abort_unless(Storage::disk('local')->exists($path), 404);
+        abort_unless($path !== '' && static::disk()->exists($path), 404);
 
-        return Storage::disk('local')->response($path, null, [
+        return static::disk()->response($path, null, [
             'Content-Type' => 'image/jpeg',
             'Cache-Control' => 'private, max-age=31536000, immutable',
             'X-Content-Type-Options' => 'nosniff',

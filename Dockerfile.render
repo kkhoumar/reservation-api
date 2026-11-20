@@ -1,0 +1,49 @@
+# syntax=docker/dockerfile:1
+#
+# Image pour Render (offre gratuite) : Nginx + PHP-FPM dans un seul conteneur,
+# base PostgreSQL sur Supabase, photos sur Supabase Storage.
+# Le docker-compose.yml habituel reste sur le Dockerfile principal.
+
+############################################
+# 1. Assets front (Vite / Tailwind)
+############################################
+FROM node:22-alpine AS assets
+WORKDIR /app
+COPY package.json package-lock.json* .npmrc* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+COPY vite.config.js ./
+COPY resources ./resources
+RUN npm run build
+
+############################################
+# 2. Application
+############################################
+FROM php:8.4-fpm-alpine
+
+COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pdo_pgsql bcmath intl gd zip exif opcache pcntl \
+    && apk add --no-cache nginx
+
+COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-app.ini
+COPY docker/render/php-fpm.conf /usr/local/etc/php-fpm.d/zz-render.conf
+
+WORKDIR /var/www/html
+
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
+
+COPY . .
+COPY --from=assets /app/public/build ./public/build
+
+RUN composer dump-autoload --optimize --classmap-authoritative --no-dev \
+    && php artisan package:discover --ansi \
+    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs storage/app/private \
+    && rm -f /etc/nginx/http.d/default.conf \
+    && chmod +x docker/render/start.sh \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+ENV PORT=10000
+EXPOSE 10000
+
+CMD ["docker/render/start.sh"]

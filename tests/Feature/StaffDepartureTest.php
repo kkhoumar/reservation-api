@@ -128,8 +128,8 @@ class StaffDepartureTest extends TestCase
         $autre = User::factory()->server()->create();
         $this->actingAs($this->patron);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        Livewire::test(UsersManage::class)->call('removeUser', $autre->id);
+        Livewire::test(UsersManage::class)->call('removeUser', $autre->id)->assertStatus(404);
+        $this->assertSame('active', $autre->fresh()->status);
     }
 
     public function test_reintegrer_un_ancien_employe(): void
