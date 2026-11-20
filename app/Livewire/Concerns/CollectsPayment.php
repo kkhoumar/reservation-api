@@ -18,6 +18,9 @@ trait CollectsPayment
     public ?int $mobileAmount = null;
     public string $reference = '';
 
+    /** « Espèces + Mobile Money » : la caissière tape les deux montants que donne le client. */
+    public bool $mixed = false;
+
     /** Fonds de départ, si la caisse est ouverte depuis l'écran de paiement. */
     public int $openingAmount = 0;
 
@@ -42,9 +45,52 @@ trait CollectsPayment
         session()->flash('register-opened', 'Caisse ouverte. Vous pouvez encaisser.');
     }
 
+    /** Bouton du haut : Espèces, ou un opérateur pour tout payer par Mobile Money. */
+    public function choosePayment(string $method): void
+    {
+        if (! array_key_exists($method, Payment::METHODS)) {
+            return;
+        }
+
+        $this->mixed = false;
+        $this->mobileAmount = null;
+        $this->paymentMethod = $method;
+        $this->updatedPaymentMethod($method);
+        $this->resetValidation();
+    }
+
+    /** Bouton « Espèces + Mobile Money » : les deux cases sont vides, prêtes à remplir. */
+    public function chooseMixed(): void
+    {
+        $this->mixed = true;
+
+        if ($this->paymentMethod === 'cash') {
+            $this->paymentMethod = 'wave';
+        }
+
+        $this->mobileAmount = null;
+        $this->amountReceived = null;
+        $this->resetValidation();
+    }
+
+    /** Boutons des billets : « compte juste » ou le billet tendu par le client. */
+    public function setCashReceived(int $amount): void
+    {
+        $this->amountReceived = max(0, min($amount, 100000000));
+    }
+
     /** Choisir un opérateur : par défaut, tout est payé par Mobile Money. */
     public function updatedPaymentMethod(string $value): void
     {
+        // Paiement mixte : on change seulement d'opérateur, les montants restent
+        if ($this->mixed) {
+            if ($value === 'cash') {
+                $this->mixed = false;
+            } else {
+                return;
+            }
+        }
+
         if ($value === 'cash') {
             $this->mobileAmount = null;
             $this->reference = '';
@@ -64,6 +110,7 @@ trait CollectsPayment
         $this->paymentMethod = 'cash';
         $this->mobileAmount = null;
         $this->reference = '';
+        $this->mixed = false;
     }
 
     protected function paymentRules(): array
