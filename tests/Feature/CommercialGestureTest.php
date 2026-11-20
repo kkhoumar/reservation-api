@@ -39,6 +39,8 @@ class CommercialGestureTest extends TestCase
         parent::setUp();
 
         $this->maquis = Restaurant::factory()->create();
+
+        $this->openRegister($this->maquis);
         $this->patron = User::factory()->owner()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Koffi']);
         $this->mariam = User::factory()->manager()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Mariam']);
         $this->jean = User::factory()->cashier()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Jean']);

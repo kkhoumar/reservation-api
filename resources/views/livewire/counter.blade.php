@@ -20,10 +20,11 @@
         </p>
     </div>
 
+    @if (session('register-opened'))
+        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px; font-size: 14px; font-weight: 700;">{{ session('register-opened') }}</div>
+    @endif
     @if (! $registerOpen)
-        <div class="card" style="border-left: 6px solid var(--color-accent); margin-bottom: 16px; font-size: 14px;">
-            La caisse n'est pas ouverte. <a href="{{ route('cash-register.manage') }}" style="color: var(--color-accent); font-weight: 600;">Ouvrez-la</a> pour que les encaissements soient comptés dans la session.
-        </div>
+        <div style="margin-bottom: 16px;">@include('livewire.partials.register-closed-gate')</div>
     @endif
 
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start;">
@@ -65,7 +66,11 @@
                         </div>
                         @error('amountReceived') <div style="color: var(--color-danger); font-size: 13px; margin-top: 8px;">{{ $message }}</div> @enderror
                         <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
-                            <button wire:click="confirmPayment" class="btn btn-primary">Encaissé, servir</button>
+                            @if ($registerOpen)
+                                <button wire:click="confirmPayment" class="btn btn-primary">Encaissé, servir</button>
+                            @else
+                                <span style="font-size: 13.5px; font-weight: 700; color: #9A5B0C; align-self: center;">Ouvrez d'abord la caisse, en haut de l'écran.</span>
+                            @endif
                             <button wire:click="cancelPayment" class="btn btn-ghost">Retour</button>
                         </div>
                     @elseif ($creditOrderId === $order->id)

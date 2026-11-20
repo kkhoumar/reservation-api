@@ -18,7 +18,29 @@ trait CollectsPayment
     public ?int $mobileAmount = null;
     public string $reference = '';
 
+    /** Fonds de départ, si la caisse est ouverte depuis l'écran de paiement. */
+    public int $openingAmount = 0;
+
     abstract protected function paymentTotal(): int;
+
+    protected function registerIsOpen(): bool
+    {
+        return \App\Models\CashRegister::isOpenFor(auth()->user()->currentRestaurantId());
+    }
+
+    /** La caisse est fermée : on l'ouvre sans quitter l'encaissement. */
+    public function openRegisterHere(): void
+    {
+        abort_unless(\App\Models\CashRegister::canOpen(auth()->user()), 403);
+
+        $this->validate(['openingAmount' => 'required|integer|min:0|max:100000000'], [
+            'openingAmount.*' => 'Entrez le fonds de départ en chiffres (0 s\'il n\'y en a pas).',
+        ]);
+
+        \App\Models\CashRegister::openFor(auth()->user()->currentRestaurantId(), auth()->user(), $this->openingAmount);
+        $this->openingAmount = 0;
+        session()->flash('register-opened', 'Caisse ouverte. Vous pouvez encaisser.');
+    }
 
     /** Choisir un opérateur : par défaut, tout est payé par Mobile Money. */
     public function updatedPaymentMethod(string $value): void

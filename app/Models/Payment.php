@@ -157,6 +157,12 @@ class Payment extends Model
                 throw new BusinessRuleException('Un paiement existe déjà pour cette commande.');
             }
 
+            // L'argent encaissé doit toujours tomber dans une caisse ouverte :
+            // sinon il n'est compté nulle part et peut disparaître sans écart.
+            if (! CashRegister::isOpenFor($order->restaurant_id)) {
+                throw new BusinessRuleException('La caisse est fermée. Ouvrez la caisse pour encaisser.');
+            }
+
             $payment = static::create([
                 'order_id' => $order->id,
                 'user_id' => $cashier->id,

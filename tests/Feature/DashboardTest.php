@@ -40,6 +40,8 @@ class DashboardTest extends TestCase
         $this->travelTo(now()->setDate(2026, 11, 18)->setTime(20, 0));
 
         $this->maquis = Restaurant::factory()->create(['credit_enabled' => true]);
+
+        $this->openRegister($this->maquis);
         $this->patron = User::factory()->owner()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Koffi']);
         $this->jean = User::factory()->cashier()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Jean']);
         $this->aya = User::factory()->server()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Aya']);

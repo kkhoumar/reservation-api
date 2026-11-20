@@ -157,6 +157,8 @@ class MoneyProtectionTest extends TestCase
 
     private function commandeAPayer(int $total = 5000): Order
     {
+        $this->openRegister($this->maquis, $this->caissier);
+
         return Order::factory()->awaitingPayment($total)->create(['restaurant_id' => $this->maquis->id]);
     }
 

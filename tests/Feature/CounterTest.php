@@ -36,6 +36,8 @@ class CounterTest extends TestCase
         parent::setUp();
 
         $this->maquis = Restaurant::factory()->create();
+
+        $this->openRegister($this->maquis);
         $this->aya = User::factory()->server()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Aya']);
         $this->jean = User::factory()->cashier()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Jean']);
         $this->biere = Product::factory()->create([

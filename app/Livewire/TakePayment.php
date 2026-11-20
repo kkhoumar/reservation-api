@@ -131,6 +131,7 @@ class TakePayment extends Component
             'order' => $this->order,
             'canCredit' => $this->canCredit(),
             'canGestures' => $this->canGiveGestures(),
+            'registerOpen' => $this->registerIsOpen(),
             'customers' => $this->canCredit() ? Customer::orderBy('name')->get() : collect(),
         ]);
     }

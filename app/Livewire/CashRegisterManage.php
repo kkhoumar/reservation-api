@@ -40,25 +40,7 @@ class CashRegisterManage extends Component
 
         $restaurantId = auth()->user()->currentRestaurantId();
 
-        $opened = DB::transaction(function () use ($restaurantId) {
-            // Verrou sur le maquis : deux ouvertures simultanées sont sérialisées
-            Restaurant::whereKey($restaurantId)->lockForUpdate()->first();
-
-            if ($this->currentRegister()) {
-                return false;
-            }
-
-            CashRegister::create([
-                'restaurant_id' => $restaurantId,
-                'opened_by' => auth()->id(),
-                'opening_amount' => $this->openingAmount,
-                'opened_at' => now(),
-            ]);
-
-            \App\Models\ActivityLog::record('register_opened', 'a ouvert la caisse avec ' . \App\Models\ActivityLog::fcfa((int) $this->openingAmount) . ' de fonds de départ.', ['amount' => (int) $this->openingAmount]);
-
-            return true;
-        });
+        $opened = CashRegister::openFor($restaurantId, auth()->user(), (int) $this->openingAmount) !== null;
 
         if (!$opened) {
             session()->flash('error', 'Une caisse est déjà ouverte.');

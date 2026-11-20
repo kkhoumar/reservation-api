@@ -23,7 +23,7 @@
         </div>
 
         <div style="margin-bottom: 8px;">
-            <label>Confirme le nouveau mot de passe</label>
+            <label>Confirmez le nouveau mot de passe</label>
             <input type="password" wire:model="passwordConfirmation" autocomplete="new-password">
         </div>
 

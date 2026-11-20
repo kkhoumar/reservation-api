@@ -50,6 +50,44 @@ class CashRegister extends Model
      *
      * @param  array<string, int|string|null>  $counts
      */
+    /** Seuls le patron, la gérante et la caissière ouvrent la caisse. */
+    public static function canOpen(User $user): bool
+    {
+        return $user->isPlatformAdmin() || in_array($user->role, ['owner', 'manager', 'cashier'], true);
+    }
+
+    /**
+     * Ouvre la caisse du maquis. Deux ouvertures en même temps sont sérialisées.
+     *
+     * @return static|null  la caisse ouverte, ou null si une caisse était déjà ouverte
+     */
+    public static function openFor(int $restaurantId, User $by, int $openingAmount): ?self
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($restaurantId, $by, $openingAmount) {
+            Restaurant::whereKey($restaurantId)->lockForUpdate()->first();
+
+            if (static::where('restaurant_id', $restaurantId)->whereNull('closed_at')->exists()) {
+                return null;
+            }
+
+            $register = static::create([
+                'restaurant_id' => $restaurantId,
+                'opened_by' => $by->id,
+                'opening_amount' => $openingAmount,
+                'opened_at' => now(),
+            ]);
+
+            ActivityLog::record('register_opened', 'a ouvert la caisse avec ' . ActivityLog::fcfa($openingAmount) . ' de fonds de départ.', ['user' => $by, 'amount' => $openingAmount]);
+
+            return $register;
+        });
+    }
+
+    public static function isOpenFor(int $restaurantId): bool
+    {
+        return static::where('restaurant_id', $restaurantId)->whereNull('closed_at')->exists();
+    }
+
     public static function countTotal(array $counts): int
     {
         $total = 0;

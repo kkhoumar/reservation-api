@@ -33,6 +33,8 @@ class SoloMaquisTest extends TestCase
         parent::setUp();
 
         $this->maquis = Restaurant::factory()->create();
+
+        $this->openRegister($this->maquis);
         $this->patron = User::factory()->owner()->create(['restaurant_id' => $this->maquis->id]);
         $this->biere = Product::factory()->create([
             'restaurant_id' => $this->maquis->id, 'name' => 'Bière', 'selling_price' => 1000, 'stock_quantity' => 20,

@@ -91,6 +91,7 @@ class ReadOnlyAndRemindersTest extends TestCase
     public function test_aucune_ecriture_n_est_possible_meme_en_contournant_l_ecran(): void
     {
         $order = Order::factory()->awaitingPayment(3000)->create(['restaurant_id' => $this->maquis->id]);
+        $this->openRegister($this->maquis, $this->patron);
         $this->verrouiller();
         $this->actingAs($this->patron);
 

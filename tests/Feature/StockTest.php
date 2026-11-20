@@ -44,6 +44,8 @@ class StockTest extends TestCase
         parent::setUp();
 
         $this->maquis = Restaurant::factory()->create();
+
+        $this->openRegister($this->maquis);
         $this->patron = User::factory()->owner()->create(['restaurant_id' => $this->maquis->id]);
         $this->mariam = User::factory()->manager()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Mariam']);
         $this->jean = User::factory()->cashier()->create(['restaurant_id' => $this->maquis->id]);
@@ -135,6 +137,8 @@ class StockTest extends TestCase
 
     public function test_livraison_payee_avec_la_caisse_mais_caisse_fermee_ne_change_rien(): void
     {
+        CashRegister::withoutGlobalScopes()->where('restaurant_id', $this->maquis->id)->update(['closed_at' => now()]);
+
         try {
             $this->stock()->recordDelivery($this->mariam, [$this->biere->id => ['quantity' => 10, 'unit_cost' => 600]], null, true);
             $this->fail('Livraison acceptée sans caisse ouverte.');

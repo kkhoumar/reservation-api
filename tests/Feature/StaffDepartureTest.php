@@ -31,6 +31,8 @@ class StaffDepartureTest extends TestCase
         parent::setUp();
 
         $this->maquis = Restaurant::factory()->create(['payment_timing' => 'after']);
+
+        $this->openRegister($this->maquis);
         $this->patron = User::factory()->owner()->create(['restaurant_id' => $this->maquis->id]);
         $this->mariam = User::factory()->manager()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Mariam']);
         $this->jean = User::factory()->cashier()->create(['restaurant_id' => $this->maquis->id, 'first_name' => 'Jean']);

@@ -55,14 +55,22 @@
         <div class="card">
             <h3 style="margin-top: 0;">Encaissement</h3>
 
-            <div style="margin-bottom: 16px;">
-                @include('livewire.partials.payment-fields', ['total' => $order->total])
-                @error('amountReceived') <div style="color: var(--color-danger); font-size: 13px; margin-top: 8px;">{{ $message }}</div> @enderror
-            </div>
+            @if (session('register-opened'))
+                <div style="background: var(--color-success-bg); color: var(--color-success); font-weight: 700; font-size: 14px; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;">{{ session('register-opened') }}</div>
+            @endif
 
-            <button wire:click="confirmPayment" class="btn btn-primary" style="width: 100%;">
-                Valider le paiement
-            </button>
+            @if ($registerOpen)
+                <div style="margin-bottom: 16px;">
+                    @include('livewire.partials.payment-fields', ['total' => $order->total])
+                    @error('amountReceived') <div style="color: var(--color-danger); font-size: 13px; margin-top: 8px;">{{ $message }}</div> @enderror
+                </div>
+
+                <button wire:click="confirmPayment" class="btn btn-primary" style="width: 100%;">
+                    Valider le paiement
+                </button>
+            @else
+                @include('livewire.partials.register-closed-gate')
+            @endif
 
             @if ($canCredit)
                 <div style="border-top: 1px dashed var(--color-border); margin-top: 16px; padding-top: 14px;">
