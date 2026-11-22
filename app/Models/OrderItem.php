@@ -13,12 +13,19 @@ class OrderItem extends Model
 
     protected $fillable = [
         'order_id', 'product_id', 'quantity', 'unit_price', 'unit_cost', 'total', 'note',
-        'is_offered', 'offered_reason', 'offered_by',
+        'is_offered', 'offered_reason', 'offered_by', 'sent_at',
     ];
 
     protected $casts = [
         'is_offered' => 'boolean',
+        'sent_at' => 'datetime',
     ];
+
+    /** Déjà parti en cuisine. */
+    public function isSent(): bool
+    {
+        return $this->sent_at !== null;
+    }
 
     protected $attributes = [
         'is_offered' => false,

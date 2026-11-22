@@ -76,7 +76,7 @@ class NewOrder extends Component
     public function getOrderProperty()
     {
         return $this->orderId
-            ? Order::with('items.product')->find($this->orderId)
+            ? Order::with(['items' => fn ($q) => $q->orderBy('id'), 'items.product'])->find($this->orderId)
             : null;
     }
 
@@ -88,9 +88,9 @@ class NewOrder extends Component
         )
             ->with([
                 'products' => fn ($q) =>
-                    $q->where('is_available', true)
+                    $q->where('is_available', true)->orderBy('name')
             ])
-            ->orderBy('sort_order')
+            ->orderBy('sort_order')->orderBy('id')
             ->get();
     }
 
@@ -104,8 +104,15 @@ class NewOrder extends Component
      * - vérifie que le stock est suffisant pour la quantité demandée ;
      * - décrémente le stock après création de la ligne de commande.
      */
-    public function addProduct($productId)
+    public function addProduct($productId, $count = null, $tapId = null)
     {
+        // Touches regroupées par le téléphone (« 3 × Flag » en un seul envoi).
+        // $tapId rend chaque envoi unique : deux envois identiques ne sont jamais fusionnés.
+        if ($count !== null) {
+            $this->quantity = (int) $count;
+            $this->note = '';
+        }
+
         $this->validate([
             'quantity' => 'required|integer|min:1|max:100',
             'note' => 'nullable|string|max:255',
@@ -134,6 +141,29 @@ class NewOrder extends Component
                 $order = $this->orderId
                     ? $this->lockEditableOrder()
                     : $this->createOrder();
+
+                // Même produit, pas encore envoyé, même prix, sans remarque ni cadeau :
+                // les touches successives grossissent la même ligne (3 × Flag, pas 3 lignes)
+                $line = $this->note === ''
+                    ? OrderItem::where('order_id', $order->id)
+                        ->where('product_id', $product->id)
+                        ->whereNull('sent_at')
+                        ->whereNull('note')
+                        ->where('is_offered', false)
+                        ->where('unit_price', $product->selling_price)
+                        ->first()
+                    : null;
+
+                if ($line) {
+                    $line->quantity += $this->quantity;
+                    $line->total = $line->unit_price * $line->quantity;
+                    $line->save();
+
+                    $product->decrementStock($this->quantity);
+                    $order->recalculateTotal();
+
+                    return $order->id;
+                }
 
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -169,30 +199,85 @@ class NewOrder extends Component
      */
     public function removeItem($itemId)
     {
+        $this->takeOff($itemId, null);
+    }
+
+    /**
+     * Bouton « − » : un article de moins sur la ligne (à 0, la ligne disparaît).
+     */
+    public function decrementItem($itemId, $count = 1, $tapId = null)
+    {
+        $this->takeOff($itemId, max(1, min(100, (int) $count)));
+    }
+
+    /**
+     * Bouton « + » d'une ligne : un article de plus du même produit.
+     */
+    public function incrementItem($itemId)
+    {
+        if (!$this->orderId) {
+            return;
+        }
+
+        $productId = OrderItem::where('order_id', $this->orderId)->whereKey($itemId)->value('product_id');
+
+        if ($productId) {
+            $this->quantity = 1;
+            $this->note = '';
+            $this->addProduct($productId);
+        }
+    }
+
+    /**
+     * Retire des articles d'une ligne de LA commande en cours et les remet en stock.
+     * $count null = toute la ligne. Un article déjà parti en cuisine ne peut
+     * être retiré que par le comptoir ou la direction, et c'est noté au journal.
+     */
+    protected function takeOff($itemId, ?int $count): void
+    {
         // Uniquement une ligne de LA commande en cours (et donc de ce restaurant)
         if (!$this->orderId) {
             return;
         }
 
         try {
-            DB::transaction(function () use ($itemId) {
+            DB::transaction(function () use ($itemId, $count) {
                 $order = $this->lockEditableOrder();
 
-                $item = OrderItem::where('order_id', $order->id)->find($itemId);
+                $item = OrderItem::where('order_id', $order->id)->lockForUpdate()->find($itemId);
 
                 if (!$item) {
                     return;
                 }
 
-                Product::restoreStock($item->product_id, $item->quantity);
-                $item->delete();
+                $sent = $item->isSent();
+
+                if ($item->isSent() && auth()->user()->isServer()) {
+                    throw new BusinessRuleException("{$item->product?->name} est déjà parti en cuisine : demandez au comptoir pour le retirer.");
+                }
+
+                $removed = min($count ?? $item->quantity, $item->quantity);
+                $unit = intdiv((int) $item->total, max(1, (int) $item->quantity));
+
+                Product::restoreStock($item->product_id, $removed);
+
+                if ($removed >= $item->quantity) {
+                    $item->delete();
+                } else {
+                    $item->quantity -= $removed;
+                    $item->total = $unit * $item->quantity;
+                    $item->save();
+                }
+
                 $order->recalculateTotal();
 
-                // Retrait après l'envoi en cuisine ou le service : à surveiller
-                $sent = $order->status !== 'created';
-                \App\Models\ActivityLog::record('item_removed', 'a retiré ' . $item->quantity . ' × ' . ($item->product?->name ?? 'article') . " du bon {$order->order_number}" . ($sent ? " après l'envoi en cuisine." : '.'), [
-                    'amount' => -(int) $item->total, 'meta' => ['order_id' => $order->id, 'sent' => $sent],
-                ]);
+                // Retrait après l'envoi en cuisine : à surveiller. Avant l'envoi, ce n'est
+                // qu'une correction de saisie (un « − » de trop) : pas de bruit au journal.
+                if ($sent) {
+                    \App\Models\ActivityLog::record('item_removed', 'a retiré ' . $removed . ' × ' . ($item->product?->name ?? 'article') . " du bon {$order->order_number} après l'envoi en cuisine.", [
+                        'amount' => -($unit * $removed), 'meta' => ['order_id' => $order->id, 'sent' => true],
+                    ]);
+                }
             });
         } catch (BusinessRuleException $e) {
             session()->flash('error', $e->getMessage());
@@ -210,6 +295,9 @@ class NewOrder extends Component
         if (!$this->changeStatus('in_preparation')) {
             return;
         }
+
+        // Les lignes parties en cuisine sont figées pour les serveurs
+        OrderItem::where('order_id', $this->orderId)->whereNull('sent_at')->update(['sent_at' => now()]);
 
         session()->flash('success', 'Commande envoyée en cuisine.');
     }
@@ -344,9 +432,15 @@ class NewOrder extends Component
      */
     public function render()
     {
+        $order = $this->order;
+
         return view('livewire.new-order', [
             'categories' => $this->categories,
-            'order' => $this->order,
+            'order' => $order,
+            // Nombre de chaque produit déjà dans la commande (pastille sur la carte)
+            'inOrder' => $order ? $order->items->groupBy('product_id')->map->sum('quantity')->all() : [],
+            // Un serveur ne diminue pas un article parti en cuisine
+            'canTrimSent' => ! auth()->user()->isServer(),
             'paysBefore' => $this->paysBeforeService(),
             'canCollect' => ! auth()->user()->isServer(),
             'hasServers' => (bool) auth()->user()->currentRestaurant()?->hasActiveServers(),
