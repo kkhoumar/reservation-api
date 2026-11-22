@@ -7,45 +7,91 @@
     <title>Pas de connexion — Maquis Express</title>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px;
             font-family: -apple-system, 'Segoe UI', Roboto, Inter, sans-serif; color: #10231D;
             background: linear-gradient(160deg, #0B4D3C, #062E24); }
-        .box { background: #fff; border-radius: 22px; padding: 36px 28px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 30px 70px rgba(0,0,0,.3); }
+        .box { background: #fff; border-radius: 22px; padding: 32px 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 30px 70px rgba(0,0,0,.3); }
         img { width: 64px; height: 64px; border-radius: 16px; }
         h1 { font-size: 22px; margin: 18px 0 10px; letter-spacing: -.02em; }
-        p { color: #5B6B65; font-size: 15px; line-height: 1.6; margin: 0 0 22px; }
-        ul { text-align: left; color: #5B6B65; font-size: 14px; line-height: 1.8; margin: 0 0 24px; padding-left: 20px; }
-        button { width: 100%; background: #D2622A; color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        p { color: #5B6B65; font-size: 15px; line-height: 1.6; margin: 0 0 20px; }
+        ul { text-align: left; color: #5B6B65; font-size: 14px; line-height: 1.8; margin: 0 0 22px; padding-left: 20px; }
+        .btn { display: block; width: 100%; border: none; border-radius: 12px; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; }
+        .main { background: #0B4D3C; color: #fff; margin-bottom: 10px; }
+        .retry { background: #D2622A; color: #fff; }
+        .retry.light { background: #F1F4F2; color: #10231D; }
+        .note { text-align: left; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.5; margin: 0 0 18px; }
+        .note.warn { background: #FFF4E5; color: #7A4A00; }
+        .note.info { background: #EAF4F0; color: #0B4D3C; }
+        [hidden] { display: none !important; }
     </style>
 </head>
 <body>
     <div class="box">
         <img src="/icons/icon-192.png" alt="">
-        <h1>Pas de connexion internet</h1>
-        <p>Maquis Express a besoin d'internet pour enregistrer les commandes et la caisse.</p>
-        <ul>
+        <h1 id="title">Pas de connexion internet</h1>
+        <p id="lead">Maquis Express a besoin d'internet pour enregistrer les commandes et la caisse.</p>
+
+        <!-- Téléphone prêt : la vente de secours d'abord -->
+        <a id="rescue" class="btn main" href="/secours" hidden>Vente de secours en espèces</a>
+
+        <!-- Compte de caisse, mais téléphone pas encore préparé -->
+        <div id="notready" class="note warn" hidden>
+            <strong>La vente de secours n'est pas encore prête sur ce téléphone.</strong><br>
+            Quand internet reviendra, ouvrez une fois l'application, connecté avec le compte de caisse : les produits et les prix seront copiés dans le téléphone.
+        </div>
+
+        <!-- Serveur ou serveuse -->
+        <div id="server" class="note info" hidden>
+            Passez les commandes au comptoir, à voix haute ou sur papier.
+        </div>
+
+        <ul id="tips">
             <li>Vérifiez que les données mobiles ou le Wi-Fi sont activés.</li>
             <li>Vérifiez qu'il vous reste du crédit internet.</li>
             <li>Rapprochez-vous de la box Wi-Fi.</li>
         </ul>
-        <a id="rescue" href="/secours" style="display: none; text-decoration: none; background: #0B4D3C; color: #fff; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700; margin-bottom: 10px;">Vente de secours en espèces</a>
-        <button onclick="location.reload()">Réessayer</button>
-        <p id="auto" style="font-size: 13px; margin: 14px 0 0;">La page revient toute seule dès que la connexion revient.</p>
+        <button id="retry" class="btn retry" onclick="location.reload()">Réessayer</button>
+        <p style="font-size: 13px; margin: 14px 0 0;">La page revient toute seule dès que la connexion revient.</p>
     </div>
     <script src="/js/offline-sales.js"></script>
     <script>
-        // Comptoir préparé sur ce téléphone : la vente de secours est possible
-        if (window.MEOffline && MEOffline.canSell() && MEOffline.catalog()) {
-            var a = document.getElementById('rescue');
-            a.style.display = "block";
-        }
+        (function () {
+            var ME = window.MEOffline;
+            var current = ME && ME.current();
+            var hasCatalog = !!(ME && ME.canSell() && ME.catalog());
+            var onRescuePage = location.pathname === '/secours';
 
-        // Retour automatique : le Wi-Fi peut être allumé sans internet, on vérifie pour de vrai
-        function retour() {
-            fetch('/up', { cache: 'no-store' }).then(function (r) { if (r.ok) location.reload(); }).catch(function () {});
-        }
-        window.addEventListener('online', retour);
-        setInterval(retour, 5000);
+            function show(id) { document.getElementById(id).hidden = false; }
+
+            // La page de secours est-elle gardée dans le téléphone ?
+            var rescueSaved = (window.caches && !onRescuePage)
+                ? caches.match('/secours').then(function (r) { return !!r; }).catch(function () { return false; })
+                : Promise.resolve(false);
+
+            rescueSaved.then(function (saved) {
+                if (hasCatalog && saved) {
+                    // Internet vraiment coupé : on va tout de suite à la vente de secours
+                    if (navigator.onLine === false) { location.replace('/secours'); return; }
+
+                    // Internet allumé mais qui ne répond pas (très lent, plus de crédit…)
+                    document.getElementById('title').textContent = 'Internet ne répond pas';
+                    document.getElementById('lead').textContent = 'Le serveur ne répond pas pour le moment. Vous pouvez continuer à vendre en espèces.';
+                    document.getElementById('retry').className = 'btn retry light';
+                    show('rescue');
+                    return;
+                }
+
+                if (current && current.canSell) show('notready');
+                else if (current) show('server');
+            });
+
+            // Retour automatique : le Wi-Fi peut être allumé sans internet, on vérifie pour de vrai
+            function retour() {
+                fetch('/up', { cache: 'no-store' }).then(function (r) { if (r.ok) location.reload(); }).catch(function () {});
+            }
+            window.addEventListener('online', retour);
+            setInterval(retour, 5000);
+        })();
     </script>
 </body>
 </html>

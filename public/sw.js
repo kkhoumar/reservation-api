@@ -9,12 +9,35 @@
  * cache : elles viennent toujours du serveur, pour qu'aucun chiffre ne soit
  * périmé et qu'aucune donnée d'un maquis ne reste sur un téléphone partagé.
  */
-const VERSION = 'me-v3';
+const VERSION = 'me-v4';
 const STATIC_CACHE = `${VERSION}-static`;
 const OFFLINE_URL = '/offline.html';
 // Vente de secours : la page est gardée pour marcher sans internet (elle ne contient
 // aucune donnée du maquis : produits et ventes sont dans le téléphone de l'utilisateur)
 const RESCUE_URL = '/secours';
+
+// Internet très faible : au-delà de ce délai, on arrête d'attendre le serveur
+const PAGE_TIMEOUT = 12000;
+const RESCUE_TIMEOUT = 5000;
+
+/** Abandonne l'attente si le serveur ne répond pas à temps. */
+function withTimeout(promise, ms) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('timeout')), ms);
+        promise.then((r) => { clearTimeout(timer); resolve(r); }, (e) => { clearTimeout(timer); reject(e); });
+    });
+}
+
+/** Si même la page « pas de connexion » manque : un message simple plutôt que l'erreur du navigateur. */
+function lastResort() {
+    return new Response(
+        '<!DOCTYPE html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+        + '<title>Pas de connexion</title><body style="font-family:sans-serif;padding:32px;text-align:center">'
+        + '<h1>Pas de connexion internet</h1><p>Vérifiez internet puis réessayez.</p>'
+        + '<button onclick="location.reload()" style="padding:14px 24px;font-size:16px">Réessayer</button></body>',
+        { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+    );
+}
 
 const PRECACHE = [
     OFFLINE_URL,
@@ -32,7 +55,12 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys()
+        // La page de secours déjà gardée passe dans la nouvelle version : le
+        // téléphone reste prêt sans devoir être repréparé après une mise à jour
+        caches.match(RESCUE_URL)
+            .then((page) => page && caches.open(STATIC_CACHE).then((cache) => cache.match(RESCUE_URL).then((mine) => mine || cache.put(RESCUE_URL, page))))
+            .catch(() => {})
+            .then(() => caches.keys())
             .then((keys) => Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))))
             .then(() => self.clients.claim())
     );
@@ -58,7 +86,7 @@ self.addEventListener('fetch', (event) => {
     // Page de secours : le serveur d'abord (copie mise de côté), sinon la copie
     if (url.origin === self.location.origin && url.pathname === RESCUE_URL) {
         event.respondWith(
-            fetch(request)
+            withTimeout(fetch(request), RESCUE_TIMEOUT)
                 .then((response) => {
                     if (response.ok && !response.redirected) {
                         const copy = response.clone();
@@ -71,9 +99,13 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Pages : toujours le serveur ; sans réseau, la page « pas de connexion »
+    // Pages : toujours le serveur ; sans réseau (ou réseau qui ne répond pas),
+    // la page « pas de connexion », qui mène à la vente de secours.
+    // Les exports (fichiers longs à préparer) ne sont jamais coupés.
     if (request.mode === 'navigate') {
-        event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
+        const slowAllowed = url.pathname.startsWith('/exports');
+        const network = slowAllowed ? fetch(request) : withTimeout(fetch(request), PAGE_TIMEOUT);
+        event.respondWith(network.catch(() => caches.match(OFFLINE_URL).then((r) => r || lastResort())));
         return;
     }
 

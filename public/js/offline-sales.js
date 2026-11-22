@@ -80,11 +80,22 @@
 
         /** Garde la page de secours dans le téléphone (le service worker la met de côté). */
         warmPage: function () {
-            var last = read('page-warm') || 0;
-            if (Date.now() - last < 10 * 60 * 1000) return;
-            fetch('/secours', { credentials: 'same-origin', cache: 'no-store' })
-                .then(function (r) { if (r.ok) write('page-warm', Date.now()); })
-                .catch(function () {});
+            if (!('serviceWorker' in navigator) || !window.caches) return;
+
+            // Seul le service worker range la page : on attend qu'il soit en place
+            // (première ouverture de l'application, ou juste après une mise à jour)
+            if (!navigator.serviceWorker.controller) {
+                navigator.serviceWorker.addEventListener('controllerchange', function () { ME.warmPage(); }, { once: true });
+                return;
+            }
+
+            caches.match('/secours').then(function (saved) {
+                var last = read('page-warm') || 0;
+                if (saved && Date.now() - last < 10 * 60 * 1000) return;
+
+                return fetch('/secours', { credentials: 'same-origin', cache: 'no-store' })
+                    .then(function (r) { if (r.ok && !r.redirected) write('page-warm', Date.now()); });
+            }).catch(function () {});
         },
 
         /** Range une vente dans le carnet du téléphone. */
