@@ -134,6 +134,7 @@
         </main>
     </div>
     @include('partials.tap-feedback')
+    @include('partials.offline-banner')
     @livewireScripts
 </body>
 </html>

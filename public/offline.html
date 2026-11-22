@@ -29,7 +29,15 @@
             <li>Rapprochez-vous de la box Wi-Fi.</li>
         </ul>
         <button onclick="location.reload()">Réessayer</button>
+        <p id="auto" style="font-size: 13px; margin: 14px 0 0;">La page revient toute seule dès que la connexion revient.</p>
     </div>
-    <script>window.addEventListener('online', function () { location.reload(); });</script>
+    <script>
+        // Retour automatique : le Wi-Fi peut être allumé sans internet, on vérifie pour de vrai
+        function retour() {
+            fetch('/up', { cache: 'no-store' }).then(function (r) { if (r.ok) location.reload(); }).catch(function () {});
+        }
+        window.addEventListener('online', retour);
+        setInterval(retour, 5000);
+    </script>
 </body>
 </html>

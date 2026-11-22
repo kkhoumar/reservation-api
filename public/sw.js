@@ -9,7 +9,7 @@
  * cache : elles viennent toujours du serveur, pour qu'aucun chiffre ne soit
  * périmé et qu'aucune donnée d'un maquis ne reste sur un téléphone partagé.
  */
-const VERSION = 'me-v1';
+const VERSION = 'me-v2';
 const STATIC_CACHE = `${VERSION}-static`;
 const OFFLINE_URL = '/offline.html';
 
@@ -37,7 +37,8 @@ self.addEventListener('activate', (event) => {
 /** Fichiers statiques sûrs à garder : icônes, polices, script Livewire. */
 function isStaticAsset(url) {
     if (url.origin === self.location.origin) {
-        return url.pathname.startsWith('/icons/') || url.pathname.startsWith('/livewire/');
+        // Script Livewire : /livewire/… ou /livewire-xxxx/… selon la version
+        return url.pathname.startsWith('/icons/') || /^\/livewire(-[a-z0-9]+)?\/.*\.js$/.test(url.pathname);
     }
     return url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 }

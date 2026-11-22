@@ -659,6 +659,7 @@
     @include('partials.money-input-script')
     @include('partials.avatar-picker-script')
     @include('partials.tap-feedback')
+    @include('partials.offline-banner')
     @livewireScripts
 </body>
 </html>
