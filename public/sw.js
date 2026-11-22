@@ -9,12 +9,16 @@
  * cache : elles viennent toujours du serveur, pour qu'aucun chiffre ne soit
  * périmé et qu'aucune donnée d'un maquis ne reste sur un téléphone partagé.
  */
-const VERSION = 'me-v2';
+const VERSION = 'me-v3';
 const STATIC_CACHE = `${VERSION}-static`;
 const OFFLINE_URL = '/offline.html';
+// Vente de secours : la page est gardée pour marcher sans internet (elle ne contient
+// aucune donnée du maquis : produits et ventes sont dans le téléphone de l'utilisateur)
+const RESCUE_URL = '/secours';
 
 const PRECACHE = [
     OFFLINE_URL,
+    '/js/offline-sales.js',
     '/icons/icon-192.png',
     '/icons/icon-512.png',
     '/icons/favicon-64.png',
@@ -38,7 +42,7 @@ self.addEventListener('activate', (event) => {
 function isStaticAsset(url) {
     if (url.origin === self.location.origin) {
         // Script Livewire : /livewire/… ou /livewire-xxxx/… selon la version
-        return url.pathname.startsWith('/icons/') || /^\/livewire(-[a-z0-9]+)?\/.*\.js$/.test(url.pathname);
+        return url.pathname.startsWith('/icons/') || url.pathname.startsWith('/js/') || /^\/livewire(-[a-z0-9]+)?\/.*\.js$/.test(url.pathname);
     }
     return url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 }
@@ -49,13 +53,29 @@ self.addEventListener('fetch', (event) => {
     // Envois de formulaires et actions Livewire : toujours en direct
     if (request.method !== 'GET') return;
 
+    const url = new URL(request.url);
+
+    // Page de secours : le serveur d'abord (copie mise de côté), sinon la copie
+    if (url.origin === self.location.origin && url.pathname === RESCUE_URL) {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    if (response.ok && !response.redirected) {
+                        const copy = response.clone();
+                        caches.open(STATIC_CACHE).then((cache) => cache.put(RESCUE_URL, copy));
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(RESCUE_URL).then((r) => r || caches.match(OFFLINE_URL)))
+        );
+        return;
+    }
+
     // Pages : toujours le serveur ; sans réseau, la page « pas de connexion »
     if (request.mode === 'navigate') {
         event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
         return;
     }
-
-    const url = new URL(request.url);
 
     // Fichiers statiques : réponse immédiate depuis la mémoire, mise à jour en fond
     if (isStaticAsset(url)) {

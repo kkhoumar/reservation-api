@@ -22,7 +22,8 @@
     #me-net[data-state="offline"] { background: #B5501D; }
     #me-net[data-state="waking"] { background: #146652; }
     #me-net[data-state="expired"] { background: #10231D; }
-    #me-net[data-state="online"] { background: #1E8E5A; }
+    #me-net[data-state="online"], #me-net[data-state="sent"] { background: #1E8E5A; }
+    #me-net[data-state="wait"] { background: #10231D; }
     #me-net .t { font-weight: 800; font-size: 15px; }
     #me-net .s { opacity: .92; margin-top: 2px; }
     #me-net .s:empty { display: none; }
@@ -47,6 +48,44 @@
     </div>
     <button type="button" hidden></button>
 </div>
+@php
+    $meUser = auth()->user();
+    $meCanSell = \App\Actions\RecordOfflineSale::canUse($meUser);
+    $meContext = $meUser && $meUser->currentRestaurantId()
+        ? ['r' => $meUser->currentRestaurantId(), 'u' => $meUser->id, 'name' => $meUser->first_name, 'canSell' => $meCanSell]
+        : null;
+@endphp
+<script src="/js/offline-sales.js"></script>
+<script>
+    // Carnet de secours : compte connecté, copie des produits et envoi des ventes gardées
+    (function () {
+        var ME = window.MEOffline;
+        if (!ME) return;
+        @auth
+            ME.setCurrent(@json($meContext));
+            ME.token = @json(csrf_token());
+            if (ME.canSell() && navigator.onLine !== false) {
+                var cat = ME.catalog();
+                if (!cat || !cat.fetched_at || Date.now() - cat.fetched_at > 2 * 60 * 1000) ME.refreshCatalog();
+                ME.warmPage();
+                ME.sync();
+            }
+
+            // Déconnexion : impossible tant que des ventes de secours attendent d'être envoyées
+            document.addEventListener('submit', function (e) {
+                var form = e.target;
+                if (!form.action || form.action.indexOf('/logout') === -1) return;
+                var n = ME.pending();
+                if (n > 0) {
+                    e.preventDefault();
+                    alert('Il reste ' + n + (n > 1 ? ' ventes de secours' : ' vente de secours') + ' dans ce téléphone. Attendez qu\'internet revienne pour les envoyer avant de vous déconnecter.');
+                    return;
+                }
+                ME.setCurrent(null);
+            }, true);
+        @endauth
+    })();
+</script>
 <script>
     (function () {
         var box = document.getElementById('me-net');
@@ -64,8 +103,18 @@
             offline: ['Pas d\'internet', 'Vos saisies restent à l\'écran. Rien n\'est perdu.'],
             waking: ['Le serveur se réveille', 'Patientez quelques secondes, puis réessayez.'],
             expired: ['Session expirée', 'Rechargez la page pour continuer.'],
-            online: ['Connexion revenue', 'Vous pouvez continuer.']
+            online: ['Connexion revenue', 'Vous pouvez continuer.'],
+            sent: ['Ventes de secours envoyées', ''],
+            wait: ['Ventes de secours en attente', '']
         };
+
+        var ME = window.MEOffline;
+        var canSell = function () { return !!(ME && ME.canSell() && ME.catalog()); };
+        @auth
+            @unless ($meCanSell)
+                TEXTS.offline[1] = 'Passez les commandes au comptoir, à voix haute ou sur papier.';
+            @endunless
+        @endauth
 
         function show(next, extra) {
             clearTimeout(hideTimer);
@@ -73,11 +122,13 @@
             box.dataset.state = next;
             title.textContent = TEXTS[next][0];
             sub.textContent = extra || TEXTS[next][1];
-            btn.hidden = next !== 'expired';
-            btn.textContent = 'Recharger';
+            var rescue = next === 'offline' && canSell();
+            btn.hidden = next !== 'expired' && !rescue;
+            btn.textContent = rescue ? 'Vente de secours' : 'Recharger';
+            btn.dataset.action = rescue ? 'rescue' : 'reload';
             box.classList.add('show');
 
-            if (next === 'online') {
+            if (next === 'online' || next === 'sent') {
                 hideTimer = setTimeout(function () { box.classList.remove('show'); }, 3500);
             }
         }
@@ -88,7 +139,24 @@
             box.classList.add('nudge');
         }
 
-        btn.addEventListener('click', function () { location.reload(); });
+        btn.addEventListener('click', function () {
+            if (btn.dataset.action === 'rescue') location.href = '/secours';
+            else location.reload();
+        });
+
+        function fcfa(n) { return String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' F'; }
+
+        // Résultat de l'envoi du carnet de secours
+        document.addEventListener('me-offline:synced', function (e) {
+            var d = e.detail || {};
+            if (d.saved) {
+                show('sent', d.saved + (d.saved > 1 ? ' ventes enregistrées' : ' vente enregistrée') + ' dans la caisse : ' + fcfa(d.total) + '.');
+            } else if (d.wait) {
+                show('wait', d.wait);
+            } else if (d.rejected) {
+                show('wait', 'Une vente de secours a été refusée. Ouvrez la page Vente de secours pour la vérifier.');
+            }
+        });
 
         // Vraie vérification : le Wi-Fi peut être allumé sans internet
         function check() {

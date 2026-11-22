@@ -111,6 +111,13 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/cash-register/history', CashRegisterHistory::class)->middleware('role:owner,manager,associate')->name('cash-register.history');
     Route::get('/cash-register/{register}/closed', CashRegisterClosed::class)->middleware('role:owner,manager,cashier,associate')->name('cash-register.closed');
     Route::get('/comptoir', Counter::class)->middleware('role:owner,manager,cashier')->name('counter');
+
+    // Vente de secours (sans internet) : page gardée dans le téléphone, catalogue, envoi des ventes
+    Route::middleware('role:owner,manager,cashier')->group(function () {
+        Route::get('/secours', [\App\Http\Controllers\OfflineSaleController::class, 'page'])->name('offline.page');
+        Route::get('/hors-ligne/catalogue', [\App\Http\Controllers\OfflineSaleController::class, 'catalogue'])->name('offline.catalogue');
+        Route::post('/hors-ligne/ventes', [\App\Http\Controllers\OfflineSaleController::class, 'sync'])->middleware('throttle:30,1')->name('offline.sync');
+    });
     Route::get('/credits', Ardoise::class)->middleware('role:owner,manager,cashier')->name('credits');
     Route::redirect('/ardoise', '/credits', 301);
     Route::get('/sacoches', Sacoches::class)->middleware('role:owner,manager,cashier')->name('sacoches');

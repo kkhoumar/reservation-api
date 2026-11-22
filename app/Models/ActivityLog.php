@@ -44,6 +44,7 @@ class ActivityLog extends Model
         'register_opened' => ['Caisse ouverte', 'info', 'money', 'cash'],
         'register_closed' => ['Caisse clôturée', 'info', 'money', 'cash'],
         'expense' => ['Dépense', 'info', 'money', 'wallet'],
+        'offline_sale' => ['Vente sans internet', 'info', 'money', 'wifi-off'],
         'price_changed' => ['Prix modifié', 'warning', 'stock', 'tag'],
         'product_created' => ['Produit ajouté', 'info', 'stock', 'box'],
         'stock_delivery' => ['Livraison', 'info', 'stock', 'truck'],
@@ -130,6 +131,11 @@ class ActivityLog extends Model
         // Article retiré avant l'envoi en cuisine : simple correction de saisie
         if ($this->action === 'item_removed' && empty($this->meta['sent'])) {
             return 'info';
+        }
+
+        // Vente sans internet avec un prix changé ou un stock insuffisant : à regarder
+        if ($this->action === 'offline_sale' && ! empty($this->meta['check'])) {
+            return 'warning';
         }
 
         // Une clôture avec écart, un comptage avec manque : à regarder
