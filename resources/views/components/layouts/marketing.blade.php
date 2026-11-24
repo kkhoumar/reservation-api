@@ -74,7 +74,10 @@
             box-shadow: 0 6px 16px rgba(210,98,42,0.28);
         }
         .btn-nav-primary:hover { background: var(--color-accent-dark); transform: translateY(-1px); }
-        .btn-nav-ghost { color: var(--color-text); text-decoration: none; font-size: 14px; font-weight: 700; padding: 10px 12px; }
+        .btn-nav-ghost { color: var(--color-text); text-decoration: none; font-size: 14px; font-weight: 700; padding: 9px 14px; display: inline-flex; align-items: center; gap: 6px;
+            border: 1.5px solid var(--color-border); border-radius: 10px; background: white; transition: border-color .15s, color .15s; }
+        .btn-nav-ghost:hover { border-color: var(--color-primary); color: var(--color-primary); }
+        .btn-nav-primary .short { display: none; }
         .menu-toggle { display: none; background: none; border: 1px solid var(--color-border); border-radius: 10px; width: 40px; height: 40px; cursor: pointer; color: var(--color-text); }
 
         /* ---------- Boutons communs ---------- */
@@ -116,8 +119,11 @@
         @media (max-width: 600px) {
             .nav-inner { padding: 12px 16px; }
             .nav-brand .name { display: none; }
-            .btn-nav-ghost { display: none; }
-            .btn-nav-primary { padding: 9px 14px; font-size: 13px; }
+            .nav-actions { gap: 6px; }
+            .btn-nav-ghost { padding: 8px 11px; font-size: 13px; }
+            .btn-nav-primary { padding: 9px 13px; font-size: 13px; }
+            .btn-nav-primary .long, .btn-nav-primary .long-tail { display: none; }
+            .btn-nav-primary .short { display: inline; }
             main { padding: 0 16px; }
         }
     </style>
@@ -134,11 +140,13 @@
                 <a href="{{ route('landing') }}#comment-ca-marche">Comment ça marche</a>
                 <a href="{{ route('landing') }}#tarifs">Tarifs</a>
                 <a href="{{ route('landing') }}#questions">Questions</a>
-                <a href="{{ route('login') }}" class="only-mobile">Connexion</a>
             </div>
             <div class="nav-actions">
-                <a href="{{ route('login') }}" class="btn-nav-ghost">Connexion</a>
-                <a href="{{ route('demo.request') }}" class="btn-nav-primary">Demander une démo</a>
+                <a href="{{ route('login') }}" class="btn-nav-ghost" aria-label="Se connecter">
+                    <svg class="ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+                    Se connecter
+                </a>
+                <a href="{{ route('demo.request') }}" class="btn-nav-primary"><span class="long">Demander une </span><span class="short">Démo</span><span class="long-tail">démo</span></a>
                 <button type="button" class="menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false" onclick="toggleSiteMenu(this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
                 </button>

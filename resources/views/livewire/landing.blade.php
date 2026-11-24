@@ -40,6 +40,8 @@
         .lp .hero h1 .hl { background: linear-gradient(90deg, #FFB37F, #F07A3A); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .lp .hero p.sub { font-size: 17px; color: rgba(255,255,255,.78); line-height: 1.6; margin: 0 0 32px; max-width: 540px; }
         .lp .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+        .lp .already { margin: 14px 0 0; font-size: 15px; color: rgba(255,255,255,.75); }
+        .lp .already a { color: #fff; font-weight: 800; text-decoration: none; border-bottom: 2px solid rgba(242,162,111,.8); padding-bottom: 1px; }
         .lp .hero .btn-ghost-light { display: inline-flex; align-items: center; gap: 8px; color: white; text-decoration: none; font-weight: 700; font-size: 15px; padding: 15px 22px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.28); transition: background .15s, transform .15s; }
         .lp .hero .btn-ghost-light:hover { background: rgba(255,255,255,.08); transform: translateY(-2px); }
         .lp .trust { display: flex; gap: 10px 22px; flex-wrap: wrap; margin-top: 30px; font-size: 14px; color: rgba(255,255,255,.75); }
@@ -257,6 +259,7 @@
                     <a href="{{ route('demo.request') }}" class="btn-primary">Demander une démo gratuite →</a>
                     <a href="#fonctionnalites" class="btn-ghost-light">Voir l'application</a>
                 </div>
+                <p class="already">Déjà client ? <a href="{{ route('login') }}">Se connecter →</a></p>
                 <div class="trust">
                     <span>{{ $trialDays }} jours d'essai gratuit</span>
                     <span>Installation avec notre équipe</span>

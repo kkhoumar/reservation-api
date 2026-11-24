@@ -39,9 +39,22 @@
             @endif
         </div>
 
-        <label style="display: flex; gap: 10px; align-items: center; font-weight: 500; font-size: 14px; cursor: pointer; margin: 4px 0 18px;">
-            <input type="checkbox" wire:model="remember"> Rester connecté sur cet appareil
+        <label style="display: flex; gap: 10px; align-items: center; font-weight: 500; font-size: 14px; cursor: pointer; margin: 4px 0 2px;">
+            <input type="checkbox" wire:model="remember" id="remember"> Rester connecté sur cet appareil
         </label>
+        <div style="font-size: 12px; color: var(--color-text-secondary); margin: 0 0 18px 28px;">Décochez si ce téléphone est partagé par plusieurs personnes.</div>
+        <script>
+            // Application installée sur le téléphone : on reste connecté (comme WhatsApp ou Wave).
+            // Sur le site dans le navigateur, la case reste décochée (ordinateur ou téléphone emprunté).
+            document.addEventListener('livewire:initialized', function () {
+                var installed = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+                var box = document.getElementById('remember');
+                if (!installed || !box || box.checked) return;
+                box.checked = true;
+                box.dispatchEvent(new Event('input', { bubbles: true }));
+                box.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        </script>
 
         <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="authenticate">
             <span wire:loading.remove wire:target="authenticate">Se connecter</span>
