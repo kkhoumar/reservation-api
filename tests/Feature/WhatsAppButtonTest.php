@@ -90,6 +90,34 @@ class WhatsAppButtonTest extends TestCase
         $this->get(route('login'))->assertOk()->assertSee('me-wa', false);
     }
 
+    public function test_bulle_de_discussion_seulement_pour_les_visiteurs_et_la_connexion(): void
+    {
+        PlatformSetting::write(PlatformSetting::SUPPORT_WHATSAPP, '0712345678');
+
+        $this->get(route('landing'))->assertSee('data-mode="visitor"', false)->assertSee('Équipe Maquis Express');
+        $this->get(route('login'))->assertSee('data-mode="login"', false)
+            ->assertSee(rawurlencode("Bonjour, je n'arrive pas à me connecter à Maquis Express."), false);
+
+        // Dans l'application : le bouton seul, jamais de bulle qui s'ouvre
+        $patron = User::factory()->owner()->create(['restaurant_id' => $this->maquis->id]);
+        $this->actingAs($patron)->get(route('dashboard.index'))
+            ->assertSee('data-mode="quiet"', false)
+            ->assertDontSee('me-wa-card', false);
+    }
+
+    public function test_l_aide_est_proposee_apres_deux_mots_de_passe_rates(): void
+    {
+        \Illuminate\Support\Facades\RateLimiter::clear('login:0101010101|127.0.0.1');
+
+        $login = Livewire::test(\App\Livewire\Login::class)
+            ->set('phone', '0101010101')
+            ->set('password', 'mauvais')
+            ->call('authenticate')
+            ->assertNotDispatched('me-wa-help');
+
+        $login->call('authenticate')->assertDispatched('me-wa-help');
+    }
+
     public function test_le_patron_le_voit_avec_le_nom_du_maquis_mais_pas_le_personnel(): void
     {
         PlatformSetting::write(PlatformSetting::SUPPORT_WHATSAPP, '0712345678');

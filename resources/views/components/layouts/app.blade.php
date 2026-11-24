@@ -665,7 +665,7 @@
             && ! request()->routeIs('orders.new', 'counter', 'payment.take', 'payment.success', 'tables.index');
     @endphp
     @if ($waShow)
-        @include('partials.whatsapp-fab', ['message' => 'Bonjour, je suis ' . trim($waUser->first_name . ' ' . $waUser->last_name)
+        @include('partials.whatsapp-fab', ['mode' => 'quiet', 'message' => 'Bonjour, je suis ' . trim($waUser->first_name . ' ' . $waUser->last_name)
             . ', ' . ($waUser->role === 'owner' ? 'patron' : 'gérant') . ' de « ' . ($waUser->currentRestaurant()?->name ?? '') . " ». J'ai besoin d'aide avec Maquis Express."])
     @endif
     @include('partials.tap-feedback')

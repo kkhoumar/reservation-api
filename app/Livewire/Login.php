@@ -33,6 +33,7 @@ class Login extends Component
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             $minutes = (int) ceil(RateLimiter::availableIn($key) / 60);
             $this->addError('phone', "Trop de tentatives. Réessayez dans {$minutes} minute" . ($minutes > 1 ? 's' : '') . '.');
+            $this->dispatch('me-wa-help'); // bulle « Problème pour vous connecter ? »
             return;
         }
 
@@ -40,6 +41,12 @@ class Login extends Component
         if (!Auth::attempt(['phone' => User::normalizePhone($this->phone), 'password' => $this->password, 'status' => 'active'], $this->remember)) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
             $this->addError('phone', 'Numéro de téléphone ou mot de passe incorrect.');
+
+            // 2 essais ratés : on propose l'aide sur WhatsApp
+            if (RateLimiter::attempts($key) >= 2) {
+                $this->dispatch('me-wa-help');
+            }
+
             return;
         }
 
