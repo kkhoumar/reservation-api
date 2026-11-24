@@ -4,6 +4,9 @@
     $count = (int) $items->sum('quantity');
     $total = (int) ($order?->total ?? 0);
     $visibleCategories = $categories->filter(fn ($c) => $c->products->isNotEmpty());
+    // Une touche sur ces produits s'ajoute à une ligne déjà là ; pour les autres, une nouvelle ligne naîtra
+    $canMerge = fn ($item) => ! $item->isSent() && ! $item->note && ! $item->is_offered && (int) $item->unit_price === (int) $item->product?->selling_price;
+    $mergeable = $items->filter($canMerge)->pluck('product_id')->flip();
 @endphp
 
 <div class="new-order" x-data="meOrder()" :class="{ 'has-items': count({{ $count }}) > 0 }">
@@ -207,18 +210,15 @@
                 <span class="n" x-cloak x-show="count({{ $count }}) > 0" x-text="count({{ $count }})" wire:key="cn-{{ $count }}">{{ $count }}</span>
             </div>
 
-            @if ($items->isEmpty())
-                <div class="empty" x-show="count(0) === 0">
-                    <div class="ico"><x-icon name="utensils" size="26" /></div>
-                    Touchez un produit pour l'ajouter.<br>Chaque touche ajoute 1.
-                </div>
-                <div class="empty" x-cloak x-show="count(0) > 0">Ajout en cours…</div>
-            @else
-                <div class="lines">
+            <div class="empty" x-show="count({{ $count }}) === 0" @if ($count > 0) x-cloak @endif>
+                <div class="ico"><x-icon name="utensils" size="26" /></div>
+                Touchez un produit pour l'ajouter.<br>Chaque touche ajoute 1.
+            </div>
+                <div class="lines" x-show="count({{ $count }}) > 0" @if ($count === 0) x-cloak @endif>
                     @foreach ($items as $item)
                         @php
                             $unit = intdiv((int) $item->total, max(1, (int) $item->quantity));
-                            $merge = ! $item->isSent() && ! $item->note && ! $item->is_offered && (int) $item->unit_price === (int) $item->product?->selling_price;
+                            $merge = $canMerge($item);
                             $locked = $item->isSent() && ! $canTrimSent;
                             $qExpr = $item->quantity . ($merge ? ' + (pend[' . $item->product_id . '] || 0)' : '') . ' - (rm[' . $item->id . '] || 0)';
                         @endphp
@@ -246,15 +246,36 @@
                             </div>
                         </div>
                     @endforeach
-                </div>
-            @endif
 
-            @if ($order && $items->isNotEmpty())
-                <div class="sum">
+                    {{-- Nouveau produit touché : sa ligne s'affiche tout de suite, le serveur la confirme derrière --}}
+                    @foreach ($visibleCategories as $category)
+                        @foreach ($category->products as $product)
+                            @continue($product->stock_quantity <= 0 || $mergeable->has($product->id))
+                            <div class="ln" wire:key="gh-{{ $product->id }}" x-cloak x-show="(pend[{{ $product->id }}] || 0) > 0">
+                                <div style="min-width: 0;">
+                                    <div class="nm">{{ $product->name }}</div>
+                                    <div class="sub"><span class="unit">{{ $fcfa($product->selling_price) }} F l'unité</span></div>
+                                </div>
+                                <div class="lt" x-text="fmt((pend[{{ $product->id }}] || 0) * {{ (int) $product->selling_price }}) + ' F'"></div>
+                                <div class="stepper">
+                                    <div class="pill">
+                                        <button type="button" class="minus" @click="unTap({{ $product->id }}, {{ (int) $product->selling_price }})" :disabled="!toAdd[{{ $product->id }}]" aria-label="Un {{ $product->name }} de moins"><x-icon name="minus" size="18" stroke="2.6" /></button>
+                                        <span class="v" x-text="pend[{{ $product->id }}] || 0"></span>
+                                        <button type="button" class="plusb" @click="addLine(0, {{ $product->id }}, {{ (int) $product->selling_price }}, {{ max(0, (int) $product->stock_quantity) }}, @js($product->name))" aria-label="Un {{ $product->name }} de plus"><x-icon name="plus" size="18" stroke="2.6" /></button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endforeach
+                </div>
+
+                <div class="sum" x-show="count({{ $count }}) > 0" @if ($count === 0) x-cloak @endif>
                     <div class="row">
                         <span style="font-weight: 700;">Total</span>
                         <span class="tot" x-ref="tot" x-text="fmt(total({{ $total }})) + ' FCFA'" wire:key="tot-{{ $total }}">{{ $fcfa($total) }} FCFA</span>
                     </div>
+
+            @if ($order && $items->isNotEmpty())
 
                     {{-- Les dernières touches partent avant l'envoi de la commande --}}
                     <div class="acts" @pointerdown.capture="flush()" @keydown.capture="flush()">
@@ -284,8 +305,8 @@
                         @endif
                     @endif
                     </div>
-                </div>
             @endif
+                </div>
         </div>
     </div>
 
@@ -389,6 +410,17 @@
                 addLine(itemId, productId, price, left, name) {
                     const card = this.$root.querySelector('[aria-label="Ajouter ' + CSS.escape(name) + '"]');
                     this.add(productId, price, left, card, name);
+                },
+
+                // « − » d'une ligne pas encore confirmée : on reprend une touche qui n'est pas encore partie
+                unTap(productId, price) {
+                    const b = this.toAdd[productId];
+                    if (!b) return;
+                    b.n -= 1;
+                    if (b.n <= 0) delete this.toAdd[productId];
+                    this.shift(this.pend, productId, -1);
+                    this.amt -= price; this.nPend -= 1;
+                    this.buzz(6); this.bumpTotals();
                 },
 
                 // « − » d'une ligne
