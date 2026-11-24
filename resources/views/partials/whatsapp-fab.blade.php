@@ -8,7 +8,8 @@
                 'quiet'   : jamais de bulle (écrans de travail du patron et du gérant)
       $help     texte déjà écrit pour le bouton de la bulle (sinon $message)
 
-    Règles : une bulle fermée ne revient pas avant 7 jours ; « répond en moins
+    Règles : la bulle ressort à chaque nouvelle visite ; fermée, elle ne revient
+    pas pendant la même visite (même en changeant de page) ; « répond en moins
     d'1 heure » seulement de 8 h à 22 h (heure d'Abidjan), sinon « dès 8 h ».
     Caché si aucun numéro n'est réglé (Super Admin → Réglages).
 --}}
@@ -101,28 +102,33 @@
                 if (!root || !card) return;
 
                 var mode = root.dataset.mode;
-                var KEY = 'me-wa-closed-until';
-                var WEEK = 7 * 24 * 3600 * 1000;
+                // Une « visite » = tant que le navigateur reste ouvert (sessionStorage).
+                // Nouvelle visite (le lendemain, Chrome rouvert…) : la bulle ressort.
+                var KEY = 'me-wa-visit';
                 var texts = {
                     hello: 'Bonjour 👋 Une question pour votre maquis ? On vous répond sur WhatsApp.',
                     prices: 'Vous hésitez entre les formules ? On vous conseille gratuitement sur WhatsApp.',
                     login: 'Problème pour vous connecter ? Écrivez-nous, on vous aide tout de suite.'
                 };
-                var shownThisVisit = {};
                 var hideTimer = null;
 
-                function store(get, value) {
-                    try { return get ? localStorage.getItem(KEY) : localStorage.setItem(KEY, value); } catch (e) { return null; }
+                // Ce qui s'est passé pendant cette visite : bulles déjà montrées, bulle fermée
+                function visit() {
+                    try { return JSON.parse(sessionStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
                 }
-                function snoozed() { return Number(store(true) || 0) > Date.now(); }
+                function remember(field) {
+                    var v = visit(); v[field] = true;
+                    try { sessionStorage.setItem(KEY, JSON.stringify(v)); } catch (e) {}
+                }
+                function snoozed() { return !!visit().closed; }
 
                 // Abidjan est à l'heure UTC toute l'année
                 function openNow() { var h = new Date().getUTCHours(); return h >= 8 && h < 22; }
 
                 function show(kind, force) {
-                    if (shownThisVisit[kind] || (!force && snoozed())) return;
+                    if (!force && (visit()[kind] || snoozed())) return;
                     if (document.querySelector('#me-net.show')) return;
-                    shownThisVisit[kind] = true;
+                    remember(kind);
 
                     var now = new Date();
                     document.getElementById('me-wa-text').textContent = texts[kind];
@@ -152,12 +158,12 @@
 
                 window.meWa = {
                     show: show,
-                    // Fermée par la personne : pas de retour avant 7 jours
+                    // Fermée par la personne : plus de bulle pendant cette visite
                     close: function () {
                         clearTimeout(hideTimer);
                         fold(false);
                         root.classList.remove('unread');
-                        store(false, String(Date.now() + WEEK));
+                        remember('closed');
                     }
                 };
 
