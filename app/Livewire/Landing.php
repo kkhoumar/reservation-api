@@ -17,7 +17,7 @@ class Landing extends Component
 {
     public function render()
     {
-        $whatsapp = config('maquis.billing.whatsapp');
+        $whatsapp = \App\Support\SupportContact::whatsappNumber();
 
         return view('livewire.landing', [
             'plans' => Plan::where('is_active', true)->orderBy('sort_order')->get(),

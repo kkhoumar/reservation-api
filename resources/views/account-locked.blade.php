@@ -1,7 +1,7 @@
 <x-layouts.guest>
     @php
         $restaurant = auth()->user()?->restaurant;
-        $billing = array_filter(config('maquis.billing', []));
+        $billing = array_filter(['whatsapp' => \App\Support\SupportContact::whatsappNumber()] + config('maquis.billing', []));
         $labels = \App\Models\SubscriptionPayment::METHODS;
     @endphp
 

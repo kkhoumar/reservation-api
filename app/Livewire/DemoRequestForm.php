@@ -110,7 +110,7 @@ class DemoRequestForm extends Component
 
     public function render()
     {
-        $whatsapp = config('maquis.billing.whatsapp');
+        $whatsapp = \App\Support\SupportContact::whatsappNumber();
 
         return view('livewire.demo-request-form', [
             'types' => self::TYPES,

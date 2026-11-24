@@ -127,7 +127,7 @@ class RestaurantSettings extends Component
             'restaurant' => $this->restaurant()->loadMissing('plan'),
             'subscriptionPayments' => $this->restaurant()->subscriptionPayments()->with('plan')->latest()->limit(12)->get(),
             'plans' => \App\Models\Plan::where('is_active', true)->orderBy('sort_order')->get(),
-            'billing' => array_filter(config('maquis.billing', [])),
+            'billing' => array_filter(['whatsapp' => \App\Support\SupportContact::whatsappNumber()] + config('maquis.billing', [])),
             'whatsappConfigured' => app(WhatsAppCloud::class)->isConfigured(),
             'ownerPhone' => $this->restaurant()->users()->where('role', 'owner')->where('status', 'active')->orderBy('id')->value('phone'),
         ]);

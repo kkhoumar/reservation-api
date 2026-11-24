@@ -189,6 +189,7 @@
         @media (max-width: 600px) { .nav-links .only-mobile { display: block; } }
     </style>
 
+    @include('partials.whatsapp-fab', ['message' => 'Bonjour, je voudrais en savoir plus sur Maquis Express pour mon maquis.'])
     @include('partials.tap-feedback')
     @livewireScripts
 </body>

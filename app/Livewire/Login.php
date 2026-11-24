@@ -66,7 +66,7 @@ class Login extends Component
 
     public function render()
     {
-        $whatsapp = config('maquis.billing.whatsapp');
+        $whatsapp = \App\Support\SupportContact::whatsappNumber();
 
         return view('livewire.login', [
             'supportUrl' => $whatsapp

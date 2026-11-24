@@ -133,6 +133,7 @@
             </div>
         </main>
     </div>
+    @include('partials.whatsapp-fab', ['message' => "Bonjour, j'ai besoin d'aide pour me connecter à Maquis Express."])
     @include('partials.tap-feedback')
     @include('partials.offline-banner')
     @livewireScripts
