@@ -4,6 +4,9 @@
             {{ session('success') }}
         </div>
     @endif
+    @if (session('error'))
+        <div class="flash flash-error" role="alert">{{ session('error') }}</div>
+    @endif
 
     <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 24px;">
         <div>
@@ -194,6 +197,11 @@
                                     <button wire:click="toggleAvailability({{ $product->id }})" class="btn {{ $product->is_available ? 'btn-danger' : 'btn-primary' }}" style="padding: 6px 12px; font-size: 12px;">
                                         {{ $product->is_available ? 'Désactiver' : 'Activer' }}
                                     </button>
+                                    <button wire:click="deleteProduct({{ $product->id }})"
+                                            wire:confirm="Retirer « {{ $product->name }} » de la carte ?&#10;&#10;Vos anciennes ventes restent dans vos rapports. Vous pourrez le remettre sur la carte quand vous voulez."
+                                            class="btn btn-ghost" style="padding: 6px 10px; font-size: 12px; margin-left: 6px; color: var(--color-danger);" aria-label="Retirer {{ $product->name }} de la carte" title="Retirer de la carte">
+                                        <x-icon name="trash" size="15" />
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -202,4 +210,29 @@
             @endif
         </div>
     @endforeach
+
+    {{-- Produits retirés de la carte : plus vendus, mais leurs anciennes ventes restent dans les rapports --}}
+    @if ($archived->isNotEmpty())
+        <details style="margin-top: 28px;">
+            <summary style="cursor: pointer; font-weight: 600; color: var(--color-text-secondary); padding: 8px 0;">
+                Voir les produits retirés ({{ $archived->count() }})
+            </summary>
+            <p style="font-size: 13px; color: var(--color-text-secondary); margin: 6px 0 12px;">
+                Ils ne sont plus proposés à la vente. Leurs anciennes ventes restent dans vos rapports.
+            </p>
+            <div class="card" style="padding: 0; overflow: hidden;">
+                @foreach ($archived as $product)
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; {{ $loop->last ? '' : 'border-bottom: 1px solid var(--color-border);' }}">
+                        <div style="min-width: 0;">
+                            <div style="font-weight: 600;">{{ $product->name }}</div>
+                            <div style="font-size: 12px; color: var(--color-text-secondary);">
+                                {{ $product->category?->name }} · {{ number_format($product->selling_price, 0, ',', ' ') }} FCFA · retiré le {{ $product->archived_at->format('d/m/Y') }}
+                            </div>
+                        </div>
+                        <button wire:click="restoreProduct({{ $product->id }})" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; white-space: nowrap;">Remettre sur la carte</button>
+                    </div>
+                @endforeach
+            </div>
+        </details>
+    @endif
 </div>

@@ -142,6 +142,46 @@ class ProductsManage extends Component
         $product->update(['is_available' => !$product->is_available]);
     }
 
+    /**
+     * « Supprimer » : jamais vendu → effacé pour de bon ; déjà vendu → rangé
+     * dans les archives, pour que les anciennes ventes restent justes.
+     */
+    public function deleteProduct($productId): void
+    {
+        $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
+
+        if ($product->isInOpenOrder()) {
+            session()->flash('error', "« {$product->name} » est dans une commande pas encore payée. Encaissez ou annulez cette commande, puis recommencez.");
+
+            return;
+        }
+
+        if ($this->editingProductId === $product->id) {
+            $this->showProductForm = false;
+            $this->editingProductId = null;
+        }
+
+        if (! $product->hasHistory()) {
+            $product->delete();
+            \App\Models\ActivityLog::record('product_removed', "a retiré le produit {$product->name} de la carte (jamais vendu, effacé).");
+            session()->flash('success', "« {$product->name} » est retiré de la carte.");
+
+            return;
+        }
+
+        $product->forceFill(['archived_at' => now(), 'is_available' => false])->save();
+        \App\Models\ActivityLog::record('product_removed', "a retiré le produit {$product->name} de la carte (stock restant : {$product->stock_quantity}).", ['meta' => ['product_id' => $product->id]]);
+        session()->flash('success', "« {$product->name} » est retiré de la carte. Ses anciennes ventes restent dans vos rapports.");
+    }
+
+    public function restoreProduct($productId): void
+    {
+        $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
+        $product->forceFill(['archived_at' => null, 'is_available' => true])->save();
+        \App\Models\ActivityLog::record('product_restored', "a remis le produit {$product->name} sur la carte.", ['meta' => ['product_id' => $product->id]]);
+        session()->flash('success', "« {$product->name} » est de retour sur la carte.");
+    }
+
     public function saveCategory()
     {
         $this->validate([
@@ -174,10 +214,16 @@ class ProductsManage extends Component
     public function render()
     {
         $categories = Category::where('restaurant_id', auth()->user()->currentRestaurantId())
-            ->with(['products' => fn ($q) => $q->orderBy('name')])
+            ->with(['products' => fn ($q) => $q->active()->orderBy('name')])
             ->orderBy('sort_order')
             ->get();
 
-        return view('livewire.products-manage', ['categories' => $categories]);
+        $archived = Product::where('restaurant_id', auth()->user()->currentRestaurantId())
+            ->whereNotNull('archived_at')
+            ->with('category')
+            ->orderBy('name')
+            ->get();
+
+        return view('livewire.products-manage', ['categories' => $categories, 'archived' => $archived]);
     }
 }

@@ -156,7 +156,7 @@ class Dashboard extends Component
             'creditDue' => PeriodStats::creditDue($restaurantId),
             'sacoches' => PeriodStats::sacochesOutstanding($restaurantId),
             'chartData' => $chartData,
-            'lowStockProducts' => Product::where('restaurant_id', $restaurantId)
+            'lowStockProducts' => Product::where('restaurant_id', $restaurantId)->active()
                 ->whereNotNull('stock_alert_threshold')
                 ->whereColumn('stock_quantity', '<=', 'stock_alert_threshold')
                 ->orderBy('stock_quantity')

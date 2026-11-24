@@ -56,7 +56,8 @@ class StockManage extends Component
 
     protected function products()
     {
-        return Product::with('category')->get()
+        // Un produit rangé disparaît du stock une fois écoulé ; s'il en reste, on le garde pour le compter
+        return Product::with('category')->where(fn ($q) => $q->whereNull('archived_at')->orWhere('stock_quantity', '>', 0))->get()
             ->sortBy(fn (Product $p) => [($p->category?->kind ?? 'food') === 'drink' ? 0 : 1, $p->category?->sort_order ?? 999, mb_strtolower($p->name)])
             ->values();
     }

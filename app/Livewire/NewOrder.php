@@ -88,7 +88,7 @@ class NewOrder extends Component
         )
             ->with([
                 'products' => fn ($q) =>
-                    $q->where('is_available', true)->orderBy('name')
+                    $q->where('is_available', true)->whereNull('archived_at')->orderBy('name')
             ])
             ->orderBy('sort_order')->orderBy('id')
             ->get();

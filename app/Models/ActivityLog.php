@@ -47,6 +47,8 @@ class ActivityLog extends Model
         'offline_sale' => ['Vente sans internet', 'info', 'money', 'wifi-off'],
         'price_changed' => ['Prix modifié', 'warning', 'stock', 'tag'],
         'product_created' => ['Produit ajouté', 'info', 'stock', 'box'],
+        'product_removed' => ['Produit retiré', 'warning', 'stock', 'box'],
+        'product_restored' => ['Produit remis', 'info', 'stock', 'box'],
         'stock_delivery' => ['Livraison', 'info', 'stock', 'truck'],
         'stock_loss' => ['Perte ou casse', 'warning', 'stock', 'alert'],
         'stock_count' => ['Comptage', 'info', 'stock', 'clipboard'],

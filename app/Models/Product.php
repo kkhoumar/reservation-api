@@ -20,6 +20,7 @@ class Product extends Model
 
     protected $casts = [
         'is_available' => 'boolean',
+        'archived_at' => 'datetime',
         'cost_price' => 'integer',
         'selling_price' => 'integer',
         'stock_quantity' => 'integer',
@@ -62,6 +63,36 @@ class Product extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /** Produits de la carte (hors produits rangés). */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    /**
+     * Le produit a-t-il une histoire (ventes, livraisons, pertes, comptages) ?
+     * Si non, on peut l'effacer sans fausser aucun rapport.
+     */
+    public function hasHistory(): bool
+    {
+        return $this->orderItems()->exists()
+            || $this->stockMovements()->where('type', '!=', 'initial')->exists()
+            || StockCountLine::where('product_id', $this->id)->exists();
+    }
+
+    /** Dans une commande pas encore payée ni annulée ? */
+    public function isInOpenOrder(): bool
+    {
+        return $this->orderItems()
+            ->whereHas('order', fn ($q) => $q->whereIn('status', Order::OPEN_STATUSES))
+            ->exists();
     }
 
     public function isLowStock(): bool

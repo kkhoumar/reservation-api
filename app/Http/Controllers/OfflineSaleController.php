@@ -32,7 +32,7 @@ class OfflineSaleController extends Controller
         abort_unless(RecordOfflineSale::canUse($user), 403);
 
         $products = Product::with('category')
-            ->where('is_available', true)
+            ->where('is_available', true)->whereNull('archived_at')
             ->orderBy('name')
             ->get(['id', 'name', 'selling_price', 'stock_quantity', 'category_id']);
 
