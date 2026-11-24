@@ -50,7 +50,7 @@
 
     <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 16px; align-items: start;">
         <div class="card">
-            <h3 style="margin-top: 0;">Enregistrer un paiement reçu</h3>
+            <h3 id="paiement" style="margin-top: 0; scroll-margin-top: 90px;">Enregistrer un paiement reçu</h3>
             <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: 0;">
                 L'accès est prolongé du nombre de mois payés et le maquis est réactivé s'il était bloqué.
             </p>
@@ -102,7 +102,7 @@
         </div>
 
         <div class="card">
-            <h3 style="margin-top: 0;">Historique des paiements</h3>
+            <h3 id="historique" style="margin-top: 0; scroll-margin-top: 90px;">Historique des paiements</h3>
             @forelse ($payments as $p)
                 <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
                     <span>

@@ -165,6 +165,37 @@ class Restaurant extends Model
         return $this->hasMany(SubscriptionPayment::class);
     }
 
+    /** Dernier paiement d'abonnement reçu (page Abonnés du Super Admin). */
+    public function lastSubscriptionPayment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SubscriptionPayment::class)->latestOfMany();
+    }
+
+    /** Onglets de la page Abonnés, dans l'ordre d'affichage. */
+    public const FOLLOW_UP_GROUPS = [
+        'retard' => 'En retard',
+        'bientot' => 'Bientôt',
+        'ajour' => 'À jour',
+        'essai' => 'En essai',
+        'bloques' => 'Bloqués',
+    ];
+
+    /**
+     * Où ranger ce maquis pour le suivi des paiements :
+     * bloques (verrouillé), retard (échéance dépassée, encore dans les jours de grâce),
+     * essai, bientot (échéance dans les 7 jours), ajour.
+     */
+    public function followUpGroup(): string
+    {
+        return match (true) {
+            $this->isLocked() => 'bloques',
+            $this->isInGracePeriod() => 'retard',
+            $this->subscription_status === 'trial' => 'essai',
+            $this->needsRenewalReminder() => 'bientot',
+            default => 'ajour',
+        };
+    }
+
     /**
      * Date jusqu'à laquelle l'accès est réglé : fin d'essai, ou date payée.
      * Null = pas de date limite (maquis activé à la main, sans échéance).

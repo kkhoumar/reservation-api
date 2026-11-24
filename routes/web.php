@@ -152,6 +152,7 @@ Route::middleware(['auth', 'platform_admin'])->group(function () {
     Route::get('/admin/restaurants/nouveau', CreateRestaurant::class)->name('admin.restaurants.create');
     Route::get('/admin/restaurants/{restaurant}/abonnement', \App\Livewire\Admin\RestaurantSubscription::class)->name('admin.restaurants.subscription');
     Route::get('/admin/formules', \App\Livewire\Admin\PlansManage::class)->name('admin.plans');
+    Route::get('/admin/abonnes', \App\Livewire\Admin\Subscribers::class)->name('admin.subscribers');
     Route::get('/admin/reglages', \App\Livewire\Admin\PlatformSettings::class)->name('admin.settings');
 
     // Sortir du maquis dans lequel le Super Admin est entré

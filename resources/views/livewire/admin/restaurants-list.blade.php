@@ -7,6 +7,7 @@
             <h1>Établissements</h1>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="{{ route('admin.subscribers') }}" class="btn btn-secondary" style="text-decoration: none;">Abonnés et paiements</a>
             <a href="{{ route('admin.plans') }}" class="btn btn-ghost" style="text-decoration: none;">Formules et prix</a>
             <a href="{{ route('admin.settings') }}" class="btn btn-ghost" style="text-decoration: none;">Réglages</a>
             <a href="{{ route('admin.restaurants.create') }}" class="btn btn-primary" style="text-decoration: none;">+ Nouveau maquis</a>
