@@ -316,6 +316,8 @@
             /* Boutons : hauteur confortable ; les longs textes passent à la ligne */
             main .btn { min-height: 42px; }
             main .btn[style*="width: 100%"], main .btn[style*="flex: 1"] { white-space: normal !important; text-align: center; }
+            /* iPhone : sous 16px, l'écran zoome tout seul quand on touche une case. On l'évite. */
+            main :where(select, textarea, input:not([type=checkbox]):not([type=radio])) { font-size: 16px; }
             /* Cases à cocher plus faciles à toucher */
             main input[type=checkbox], main input[type=radio] { width: 20px; height: 20px; flex-shrink: 0; }
             /* Bouton principal d'un formulaire : toute la largeur */

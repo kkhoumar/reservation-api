@@ -68,7 +68,7 @@
         }
         label { display: block; font-size: 13px; font-weight: 700; color: var(--color-text); }
         input[type=text], input[type=tel], input[type=password], input[type=email], input:not([type]) {
-            width: 100%; font-family: inherit; font-size: 15px; padding: 13px 14px;
+            width: 100%; font-family: inherit; font-size: 16px; padding: 13px 14px;
             border-radius: 12px; border: 1.5px solid var(--color-border); margin-top: 7px; background: #fff; color: var(--color-text);
             transition: border-color .15s, box-shadow .15s;
         }

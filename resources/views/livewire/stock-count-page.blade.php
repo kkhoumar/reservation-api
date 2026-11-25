@@ -259,7 +259,7 @@
                                 <span x-show="g.counted > 0 && g.gapSale !== 0" x-text="signed(g.gapSale)"></span>
                             </div>
                             <div class="small muted" style="margin-top: 6px;" x-show="g.counted > 0 && g.gapSale !== 0" x-text="'Soit ' + signed(g.gapCost) + ' au prix d\'achat'"></div>
-                            <div class="small" style="margin-top: 6px; font-weight: 700;" :style="g.key === 'total' ? 'color:#FFD3D3' : 'color: var(--color-danger)'" x-show="g.unbilled > 0" x-text="'Dont ' + money(g.unbilled) + ' de boissons vendues sans bon'"></div>
+                            <div class="small" style="margin-top: 6px; font-weight: 700;" :style="g.key === 'total' ? 'color:#FFD3D3' : 'color: var(--color-danger)'" x-show="g.unbilled > 0" x-text="'Dont ' + money(g.unbilled) + ' de boissons peut-être vendues sans bon'"></div>
                         </div>
                     </template>
                 </div>

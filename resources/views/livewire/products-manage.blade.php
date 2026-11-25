@@ -215,7 +215,7 @@
                                 </div></td>
                                 <td style="padding: 12px 20px;">
                                     @if (! $product->track_stock)
-                                        <span style="color: var(--color-text-secondary); font-size: 13px;">Non suivi</span>
+                                        <span style="color: var(--color-text-secondary); font-size: 13px; white-space: nowrap;">Non suivi</span>
                                     @elseif ($product->isLowStock())
                                         <span style="color: var(--color-danger); font-weight: 600;"><x-icon name="alert" size="14" /> {{ $product->stock_quantity }}</span>
                                     @else
@@ -231,14 +231,14 @@
                                     </span>
                                     @endif
                                 </td>
-                                <td style="padding: 12px 20px; text-align: right; white-space: nowrap;">
+                                <td class="pm-actions" style="padding: 12px 20px; text-align: right; white-space: nowrap;">
                                     @if (! $product->track_stock && $product->is_available)
-                                        <button wire:click="toggleSoldOut({{ $product->id }})" class="btn {{ $product->isSoldOutToday() ? 'btn-primary' : 'btn-secondary' }}" style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">
+                                        <button wire:click="toggleSoldOut({{ $product->id }})" class="btn pm-soldout {{ $product->isSoldOutToday() ? 'btn-primary' : 'btn-secondary' }}" style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">
                                             {{ $product->isSoldOutToday() ? 'Remettre en vente' : 'Fini pour aujourd\'hui' }}
                                         </button>
                                     @endif
                                     <button wire:click="editProduct({{ $product->id }})" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">Modifier</button>
-                                    <button wire:click="toggleAvailability({{ $product->id }})" class="btn {{ $product->is_available ? 'btn-danger' : 'btn-primary' }}" style="padding: 6px 12px; font-size: 12px;">
+                                    <button wire:click="toggleAvailability({{ $product->id }})" class="btn {{ $product->is_available ? 'btn-ghost pm-off' : 'btn-primary' }}" style="padding: 6px 12px; font-size: 12px;">
                                         {{ $product->is_available ? 'Désactiver' : 'Activer' }}
                                     </button>
                                     <button wire:click="deleteProduct({{ $product->id }})"
@@ -303,6 +303,19 @@
         .rt-why summary::-webkit-details-marker { display: none; }
         .rt-why summary::before { content: '?'; width: 18px; height: 18px; border-radius: 50%; background: var(--color-accent); color: #fff; font-size: 11.5px; display: inline-flex; align-items: center; justify-content: center; }
         .rt-why p { margin: 8px 0 0; padding: 10px 12px; background: #FFF8F2; border-radius: 10px; line-height: 1.5; color: var(--color-text); }
+        /* « Désactiver » : contour rouge, pas un gros bouton rouge qui fait peur */
+        .pm-off { color: var(--color-danger) !important; border-color: #F1C4C4 !important; }
+        .pm-off:hover { background: var(--color-danger-bg) !important; }
+        /* « Fini pour aujourd'hui » : discret ; « Remettre en vente » reste bien visible */
+        .pm-soldout.btn-secondary { background: var(--color-mint) !important; color: var(--color-primary) !important; border: 1px solid #CFE6DB !important; box-shadow: none !important; }
+        .pm-soldout.btn-secondary:hover { background: #E1F0E8 !important; }
+        /* Téléphone : boutons de chaque produit bien alignés */
+        @media (max-width: 640px) {
+            main table td.pm-actions { display: grid !important; grid-template-columns: 1fr 1fr 44px; gap: 8px !important; }
+            main table td.pm-actions > * { width: 100%; margin: 0 !important; }
+            main table td.pm-actions .pm-soldout { grid-column: 1 / -1; }
+            main table td.pm-actions button[aria-label^="Retirer"] { padding: 0 !important; }
+        }
         @media (max-width: 420px) {
             .rt { padding: 14px; }
             .rt-chips > button { flex: 1; min-width: 0; }
