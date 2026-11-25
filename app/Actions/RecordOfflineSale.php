@@ -167,7 +167,7 @@ class RecordOfflineSale
                 'total' => $product->selling_price * $quantity,
             ]);
 
-            if ($product->stock_quantity < $quantity) {
+            if ($product->track_stock && $product->stock_quantity < $quantity) {
                 $shortages[] = "{$product->name} (il en restait {$product->stock_quantity})";
             }
 

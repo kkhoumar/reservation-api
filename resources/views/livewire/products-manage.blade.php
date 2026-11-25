@@ -62,7 +62,7 @@
 
             <div style="margin-bottom: 14px;">
                 <label style="font-size: 13px; font-weight: 600;">Catégorie</label>
-                <select wire:model="categoryId" style="width: 100%; margin-top: 6px;">
+                <select wire:model.live="categoryId" style="width: 100%; margin-top: 6px;">
                     <option value="">-- Choisir --</option>
                     @foreach ($categories as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -87,26 +87,39 @@
                 Les deux prix sont obligatoires. L'application s'en sert pour calculer le bénéfice et la valeur du stock. Chaque livraison met à jour le prix d'achat.
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
-                <div>
-                    @if ($editingProductId)
-                        <label style="font-size: 13px; font-weight: 600;">Stock actuel</label>
-                        <div style="margin-top: 6px; padding: 10px 12px; background: var(--color-bg); border-radius: 8px; font-size: 14px;">
-                            {{ $stockQuantity }}
-                            <a href="{{ route('stock.index') }}" style="display: block; font-size: 12px; color: var(--color-accent);">Livraison, perte ou inventaire →</a>
-                        </div>
-                    @else
-                        <label style="font-size: 13px; font-weight: 600;">Stock de départ</label>
-                        <input type="number" wire:model="stockQuantity" style="width: 100%; margin-top: 6px;">
-                        @error('stockQuantity') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
-                    @endif
-                </div>
-                <div>
-                    <label style="font-size: 13px; font-weight: 600;">Seuil d'alerte</label>
-                    <input type="number" wire:model="stockAlertThreshold" style="width: 100%; margin-top: 6px;">
-                </div>
-            </div>
+            <div style="margin-bottom: 14px; padding: 14px; border: 1px solid var(--color-border); border-radius: 14px;">
+                <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer;">
+                    <input type="checkbox" wire:model.live="trackStock" style="margin-top: 2px;">
+                    <span>
+                        <strong style="font-size: 14px;">Suivre le stock</strong>
+                        <span style="display: block; font-size: 12.5px; color: var(--color-text-secondary); margin-top: 2px; line-height: 1.45;">
+                            Pour ce qu'on compte à l'unité : bouteilles, canettes, cigarettes… Laissez décoché pour un plat cuisiné : il ne sera jamais « épuisé » tout seul, et vous pourrez le marquer « Fini pour aujourd'hui ».
+                        </span>
+                    </span>
+                </label>
 
+                @if ($trackStock)
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
+                    <div>
+                        @if ($editingProductId)
+                            <label style="font-size: 13px; font-weight: 600;">Stock actuel</label>
+                            <div style="margin-top: 6px; padding: 10px 12px; background: var(--color-bg); border-radius: 8px; font-size: 14px;">
+                                {{ $stockQuantity }}
+                                <a href="{{ route('stock.index') }}" style="display: block; font-size: 12px; color: var(--color-accent);">Livraison, perte ou inventaire →</a>
+                            </div>
+                        @else
+                            <label style="font-size: 13px; font-weight: 600;">Stock de départ</label>
+                            <input type="number" wire:model="stockQuantity" style="width: 100%; margin-top: 6px;">
+                            @error('stockQuantity') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                        @endif
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600;">Seuil d'alerte</label>
+                        <input type="number" wire:model="stockAlertThreshold" style="width: 100%; margin-top: 6px;">
+                    </div>
+                </div>
+                @endif
+            </div>
             <div style="margin-bottom: 16px; padding: 14px; border: 1px solid var(--color-border); border-radius: 14px;">
                 <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer;">
                     <input type="checkbox" wire:model.live="isReturnable" style="margin-top: 2px;">
@@ -181,18 +194,29 @@
                                     @endif
                                 </div></td>
                                 <td style="padding: 12px 20px;">
-                                    @if ($product->isLowStock())
+                                    @if (! $product->track_stock)
+                                        <span style="color: var(--color-text-secondary); font-size: 13px;">Non suivi</span>
+                                    @elseif ($product->isLowStock())
                                         <span style="color: var(--color-danger); font-weight: 600;"><x-icon name="alert" size="14" /> {{ $product->stock_quantity }}</span>
                                     @else
                                         <span style="color: var(--color-text-secondary);">{{ $product->stock_quantity }}</span>
                                     @endif
                                 </td>
                                 <td style="padding: 12px 20px;">
+                                    @if ($product->is_available && $product->isSoldOutToday())
+                                        <span style="background: var(--color-warning-bg, #FFF4E5); color: var(--color-accent-dark, #A84A1C); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">Fini aujourd'hui</span>
+                                    @else
                                     <span style="background: {{ $product->is_available ? 'var(--color-success-bg)' : 'var(--color-danger-bg)' }}; color: {{ $product->is_available ? 'var(--color-success)' : 'var(--color-danger)' }}; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
                                         {{ $product->is_available ? 'Disponible' : 'Indisponible' }}
                                     </span>
+                                    @endif
                                 </td>
                                 <td style="padding: 12px 20px; text-align: right; white-space: nowrap;">
+                                    @if (! $product->track_stock && $product->is_available)
+                                        <button wire:click="toggleSoldOut({{ $product->id }})" class="btn {{ $product->isSoldOutToday() ? 'btn-primary' : 'btn-secondary' }}" style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">
+                                            {{ $product->isSoldOutToday() ? 'Remettre en vente' : 'Fini pour aujourd\'hui' }}
+                                        </button>
+                                    @endif
                                     <button wire:click="editProduct({{ $product->id }})" class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">Modifier</button>
                                     <button wire:click="toggleAvailability({{ $product->id }})" class="btn {{ $product->is_available ? 'btn-danger' : 'btn-primary' }}" style="padding: 6px 12px; font-size: 12px;">
                                         {{ $product->is_available ? 'Désactiver' : 'Activer' }}

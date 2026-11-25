@@ -15,7 +15,12 @@ class Product extends Model
     protected $fillable = [
         'restaurant_id', 'category_id', 'name', 'photo',
         'selling_price', 'cost_price', 'is_available', 'stock_quantity', 'stock_alert_threshold',
-        'is_returnable', 'crate_size', 'empty_quantity', 'empties_counted_at',
+        'is_returnable', 'crate_size', 'empty_quantity', 'empties_counted_at', 'track_stock',
+    ];
+
+    /** Comme la base : un produit suit son stock tant qu'on n'a pas dit le contraire. */
+    protected $attributes = [
+        'track_stock' => true,
     ];
 
     protected $casts = [
@@ -24,6 +29,8 @@ class Product extends Model
         'cost_price' => 'integer',
         'selling_price' => 'integer',
         'stock_quantity' => 'integer',
+        'track_stock' => 'boolean',
+        'sold_out_on' => 'date',
         'is_returnable' => 'boolean',
         'crate_size' => 'integer',
         'empty_quantity' => 'integer',
@@ -95,14 +102,50 @@ class Product extends Model
             ->exists();
     }
 
+    /** La cuisine a dit « fini pour aujourd'hui » : il revient tout seul demain. */
+    public function isSoldOutToday(): bool
+    {
+        return $this->sold_out_on !== null && $this->sold_out_on->isSameDay(today());
+    }
+
+    /** Combien on peut encore en vendre (null = sans limite : produit sans suivi de stock). */
+    public function sellableQuantity(): ?int
+    {
+        if ($this->isSoldOutToday()) {
+            return 0;
+        }
+
+        return $this->track_stock ? max(0, (int) $this->stock_quantity) : null;
+    }
+
+    /** Pourquoi on ne peut pas en vendre $quantity (null = c'est possible). */
+    public function cannotSellReason(int $quantity): ?string
+    {
+        if ($this->isSoldOutToday()) {
+            return "{$this->name} est fini pour aujourd'hui.";
+        }
+        if (! $this->track_stock || $this->stock_quantity >= $quantity) {
+            return null;
+        }
+
+        return $this->stock_quantity <= 0
+            ? "Rupture de stock : {$this->name} n'est plus disponible."
+            : "Stock insuffisant : {$this->name}. Stock disponible : {$this->stock_quantity}.";
+    }
+
     public function isLowStock(): bool
     {
-        return $this->stock_alert_threshold !== null
+        return $this->track_stock && $this->stock_alert_threshold !== null
             && $this->stock_quantity <= $this->stock_alert_threshold;
     }
 
     public function decrementStock(int $quantity): void
     {
+        // Plat sans suivi de stock : la vente est comptée, rien n'est décompté
+        if (! $this->track_stock) {
+            return;
+        }
+
         $this->decrement('stock_quantity', $quantity);
 
         // Bouteille consignée : chaque bouteille vendue devient un vide au maquis
@@ -116,8 +159,8 @@ class Product extends Model
      */
     public static function restoreStock(int $productId, int $quantity): void
     {
-        static::whereKey($productId)->increment('stock_quantity', $quantity);
-        static::whereKey($productId)->where('is_returnable', true)->decrement('empty_quantity', $quantity);
+        static::whereKey($productId)->where('track_stock', true)->increment('stock_quantity', $quantity);
+        static::whereKey($productId)->where('track_stock', true)->where('is_returnable', true)->decrement('empty_quantity', $quantity);
     }
 
     /** Le maquis a déjà compté les vides de ce produit : le contrôle des vides est possible. */

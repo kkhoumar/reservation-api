@@ -29,6 +29,9 @@ class ProductsManage extends Component
     public string $stockAlertThreshold = '';
     public bool $isAvailable = true;
 
+    /** Compté à l'unité (boissons) ; un plat cuisiné ne l'est pas. */
+    public bool $trackStock = true;
+
     /** Bouteille en verre rendue au fournisseur (1 vide contre 1 pleine). */
     public bool $isReturnable = false;
     public string $crateSize = '';
@@ -51,7 +54,7 @@ class ProductsManage extends Component
             'costPrice' => 'required|integer|min:0|max:10000000|lte:sellingPrice',
             // Le stock ne se saisit qu'à la création ; ensuite il ne bouge que
             // par les ventes, livraisons, pertes et inventaires (écran Stock)
-            'stockQuantity' => $this->editingProductId ? 'nullable' : 'required|integer|min:0|max:1000000',
+            'stockQuantity' => $this->editingProductId || ! $this->trackStock ? 'nullable' : 'required|integer|min:0|max:1000000',
             'stockAlertThreshold' => 'nullable|integer|min:0',
             'isReturnable' => 'boolean',
             'crateSize' => 'nullable|in:6,12,15,20,24',
@@ -71,6 +74,7 @@ class ProductsManage extends Component
     {
         $this->reset(['editingProductId', 'name', 'sellingPrice', 'costPrice', 'categoryId', 'stockQuantity', 'stockAlertThreshold', 'isReturnable', 'crateSize']);
         $this->isAvailable = true;
+        $this->trackStock = true;
         $this->showProductForm = true;
     }
 
@@ -86,6 +90,7 @@ class ProductsManage extends Component
         $this->stockQuantity = (string) $product->stock_quantity;
         $this->stockAlertThreshold = $product->stock_alert_threshold !== null ? (string) $product->stock_alert_threshold : '';
         $this->isAvailable = $product->is_available;
+        $this->trackStock = (bool) $product->track_stock;
         $this->isReturnable = (bool) $product->is_returnable;
         $this->crateSize = $product->crate_size ? (string) $product->crate_size : '';
         $this->showProductForm = true;
@@ -103,6 +108,7 @@ class ProductsManage extends Component
             'cost_price' => (int) $this->costPrice,
             'stock_alert_threshold' => $this->stockAlertThreshold !== '' ? $this->stockAlertThreshold : null,
             'is_available' => $this->isAvailable,
+            'track_stock' => $this->trackStock,
             'is_returnable' => $this->isReturnable,
             'crate_size' => $this->isReturnable && $this->crateSize !== '' ? (int) $this->crateSize : null,
         ];
@@ -126,7 +132,7 @@ class ProductsManage extends Component
             }
         } else {
             DB::transaction(function () use ($data) {
-                $product = Product::create($data + ['stock_quantity' => (int) $this->stockQuantity]);
+                $product = Product::create($data + ['stock_quantity' => $this->trackStock ? (int) $this->stockQuantity : 0]);
                 app(StockService::class)->recordInitial(auth()->user(), $product);
                 \App\Models\ActivityLog::record('product_created', "a ajouté le produit {$product->name} à " . \App\Models\ActivityLog::fcfa((int) $product->selling_price) . ", stock de départ {$product->stock_quantity}.", ['meta' => ['product_id' => $product->id]]);
             });
@@ -136,8 +142,25 @@ class ProductsManage extends Component
         session()->flash('success', 'Produit enregistré.');
     }
 
-    public function toggleAvailability($productId)
+    /** Nouveau produit : on propose « Suivre le stock » pour les boissons, pas pour la nourriture. */
+    public function updatedCategoryId($value): void
     {
+        if ($this->editingProductId || ! $value) {
+            return;
+        }
+
+        $kind = Category::where('restaurant_id', auth()->user()->currentRestaurantId())->whereKey($value)->value('kind');
+        $this->trackStock = $kind !== 'food';
+    }
+
+    /** « Fini pour aujourd'hui » : la cuisine n'en a plus ; il revient tout seul demain. */
+    public function toggleSoldOut($productId): void
+    {
+        $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
+        $product->forceFill(['sold_out_on' => $product->isSoldOutToday() ? null : today()])->save();
+    }
+
+    public function toggleAvailability($productId)    {
         $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
         $product->update(['is_available' => !$product->is_available]);
     }
@@ -208,7 +231,14 @@ class ProductsManage extends Component
             return;
         }
 
-        Category::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($categoryId)->update(['kind' => $kind]);
+        $category = Category::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($categoryId);
+        $category->update(['kind' => $kind]);
+
+        // Des plats ne se comptent pas comme des bouteilles : plus de faux « Épuisé »
+        // (l'inverse n'est pas fait : un plat sans stock tomberait « épuisé » d'un coup)
+        if ($kind === 'food') {
+            Product::where('category_id', $category->id)->update(['track_stock' => false]);
+        }
     }
 
     public function render()

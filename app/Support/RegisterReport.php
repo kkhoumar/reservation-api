@@ -36,6 +36,8 @@ class RegisterReport
     public readonly Collection $byServer;
     /** @var Collection<int, object{name: string, quantity: int, amount: int}> */
     public readonly Collection $topProducts;
+    /** Nourriture / Boissons : chaque produit vendu et le total de chaque famille. */
+    public readonly Collection $byKind;
 
     public function __construct(public readonly CashRegister $register)
     {
@@ -48,6 +50,7 @@ class RegisterReport
         $this->creditSales = $stats->creditTotal;
         $this->byServer = $stats->byServer;
         $this->topProducts = $stats->topProducts;
+        $this->byKind = $stats->byKind;
         $this->gestures = $stats->gestures;
         $this->gesturesTotal = $stats->gesturesTotal;
         $this->cancelledCount = $stats->cancelledCount;
@@ -158,11 +161,22 @@ class RegisterReport
             }
         }
 
-        if ($this->topProducts->isNotEmpty()) {
+        // Ce qui a été vendu, cuisine et bar séparés
+        foreach ($this->byKind as $group) {
+            if ($group->items->isEmpty()) {
+                continue;
+            }
+            $show = $group->kind === 'food' ? 15 : 10;
             $lines[] = '';
-            $lines[] = '*Meilleures ventes* : ' . $this->topProducts
-                ->map(fn ($p) => "{$p->name} ×{$p->quantity}")
-                ->join(', ');
+            $lines[] = ($group->kind === 'food' ? '🍽️' : '🍺') . ' *' . $group->label . ' : ' . $f($group->amount) . ' FCFA* (' . $group->quantity . ')'
+                . ($group->margin !== null ? ' · bénéfice ' . $f($group->margin) : '');
+            foreach ($group->items->take($show) as $item) {
+                $lines[] = "• {$item->name} ×{$item->quantity} · " . $f($item->amount);
+            }
+            if ($group->items->count() > $show) {
+                $rest = $group->items->slice($show);
+                $lines[] = '• … et ' . $rest->count() . ' autre' . ($rest->count() > 1 ? 's' : '') . ' · ' . $f((int) $rest->sum('amount'));
+            }
         }
 
         if ($this->gestures->isNotEmpty()) {

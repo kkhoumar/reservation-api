@@ -180,6 +180,31 @@
         </div>
     </div>
 
+    {{-- Cuisine et bar séparés : chaque produit vendu et le total de chaque famille --}}
+    <div class="kinds" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; align-items: start;">
+        @foreach ($stats->byKind as $group)
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px;">
+                    <h3 style="margin: 0;">{{ $group->label }}</h3>
+                    <strong style="font-size: 20px; color: var(--color-primary);">{{ $fcfa($group->amount) }}</strong>
+                </div>
+                <div style="{{ $small }} margin-bottom: 8px;">
+                    {{ $group->quantity }} vendu{{ $group->quantity > 1 ? 's' : '' }}
+                    @if ($group->margin !== null && $group->amount > 0) · bénéfice {{ $fcfa($group->margin) }} @endif
+                </div>
+                @forelse ($group->items as $item)
+                    <div style="display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--color-border); font-size: 14px;">
+                        <span>{{ $item->name }} <span style="{{ $small }}">× {{ $item->quantity }}</span></span>
+                        <strong>{{ $fcfa($item->amount) }}</strong>
+                    </div>
+                @empty
+                    <p style="{{ $small }}">Rien de vendu sur la période.</p>
+                @endforelse
+            </div>
+        @endforeach
+    </div>
+    <style>@media (max-width: 760px) { .kinds { grid-template-columns: minmax(0, 1fr) !important; } }</style>
+
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start;">
         <div class="card">
             <h3 style="margin: 0 0 10px 0;">Ce qui se vend le plus</h3>

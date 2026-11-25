@@ -97,6 +97,7 @@ class StockCountSheet
         return Product::withoutGlobalScopes()
             ->with(['category' => fn ($q) => $q->withoutGlobalScopes()])
             ->where('restaurant_id', $this->restaurantId)
+            ->where('track_stock', true)
             ->where(fn ($q) => $q->whereNull('archived_at')->orWhere('stock_quantity', '>', 0))
             ->get()
             ->sortBy(fn (Product $p) => [

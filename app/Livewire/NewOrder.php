@@ -132,10 +132,8 @@ class NewOrder extends Component
                     throw new BusinessRuleException("Le produit {$product->name} n'est plus disponible.");
                 }
 
-                if ($product->stock_quantity < $this->quantity) {
-                    throw new BusinessRuleException($product->stock_quantity <= 0
-                        ? "Rupture de stock : {$product->name} n'est plus disponible."
-                        : "Stock insuffisant : {$product->name}. Stock disponible : {$product->stock_quantity}.");
+                if ($reason = $product->cannotSellReason($this->quantity)) {
+                    throw new BusinessRuleException($reason);
                 }
 
                 $order = $this->orderId

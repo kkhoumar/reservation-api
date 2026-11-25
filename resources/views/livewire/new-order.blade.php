@@ -170,13 +170,14 @@
                     @foreach ($category->products as $product)
                         @php
                             $q = (int) ($inOrder[$product->id] ?? 0);
-                            $left = max(0, (int) $product->stock_quantity);
+                            // Plat sans suivi de stock : pas de limite (999), sauf « fini pour aujourd'hui »
+                            $left = $product->sellableQuantity() ?? 999;
                         @endphp
-                        @if ($product->stock_quantity <= 0)
+                        @if ($left <= 0)
                             <button type="button" class="pc" disabled wire:key="pc-{{ $product->id }}-{{ $q }}-0">
                                 @if ($q)<span class="q">{{ $q }}</span>@endif
                                 <span class="pn">{{ $product->name }}</span>
-                                <span class="pp"><span class="price">{{ $fcfa($product->selling_price) }} F</span><span class="out">Épuisé</span></span>
+                                <span class="pp"><span class="price">{{ $fcfa($product->selling_price) }} F</span><span class="out">{{ $product->isSoldOutToday() ? 'Fini aujourd\'hui' : 'Épuisé' }}</span></span>
                             </button>
                         @else
                             <button type="button" class="pc" wire:key="pc-{{ $product->id }}-{{ $q }}-{{ $left }}"
@@ -241,7 +242,7 @@
                                         <button type="button" class="minus" @click="minus({{ $item->id }}, {{ $item->product_id }}, {{ $unit }})" aria-label="Un {{ $item->product->name }} de moins"><x-icon name="minus" size="18" stroke="2.6" /></button>
                                     @endif
                                     <span class="v" x-text="{{ $qExpr }}">{{ $item->quantity }}</span>
-                                    <button type="button" class="plusb" @click="addLine({{ $item->id }}, {{ $item->product_id }}, {{ (int) ($item->product?->selling_price ?? $item->unit_price) }}, {{ max(0, (int) ($item->product?->stock_quantity ?? 0)) }}, @js($item->product->name))" aria-label="Un {{ $item->product->name }} de plus"><x-icon name="plus" size="18" stroke="2.6" /></button>
+                                    <button type="button" class="plusb" @click="addLine({{ $item->id }}, {{ $item->product_id }}, {{ (int) ($item->product?->selling_price ?? $item->unit_price) }}, {{ $item->product?->sellableQuantity() ?? 999 }}, @js($item->product->name))" aria-label="Un {{ $item->product->name }} de plus"><x-icon name="plus" size="18" stroke="2.6" /></button>
                                 </div>
                             </div>
                         </div>
@@ -250,7 +251,7 @@
                     {{-- Nouveau produit touché : sa ligne s'affiche tout de suite, le serveur la confirme derrière --}}
                     @foreach ($visibleCategories as $category)
                         @foreach ($category->products as $product)
-                            @continue($product->stock_quantity <= 0 || $mergeable->has($product->id))
+                            @continue(($product->sellableQuantity() ?? 999) <= 0 || $mergeable->has($product->id))
                             <div class="ln" wire:key="gh-{{ $product->id }}" x-cloak x-show="(pend[{{ $product->id }}] || 0) > 0">
                                 <div style="min-width: 0;">
                                     <div class="nm">{{ $product->name }}</div>
@@ -261,7 +262,7 @@
                                     <div class="pill">
                                         <button type="button" class="minus" @click="unTap({{ $product->id }}, {{ (int) $product->selling_price }})" :disabled="!toAdd[{{ $product->id }}]" aria-label="Un {{ $product->name }} de moins"><x-icon name="minus" size="18" stroke="2.6" /></button>
                                         <span class="v" x-text="pend[{{ $product->id }}] || 0"></span>
-                                        <button type="button" class="plusb" @click="addLine(0, {{ $product->id }}, {{ (int) $product->selling_price }}, {{ max(0, (int) $product->stock_quantity) }}, @js($product->name))" aria-label="Un {{ $product->name }} de plus"><x-icon name="plus" size="18" stroke="2.6" /></button>
+                                        <button type="button" class="plusb" @click="addLine(0, {{ $product->id }}, {{ (int) $product->selling_price }}, {{ $product->sellableQuantity() ?? 999 }}, @js($product->name))" aria-label="Un {{ $product->name }} de plus"><x-icon name="plus" size="18" stroke="2.6" /></button>
                                     </div>
                                 </div>
                             </div>

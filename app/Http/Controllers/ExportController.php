@@ -229,7 +229,7 @@ class ExportController extends Controller
     {
         $rows = function () use ($from, $to) {
             // 1. État du stock aujourd'hui
-            foreach (Product::with('category')->orderBy('name')->get() as $p) {
+            foreach (Product::with('category')->where('track_stock', true)->orderBy('name')->get() as $p) {
                 yield [
                     'ÉTAT', now()->format('d/m/Y H:i'), $p->name, $p->category?->name,
                     (int) $p->stock_quantity, $p->cost_price, max(0, $p->stock_quantity) * $p->unitValue(), null, null, null,
