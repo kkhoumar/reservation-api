@@ -616,11 +616,8 @@
                 </div>
             @endif
 
-            @if (session('error'))
-                <div class="card" style="border-left: 6px solid var(--color-danger); margin-bottom: 16px;">
-                    {{ session('error') }}
-                </div>
-            @endif
+            {{-- Messages venus d'une redirection (accès refusé, compte désactivé…) --}}
+            <x-flash :in-component="false" />
 
             {{ $slot }}
         </main>
@@ -663,6 +660,88 @@
                 if (main) new MutationObserver(schedule).observe(main, { childList: true, subtree: true });
             });
         })();
+    </script>
+
+    {{-- ===== Messages en bas de l'écran : succès (vert, part tout seul) et erreurs (rouge, à fermer) ===== --}}
+    <div class="toasts" x-data aria-live="polite">
+        <template x-for="t in $store.toasts.items" :key="t.key">
+            <div class="toast-item" :class="t.type" :role="t.type === 'error' ? 'alert' : 'status'"
+                 x-show="t.show" x-transition:enter="ti-enter" x-transition:enter-start="ti-from" x-transition:leave="ti-leave" x-transition:leave-end="ti-from">
+                <span class="ti-ico" aria-hidden="true">
+                    <svg x-show="t.type === 'success'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>
+                    <svg x-show="t.type === 'error'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 7v6"/><path d="M12 17h.01"/></svg>
+                </span>
+                <span class="ti-text" x-text="t.text"></span>
+                <button type="button" class="ti-undo" x-show="t.undo && t.wire" @click="$store.toasts.undo(t)">Annuler</button>
+                <button type="button" class="ti-x" @click="$store.toasts.close(t.key)" aria-label="Fermer le message">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+        </template>
+    </div>
+    <style>
+        .toasts { position: fixed; left: 0; right: 0; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 95;
+                  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 16px; pointer-events: none; }
+        @media (min-width: 861px) { .toasts { left: var(--sidebar-width, 0px); bottom: 24px; } }
+        /* Au-dessus des barres du bas (vente rapide, comptage) */
+        body:has(.new-order) .toasts { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+        body:has(.sc-sticky) .toasts { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+        .toast-item { pointer-events: auto; width: 100%; max-width: 460px; display: flex; align-items: center; gap: 10px;
+                      padding: 10px 8px 10px 12px; border-radius: 14px; color: #fff; font-size: 14.5px; font-weight: 600; line-height: 1.35;
+                      box-shadow: 0 14px 34px -10px rgba(6, 30, 22, .55), 0 2px 6px rgba(6, 30, 22, .18); }
+        .toast-item.success { background: #0B4D3C; }
+        .toast-item.error { background: #8E2222; }
+        .ti-ico { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.18); }
+        .toast-item.success .ti-ico { background: #5EBFA0; color: #0B4D3C; }
+        .ti-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+        .ti-undo { flex-shrink: 0; border: 0; border-radius: 10px; padding: 8px 12px; min-height: 36px; background: rgba(255,255,255,.16); color: #fff;
+                   font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+        .ti-undo:hover { background: rgba(255,255,255,.26); }
+        .ti-x { flex-shrink: 0; width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: rgba(255,255,255,.8);
+                display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .ti-x:hover { background: rgba(255,255,255,.12); color: #fff; }
+        .ti-enter { transition: opacity .2s ease-out, transform .25s cubic-bezier(.2,.8,.2,1); }
+        .ti-leave { transition: opacity .18s ease-in, transform .18s ease-in; }
+        .ti-from { opacity: 0; transform: translateY(14px) scale(.98); }
+        @media (prefers-reduced-motion: reduce) { .ti-enter, .ti-leave { transition: none; } }
+    </style>
+    <script>
+        document.addEventListener('alpine:init', function () {
+            var KEY = 'me-toasts-seen';
+            var seen = [], pageSeen = [];
+            try { seen = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch (e) {}
+            Alpine.store('toasts', {
+                items: [],
+                push: function (t, wire) {
+                    // Déjà montré (même message pendant l'action suivante, ou page rechargée) : on ne le répète pas
+                    if (!t || !t.text || seen.indexOf(t.id) !== -1 || pageSeen.indexOf(t.id) !== -1) return;
+                    pageSeen.push(t.id);
+                    if (t.persist) {
+                        seen.push(t.id);
+                        if (seen.length > 50) seen = seen.slice(-50);
+                        try { sessionStorage.setItem(KEY, JSON.stringify(seen)); } catch (e) {}
+                    }
+
+                    var self = this;
+                    var item = { key: t.id + '-' + Date.now(), type: t.type, text: t.text, undo: t.undo || null, wire: wire || null, show: true };
+                    this.items.push(item);
+                    if (this.items.length > 3) this.close(this.items[0].key);
+                    // Un succès part tout seul ; une erreur reste jusqu'à ce qu'on la ferme
+                    if (t.type === 'success') setTimeout(function () { self.close(item.key); }, item.undo ? 7000 : 4000);
+                },
+                close: function (key) {
+                    var self = this;
+                    var item = this.items.find(function (i) { return i.key === key; });
+                    if (!item || !item.show) return;
+                    item.show = false;
+                    setTimeout(function () { self.items = self.items.filter(function (i) { return i.key !== key; }); }, 220);
+                },
+                undo: function (t) {
+                    if (t.wire && t.undo) t.wire.call(t.undo.call, ...(t.undo.args || []));
+                    this.close(t.key);
+                },
+            });
+        });
     </script>
 
     @include('partials.money-input-script')

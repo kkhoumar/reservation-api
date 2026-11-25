@@ -65,7 +65,10 @@ class ProductsManage extends Component
     protected function messages(): array
     {
         return [
+            'name.required' => 'Écrivez le nom du produit.',
+            'categoryId.required' => 'Choisissez une catégorie.',
             'sellingPrice.required' => 'Entrez le prix de vente.',
+            'stockQuantity.required' => 'Entrez combien vous en avez maintenant (0 si vous n\'en avez pas).',
             'costPrice.required' => 'Entrez le prix d\'achat : il sert à calculer votre bénéfice.',
             'costPrice.lte' => 'Le prix d\'achat dépasse le prix de vente : vous perdriez de l\'argent à chaque vente. Vérifiez les deux prix.',
             'crateSize.required' => 'Dites combien de bouteilles il y a dans un casier.',
@@ -145,7 +148,7 @@ class ProductsManage extends Component
         }
 
         $this->showProductForm = false;
-        session()->flash('success', 'Produit enregistré.');
+        \App\Support\Toast::success($this->editingProductId ? "« {$this->name} » est modifié." : "« {$this->name} » est ajouté à la carte.");
     }
 
     /** Nouveau produit : on propose « Suivre le stock » pour les boissons, pas pour la nourriture. */
@@ -173,12 +176,19 @@ class ProductsManage extends Component
     public function toggleSoldOut($productId): void
     {
         $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
-        $product->forceFill(['sold_out_on' => $product->isSoldOutToday() ? null : today()])->save();
+        $soldOut = ! $product->isSoldOutToday();
+        $product->forceFill(['sold_out_on' => $soldOut ? today() : null])->save();
+        \App\Support\Toast::success($soldOut
+            ? "« {$product->name} » : fini pour aujourd'hui. Il revient tout seul demain."
+            : "« {$product->name} » est de nouveau en vente aujourd'hui.");
     }
 
     public function toggleAvailability($productId)    {
         $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
         $product->update(['is_available' => !$product->is_available]);
+        \App\Support\Toast::success($product->is_available
+            ? "« {$product->name} » est de nouveau en vente."
+            : "« {$product->name} » n'est plus en vente.", ['call' => 'toggleAvailability', 'args' => [$product->id]]);
     }
 
     /**
@@ -190,7 +200,7 @@ class ProductsManage extends Component
         $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
 
         if ($product->isInOpenOrder()) {
-            session()->flash('error', "« {$product->name} » est dans une commande pas encore payée. Encaissez ou annulez cette commande, puis recommencez.");
+            \App\Support\Toast::error("« {$product->name} » est dans une commande pas encore payée. Encaissez ou annulez cette commande, puis recommencez.");
 
             return;
         }
@@ -203,14 +213,14 @@ class ProductsManage extends Component
         if (! $product->hasHistory()) {
             $product->delete();
             \App\Models\ActivityLog::record('product_removed', "a retiré le produit {$product->name} de la carte (jamais vendu, effacé).");
-            session()->flash('success', "« {$product->name} » est retiré de la carte.");
+            \App\Support\Toast::success("« {$product->name} » est retiré de la carte.");
 
             return;
         }
 
         $product->forceFill(['archived_at' => now(), 'is_available' => false])->save();
         \App\Models\ActivityLog::record('product_removed', "a retiré le produit {$product->name} de la carte (stock restant : {$product->stock_quantity}).", ['meta' => ['product_id' => $product->id]]);
-        session()->flash('success', "« {$product->name} » est retiré de la carte. Ses anciennes ventes restent dans vos rapports.");
+        \App\Support\Toast::success("« {$product->name} » est retiré de la carte. Ses ventes restent dans vos rapports.", ['call' => 'restoreProduct', 'args' => [$product->id]]);
     }
 
     public function restoreProduct($productId): void
@@ -218,7 +228,7 @@ class ProductsManage extends Component
         $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
         $product->forceFill(['archived_at' => null, 'is_available' => true])->save();
         \App\Models\ActivityLog::record('product_restored', "a remis le produit {$product->name} sur la carte.", ['meta' => ['product_id' => $product->id]]);
-        session()->flash('success', "« {$product->name} » est de retour sur la carte.");
+        \App\Support\Toast::success("« {$product->name} » est de retour sur la carte.");
     }
 
     public function saveCategory()
@@ -235,10 +245,10 @@ class ProductsManage extends Component
             'sort_order' => Category::where('restaurant_id', auth()->user()->currentRestaurantId())->count() + 1,
         ]);
 
+        \App\Support\Toast::success("Catégorie « {$this->newCategoryName} » ajoutée.");
         $this->newCategoryName = '';
         $this->newCategoryKind = '';
         $this->showCategoryForm = false;
-        session()->flash('success', 'Catégorie ajoutée.');
     }
 
     public function setCategoryKind($categoryId, string $kind): void
@@ -249,6 +259,7 @@ class ProductsManage extends Component
 
         $category = Category::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($categoryId);
         $category->update(['kind' => $kind]);
+        \App\Support\Toast::success("« {$category->name} » est rangée dans " . ($kind === 'food' ? 'Nourriture' : 'Boissons') . '.');
 
         // Des plats ne se comptent pas comme des bouteilles : plus de faux « Épuisé »
         // (l'inverse n'est pas fait : un plat sans stock tomberait « épuisé » d'un coup)

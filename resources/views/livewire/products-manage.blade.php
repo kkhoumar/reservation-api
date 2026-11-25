@@ -1,16 +1,9 @@
 <div x-data="{
         q: '',
-        norm(s) { return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); },
+        norm(s) { return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); },
         has(names) { const q = this.norm(this.q); return !q || names.some(n => this.norm(n).includes(q)); },
     }">
-    @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="flash flash-error" role="alert">{{ session('error') }}</div>
-    @endif
+    <x-flash />
 
     <div class="page-head pm-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 20px;">
         <div>
@@ -56,7 +49,7 @@
             </div>
             <label style="font-size: 13px; font-weight: 600;">Nom</label>
             <input type="text" wire:model="newCategoryName" placeholder="Ex : Grillades" style="width: 100%; margin: 6px 0 14px 0;">
-            @error('newCategoryName') <div style="color: var(--color-danger); font-size: 12px; margin-bottom: 10px;">{{ $message }}</div> @enderror
+            @error('newCategoryName') <div class="pm-err" style="color: var(--color-danger); font-size: 12.5px; font-weight: 600; margin-top: 4px; margin-bottom: 10px;">{{ $message }}</div> @enderror
             <label style="font-size: 13px; font-weight: 600;">Famille</label>
             <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 2px;">Le comptage sépare les totaux des boissons et de la nourriture.</div>
             <div style="display: flex; gap: 8px; margin: 6px 0 16px 0;">
@@ -65,7 +58,7 @@
                 @endforeach
             </div>
             <div class="pm-sheet-actions">
-                <button wire:click="saveCategory" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
+                <button wire:click="saveCategory" wire:loading.attr="disabled" wire:target="saveCategory" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
                 <button wire:click="$set('showCategoryForm', false)" class="btn btn-ghost" style="flex: 1;">Annuler</button>
             </div>
         </div>
@@ -84,7 +77,7 @@
             <div style="margin-bottom: 14px;">
                 <label style="font-size: 13px; font-weight: 600;">Nom</label>
                 <input type="text" wire:model="name" style="width: 100%; margin-top: 6px;">
-                @error('name') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                @error('name') <div class="pm-err" style="color: var(--color-danger); font-size: 12.5px; font-weight: 600; margin-top: 4px;">{{ $message }}</div> @enderror
             </div>
 
             <div style="margin-bottom: 14px;">
@@ -95,19 +88,19 @@
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                     @endforeach
                 </select>
-                @error('categoryId') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                @error('categoryId') <div class="pm-err" style="color: var(--color-danger); font-size: 12.5px; font-weight: 600; margin-top: 4px;">{{ $message }}</div> @enderror
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Prix de vente (FCFA)</label>
                     <x-money-input model="sellingPrice" :empty="''" style="width: 100%; margin-top: 6px;" />
-                    @error('sellingPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                    @error('sellingPrice') <div class="pm-err" style="color: var(--color-danger); font-size: 12.5px; font-weight: 600; margin-top: 4px;">{{ $message }}</div> @enderror
                 </div>
                 <div>
                     <label style="font-size: 13px; font-weight: 600;">Prix d'achat (FCFA)</label>
                     <x-money-input model="costPrice" :empty="''" placeholder="Obligatoire" style="width: 100%; margin-top: 6px;" />
-                    @error('costPrice') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                    @error('costPrice') <div class="pm-err" style="color: var(--color-danger); font-size: 12.5px; font-weight: 600; margin-top: 4px;">{{ $message }}</div> @enderror
                 </div>
             </div>
             <div style="font-size: 12px; color: var(--color-text-secondary); margin: -8px 0 14px 0;">
@@ -137,7 +130,7 @@
                         @else
                             <label style="font-size: 13px; font-weight: 600;">Stock de départ</label>
                             <input type="number" wire:model="stockQuantity" style="width: 100%; margin-top: 6px;">
-                            @error('stockQuantity') <div style="color: var(--color-danger); font-size: 12px;">{{ $message }}</div> @enderror
+                            @error('stockQuantity') <div class="pm-err" style="color: var(--color-danger); font-size: 12.5px; font-weight: 600; margin-top: 4px;">{{ $message }}</div> @enderror
                         @endif
                     </div>
                     <div>
@@ -180,7 +173,7 @@
                                 <span>bouteilles</span>
                             </span>
                         </div>
-                        @error('crateSize') <div class="rt-error">{{ $message }}</div> @enderror
+                        @error('crateSize') <div class="rt-error pm-err">{{ $message }}</div> @enderror
 
                         <details class="rt-why">
                             <summary>Pourquoi c'est utile&nbsp;?</summary>
@@ -198,7 +191,8 @@
             </div>
 
             <div class="pm-sheet-actions">
-                <button wire:click="saveProduct" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
+                <button type="button" class="btn btn-primary" style="flex: 1;" wire:loading.attr="disabled" wire:target="saveProduct"
+                        @click="$wire.saveProduct().then(() => $nextTick(() => { const e = document.querySelector('.pm-sheet .pm-err'); if (e) e.scrollIntoView({ block: 'center', behavior: 'smooth' }); }))">Enregistrer</button>
                 <button wire:click="$set('showProductForm', false)" class="btn btn-ghost" style="flex: 1;">Annuler</button>
             </div>
         </div>

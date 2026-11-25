@@ -10,11 +10,7 @@
         </p>
     </div>
 
-    @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
-            {{ session('success') }}
-        </div>
-    @endif
+    <x-flash />
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
         @foreach ($plans as $plan)

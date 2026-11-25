@@ -158,7 +158,7 @@ class UsersManage extends Component
         }
 
         $this->showForm = false;
-        session()->flash('success', 'Utilisateur enregistré.');
+        \App\Support\Toast::success("Compte de {$who} enregistré.");
     }
 
     public function toggleStatus($userId)
@@ -166,7 +166,7 @@ class UsersManage extends Component
         $user = $this->findStaff((int) $userId);
 
         if ($user->id === auth()->id()) {
-            session()->flash('error', 'Vous ne pouvez pas désactiver votre propre compte.');
+            \App\Support\Toast::error('Vous ne pouvez pas désactiver votre propre compte.');
             return;
         }
 
@@ -201,7 +201,7 @@ class UsersManage extends Component
             . 'Désactivez ou retirez quelqu\'un, ou passez à une formule supérieure.';
 
         $this->addError('limit', $message);
-        session()->flash('error', $message);
+        \App\Support\Toast::error($message);
 
         return false;
     }
@@ -220,7 +220,7 @@ class UsersManage extends Component
         }
 
         if ($user->isServer() && ($balance = $user->sacocheBalance()) > 0) {
-            session()->flash('error', "{$user->first_name} doit encore verser " . number_format($balance, 0, ',', ' ')
+            \App\Support\Toast::error("{$user->first_name} doit encore verser " . number_format($balance, 0, ',', ' ')
                 . ' FCFA de sa sacoche. Recevez son versement avant de la retirer.');
 
             return;
@@ -240,7 +240,7 @@ class UsersManage extends Component
             $this->showForm = false;
         }
 
-        session()->flash('success', "{$user->first_name} {$user->last_name} a été retiré(e) du maquis. Son historique est conservé.");
+        \App\Support\Toast::success("{$user->first_name} {$user->last_name} a été retiré(e) du maquis. Son historique est conservé.");
     }
 
     /** Un ancien employé revient : il retrouve son compte et son historique. */
@@ -256,7 +256,7 @@ class UsersManage extends Component
         $user->forceFill(['status' => 'active', 'left_at' => null])->save();
         \App\Models\ActivityLog::record('user_reactivated', "a réintégré {$user->first_name} {$user->last_name} dans l'équipe.", ['meta' => ['user_id' => $user->id]]);
 
-        session()->flash('success', "{$user->first_name} {$user->last_name} fait de nouveau partie de l'équipe.");
+        \App\Support\Toast::success("{$user->first_name} {$user->last_name} fait de nouveau partie de l'équipe.");
     }
 
     public function render()

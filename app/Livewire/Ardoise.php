@@ -39,7 +39,7 @@ class Ardoise extends Component
     public function mount(): void
     {
         if (! auth()->user()->currentRestaurant()?->creditEnabled()) {
-            session()->flash('error', "Le crédit client n'est pas activé. Le patron peut l'activer dans Paramètres.");
+            \App\Support\Toast::error("Le crédit client n'est pas activé. Le patron peut l'activer dans Paramètres.");
             $this->redirect(route('tables.index'), navigate: false);
         }
     }
@@ -95,7 +95,7 @@ class Ardoise extends Component
         ]);
 
         $this->reset(['name', 'phone', 'creditLimit', 'showCreate']);
-        session()->flash('success', "Client {$customer->name} ajouté.");
+        \App\Support\Toast::success("Client {$customer->name} ajouté.");
     }
 
     public function saveLimit(): void
@@ -111,7 +111,7 @@ class Ardoise extends Component
         $customer = Customer::findOrFail($this->customerId);
         $customer->update(['credit_limit' => $this->editLimit]);
         \App\Models\ActivityLog::record('credit_limit', "a fixé le plafond de crédit de {$customer->name} à " . ($this->editLimit === null ? 'aucun plafond' : \App\Models\ActivityLog::fcfa((int) $this->editLimit)) . '.', ['meta' => ['customer_id' => $customer->id]]);
-        session()->flash('success', 'Plafond enregistré.');
+        \App\Support\Toast::success('Plafond de crédit enregistré.');
     }
 
     public function recordRepayment(): void
@@ -135,7 +135,7 @@ class Ardoise extends Component
             return;
         }
 
-        session()->flash('success', number_format($this->repaymentAmount, 0, ',', ' ') . " FCFA remboursés par {$customer->name} : l'argent est en caisse.");
+        \App\Support\Toast::success(number_format($this->repaymentAmount, 0, ',', ' ') . " FCFA remboursés par {$customer->name} : l'argent est en caisse.");
         $this->repaymentAmount = null;
         $this->repaymentNote = '';
     }

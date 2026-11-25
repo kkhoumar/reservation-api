@@ -42,7 +42,7 @@ class CashRegisterClosed extends Component
         }
 
         SendRegisterReport::queueFor($register);
-        session()->flash('success', 'Envoi du rapport relancé.');
+        \App\Support\Toast::success('Envoi du rapport relancé.');
     }
 
     public function render(WhatsAppCloud $whatsapp)

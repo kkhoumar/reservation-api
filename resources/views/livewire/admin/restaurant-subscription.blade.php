@@ -15,11 +15,7 @@
         <div style="font-size: 13px; color: var(--color-text-secondary);">Référence de paiement : <strong>{{ $restaurant->paymentReference() }}</strong></div>
     </div>
 
-    @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
-            {{ session('success') }}
-        </div>
-    @endif
+    <x-flash />
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px;">
         <div class="card" style="padding: 14px 16px; border-left: 4px solid var(--color-{{ $color }});">

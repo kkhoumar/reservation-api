@@ -1,14 +1,5 @@
 <div>
-    @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="card" style="border-left: 6px solid var(--color-danger); margin-bottom: 16px;">
-            {{ session('error') }}
-        </div>
-    @endif
+    <x-flash />
 
     <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 24px;">
         <div>

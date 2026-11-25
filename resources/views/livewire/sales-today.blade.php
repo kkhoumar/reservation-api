@@ -1,4 +1,5 @@
 <div>
+    <x-flash />
     <style>
         /* Téléphone : le total sur toute la largeur, sous le titre */
         @media (max-width: 640px) {

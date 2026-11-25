@@ -51,7 +51,7 @@ class TakePayment extends Component
 
         // Paiement avant service : la serveuse n'encaisse pas, elle apporte l'argent au comptoir
         if (auth()->user()->isServer() && auth()->user()->currentRestaurant()?->paysBeforeService()) {
-            session()->flash('error', "C'est le comptoir qui encaisse.");
+            \App\Support\Toast::error("C'est le comptoir qui encaisse.");
             $this->redirect(route('tables.index'), navigate: false);
         }
     }
@@ -77,7 +77,7 @@ class TakePayment extends Component
         try {
             $this->recordPaymentFor($this->order);
         } catch (BusinessRuleException $e) {
-            session()->flash('error', $e->getMessage());
+            \App\Support\Toast::error($e->getMessage());
 
             return;
         }
@@ -120,7 +120,7 @@ class TakePayment extends Component
             return;
         }
 
-        session()->flash('success', "{$this->order->order_number} mis à crédit pour {$customer->name}.");
+        \App\Support\Toast::success("{$this->order->order_number} mis à crédit pour {$customer->name}.");
 
         $this->redirect(route('credits'), navigate: false);
     }

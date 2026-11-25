@@ -97,11 +97,12 @@ class ExpensesList extends Component
 
         \App\Models\ActivityLog::record('expense', 'a enregistré une dépense de ' . \App\Models\ActivityLog::fcfa((int) $this->amount) . ' : ' . ($this->categories[$this->category] ?? $this->category) . ($this->description ? ', ' . trim($this->description) : '') . '. Reçu joint.', ['amount' => -(int) $this->amount]);
 
+        $savedAmount = (int) $this->amount;
         $this->amount = null;
         $this->description = '';
         $this->receiptPhoto = '';
 
-        session()->flash('success', 'Dépense enregistrée.');
+        \App\Support\Toast::success('Dépense de ' . number_format($savedAmount, 0, ',', ' ') . ' F enregistrée.');
     }
 
     /** @return array{0: Carbon, 1: Carbon} */

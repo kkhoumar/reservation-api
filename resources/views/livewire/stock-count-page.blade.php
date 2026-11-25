@@ -18,6 +18,7 @@
 @endphp
 
 <div class="sc">
+    <x-flash />
     @include('partials.stock-count-styles')
 
     {{-- ================= En-tête ================= --}}

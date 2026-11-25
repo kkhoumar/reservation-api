@@ -123,14 +123,10 @@
     </style>
 
     {{-- Messages du serveur (stock épuisé, commande déjà encaissée…) --}}
-    @if (session('error') || $errors->any())
+    <x-flash />
+    @if ($errors->any())
         <div class="toast err" role="alert" wire:key="err-{{ uniqid() }}" x-data="{ show: true }" x-init="setTimeout(() => show = false, 4500)" x-show="show" x-transition.opacity @click="show = false">
-            {{ session('error') ?: $errors->first() }}
-        </div>
-    @endif
-    @if (session('success'))
-        <div class="toast ok" role="status" wire:key="ok-{{ uniqid() }}" x-data="{ show: true }" x-init="setTimeout(() => show = false, 3500)" x-show="show" x-transition.opacity @click="show = false">
-            {{ session('success') }}
+            {{ $errors->first() }}
         </div>
     @endif
     {{-- Message immédiat du téléphone (plus de stock) --}}

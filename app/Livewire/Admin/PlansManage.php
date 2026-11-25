@@ -57,7 +57,7 @@ class PlansManage extends Component
 
         Log::info('Formule modifiée', ['admin_id' => auth()->id(), 'plan' => $plan->code, 'price' => $plan->monthly_price]);
 
-        session()->flash('success', "Formule {$plan->name} enregistrée.");
+        \App\Support\Toast::success("Formule {$plan->name} enregistrée.");
     }
 
     public function render()

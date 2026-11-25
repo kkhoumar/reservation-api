@@ -13,7 +13,7 @@ trait ShowsBusinessErrors
     public function exception($e, $stopPropagation): void
     {
         if ($e instanceof BusinessRuleException) {
-            session()->flash('error', $e->getMessage());
+            \App\Support\Toast::error($e->getMessage());
             $this->addError('business', $e->getMessage());
             $stopPropagation();
         }

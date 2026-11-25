@@ -1,9 +1,5 @@
 <div>
-    @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
-            {{ session('success') }}
-        </div>
-    @endif
+    <x-flash />
 
     <h1 style="color: var(--color-primary);">Plan des tables</h1>
 

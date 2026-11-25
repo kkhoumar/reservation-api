@@ -88,7 +88,7 @@ class RestaurantSubscription extends Component
         $this->reference = '';
         $this->note = '';
 
-        session()->flash('success', 'Paiement de ' . number_format($payment->amount, 0, ',', ' ')
+        \App\Support\Toast::success('Paiement de ' . number_format($payment->amount, 0, ',', ' ')
             . ' FCFA enregistré : accès payé jusqu\'au ' . $payment->period_end->format('d/m/Y') . '.');
     }
 
@@ -106,7 +106,7 @@ class RestaurantSubscription extends Component
             'plan_id' => $this->planId,
         ]);
 
-        session()->flash('success', 'Formule enregistrée.');
+        \App\Support\Toast::success('Formule enregistrée.');
     }
 
     // ---------- Zone dangereuse ----------
@@ -134,7 +134,7 @@ class RestaurantSubscription extends Component
 
         $this->reset(['resetConfirm', 'resetCustomers', 'resetStock']);
         $total = array_sum($counts);
-        session()->flash('success', "Données de test vidées ({$total} lignes effacées : "
+        \App\Support\Toast::success("Données de test vidées ({$total} lignes effacées : "
             . collect($counts)->filter()->map(fn ($n, $k) => "{$n} {$k}")->join(', ')
             . "). Le menu, les tables, l'équipe et les réglages sont conservés.");
     }
@@ -156,7 +156,7 @@ class RestaurantSubscription extends Component
             session()->forget(\App\Models\User::ADMIN_RESTAURANT_SESSION_KEY);
         }
 
-        session()->flash('success', "Le maquis « {$restaurant->name} » et toutes ses données ont été supprimés.");
+        \App\Support\Toast::success("Le maquis « {$restaurant->name} » et toutes ses données ont été supprimés.");
 
         return $this->redirect(route('admin.restaurants'), navigate: false);
     }

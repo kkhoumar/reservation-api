@@ -1,4 +1,5 @@
 <div style="display: flex; justify-content: center; align-items: flex-start; gap: 16px; flex-wrap: wrap; padding-top: 20px;">
+    <x-flash />
     <div class="card" style="max-width: 460px; width: 100%; text-align: center;">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-success-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E8E5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

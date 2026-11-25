@@ -58,7 +58,7 @@ class StockCountPage extends Component
             return 'Un produit a été supprimé pendant le comptage. Rechargez la page.';
         }
 
-        session()->flash('success', 'Comptage validé. Le stock de l\'application est maintenant celui que vous avez compté.');
+        \App\Support\Toast::success('Comptage validé. Le stock de l\'application est maintenant celui que vous avez compté.');
         $this->redirectRoute('stock.count.show', ['stockCount' => $count->id]);
 
         return null;

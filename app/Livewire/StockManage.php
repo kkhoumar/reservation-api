@@ -126,7 +126,7 @@ class StockManage extends Component
             return;
         }
 
-        session()->flash('success', "Livraison enregistrée : {$result['quantity']} " . ($result['quantity'] > 1 ? 'articles' : 'article') . " sur {$result['lines']} " . ($result['lines'] > 1 ? 'produits' : 'produit')
+        \App\Support\Toast::success("Livraison enregistrée : {$result['quantity']} " . ($result['quantity'] > 1 ? 'articles' : 'article') . " sur {$result['lines']} " . ($result['lines'] > 1 ? 'produits' : 'produit')
             . ($result['total_cost'] > 0 ? ', ' . number_format($result['total_cost'], 0, ',', ' ') . ' FCFA' : '')
             . ($result['expense'] ? ', dépense créée dans la caisse.' : '.'));
 
@@ -173,7 +173,7 @@ class StockManage extends Component
             return;
         }
 
-        session()->flash('success', 'Perte enregistrée : ' . abs($movement->quantity) . ' ' . $movement->product->name
+        \App\Support\Toast::success('Perte enregistrée : ' . abs($movement->quantity) . ' ' . $movement->product->name
             . ', soit ' . number_format(abs($movement->quantity) * $movement->unit_cost, 0, ',', ' ') . ' FCFA.');
 
         $this->reset(['lossProductId', 'lossReason', 'lossPhoto']);

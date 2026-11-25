@@ -51,7 +51,7 @@ class RestaurantsList extends Component
             'status' => $newStatus,
         ]);
 
-        session()->flash('success', $newStatus === 'suspended'
+        \App\Support\Toast::success($newStatus === 'suspended'
             ? "{$restaurant->name} est verrouillé : son personnel n'a plus accès à l'application."
             : "{$restaurant->name} est réactivé.");
     }

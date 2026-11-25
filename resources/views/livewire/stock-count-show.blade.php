@@ -46,11 +46,7 @@
         }
     </style>
 
-    @if (session('success'))
-        <div class="sc-warn" style="background: var(--color-success-bg); color: var(--color-success);">
-            <x-icon name="check-circle" size="18" /> <div><strong>{{ session('success') }}</strong></div>
-        </div>
-    @endif
+    <x-flash />
 
     {{-- ================= En-tête ================= --}}
     <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;">

@@ -43,13 +43,13 @@ class CashRegisterManage extends Component
         $opened = CashRegister::openFor($restaurantId, auth()->user(), (int) $this->openingAmount) !== null;
 
         if (!$opened) {
-            session()->flash('error', 'Une caisse est déjà ouverte.');
+            \App\Support\Toast::error('Une caisse est déjà ouverte.');
 
             return;
         }
 
         $this->openingAmount = 0;
-        session()->flash('success', 'Caisse ouverte.');
+        \App\Support\Toast::success('Caisse ouverte.');
     }
 
     public function confirmClose()
@@ -108,7 +108,7 @@ class CashRegisterManage extends Component
         });
 
         if (!$closed) {
-            session()->flash('error', 'Cette caisse est déjà clôturée.');
+            \App\Support\Toast::error('Cette caisse est déjà clôturée.');
 
             return;
         }

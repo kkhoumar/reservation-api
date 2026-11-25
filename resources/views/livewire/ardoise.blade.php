@@ -1,9 +1,5 @@
 <div>
-    @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
-            {{ session('success') }}
-        </div>
-    @endif
+    <x-flash />
 
     <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
         <div>

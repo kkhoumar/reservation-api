@@ -85,7 +85,8 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    // Application en français uniquement : les messages d'erreur des formulaires sont dans lang/fr
+    'locale' => 'fr',
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

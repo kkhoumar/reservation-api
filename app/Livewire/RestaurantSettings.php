@@ -116,7 +116,7 @@ class RestaurantSettings extends Component
             \App\Models\ActivityLog::record('settings_changed', 'a modifié les réglages : ' . implode(', ', $changed) . '.');
         }
 
-        session()->flash('success', 'Réglages enregistrés.');
+        \App\Support\Toast::success('Vos réglages sont enregistrés.');
     }
 
     public function render()

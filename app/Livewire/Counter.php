@@ -110,12 +110,12 @@ class Counter extends Component
             return;
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             $this->reset(['creditOrderId', 'creditCustomerId']);
-            session()->flash('error', 'Ce bon a déjà été traité.');
+            \App\Support\Toast::error('Ce bon a déjà été traité.');
 
             return;
         }
 
-        session()->flash('success', "{$order->order_number} mis à crédit pour {$customer->name} : servez la commande.");
+        \App\Support\Toast::success("{$order->order_number} mis à crédit pour {$customer->name} : servez la commande.");
         $this->reset(['creditOrderId', 'creditCustomerId']);
     }
 
@@ -128,7 +128,7 @@ class Counter extends Component
     public function mount(): void
     {
         if (! auth()->user()->currentRestaurant()?->paysBeforeService()) {
-            session()->flash('error', 'Ce maquis encaisse à la fin du repas : utilisez le plan des tables.');
+            \App\Support\Toast::error('Ce maquis encaisse à la fin du repas : utilisez le plan des tables.');
             $this->redirect(route('tables.index'), navigate: false);
         }
     }
@@ -184,13 +184,13 @@ class Counter extends Component
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             // Encaissé ou annulé entre-temps par quelqu'un d'autre
             $this->cancelPayment();
-            session()->flash('error', 'Ce bon a déjà été traité.');
+            \App\Support\Toast::error('Ce bon a déjà été traité.');
 
             return;
         }
 
         $change = (int) $payment->change_given;
-        session()->flash('success', "{$order->order_number} encaissé ({$payment->methodLabel()}) : servez la commande."
+        \App\Support\Toast::success("{$order->order_number} encaissé ({$payment->methodLabel()}) : servez la commande."
             . ($change > 0 ? ' Monnaie à rendre : ' . number_format($change, 0, ',', ' ') . ' FCFA.' : ''));
 
         $this->cancelPayment();
@@ -206,7 +206,7 @@ class Counter extends Component
         try {
             $order->cancel();
         } catch (BusinessRuleException $e) {
-            session()->flash('error', $e->getMessage());
+            \App\Support\Toast::error($e->getMessage());
 
             return;
         }
@@ -221,7 +221,7 @@ class Counter extends Component
             $this->cancelPayment();
         }
 
-        session()->flash('success', "{$order->order_number} annulé : les articles sont remis en stock.");
+        \App\Support\Toast::success("{$order->order_number} annulé : les articles sont remis en stock.");
     }
 
     /**

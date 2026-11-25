@@ -14,11 +14,7 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
-            {{ session('success') }}
-        </div>
-    @endif
+    <x-flash />
 
     @if ($demoRequests->isNotEmpty())
         <h3 style="margin: 0 0 10px 0;">Demandes de démo ({{ $demoRequests->count() }})</h3>

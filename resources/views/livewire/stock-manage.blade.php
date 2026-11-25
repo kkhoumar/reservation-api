@@ -123,11 +123,7 @@
         }
     </style>
 
-    @if (session('success'))
-        <div class="sc-warn" style="background: var(--color-success-bg); color: var(--color-success);">
-            <x-icon name="check-circle" size="18" /> <div><strong>{{ session('success') }}</strong></div>
-        </div>
-    @endif
+    <x-flash />
 
     @if (session('empties_alerts'))
         <div class="sc-warn" style="background: var(--color-danger-bg); color: var(--color-danger);">

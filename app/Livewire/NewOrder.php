@@ -51,7 +51,7 @@ class NewOrder extends Component
         }
 
         if (! $this->tableId && ! $restaurant?->usesQuickSale()) {
-            session()->flash('error', "La vente rapide n'est pas activée dans ce maquis. Choisissez une table.");
+            \App\Support\Toast::error("La vente rapide n'est pas activée dans ce maquis. Choisissez une table.");
             $this->redirect(route('tables.index'), navigate: false);
 
             return;
@@ -181,7 +181,7 @@ class NewOrder extends Component
                 return $order->id;
             });
         } catch (BusinessRuleException $e) {
-            session()->flash('error', $e->getMessage());
+            \App\Support\Toast::error($e->getMessage());
 
             return;
         }
@@ -278,7 +278,7 @@ class NewOrder extends Component
                 }
             });
         } catch (BusinessRuleException $e) {
-            session()->flash('error', $e->getMessage());
+            \App\Support\Toast::error($e->getMessage());
         }
     }
 
@@ -297,7 +297,7 @@ class NewOrder extends Component
         // Les lignes parties en cuisine sont figées pour les serveurs
         OrderItem::where('order_id', $this->orderId)->whereNull('sent_at')->update(['sent_at' => now()]);
 
-        session()->flash('success', 'Commande envoyée en cuisine.');
+        \App\Support\Toast::success('Commande envoyée en cuisine.');
     }
 
     /**
@@ -317,7 +317,7 @@ class NewOrder extends Component
 
         // Paiement avant service : seul le comptoir encaisse
         if ($paysBefore && auth()->user()->isServer()) {
-            session()->flash('error', "C'est le comptoir qui encaisse : envoie le bon au comptoir.");
+            \App\Support\Toast::error("C'est le comptoir qui encaisse : envoie le bon au comptoir.");
 
             return;
         }
@@ -354,7 +354,7 @@ class NewOrder extends Component
         }
 
         $order = $this->order;
-        session()->flash('success', "Bon {$order->order_number} envoyé au comptoir : "
+        \App\Support\Toast::success("Bon {$order->order_number} envoyé au comptoir : "
             . number_format($order->total, 0, ',', ' ') . ' FCFA à encaisser.');
 
         return $this->tableId
@@ -376,13 +376,13 @@ class NewOrder extends Component
         $order = $this->order;
 
         if (!$order || $order->items->isEmpty()) {
-            session()->flash('error', 'Ajoutez au moins un article avant de continuer.');
+            \App\Support\Toast::error('Ajoutez au moins un article avant de continuer.');
 
             return false;
         }
 
         if (!$order->isEditable()) {
-            session()->flash('error', 'Cette commande est déjà à l\'encaissement ou payée.');
+            \App\Support\Toast::error('Cette commande est déjà à l\'encaissement ou payée.');
 
             return false;
         }

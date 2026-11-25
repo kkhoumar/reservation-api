@@ -6,6 +6,7 @@
 @endphp
 
 <div>
+    <x-flash />
     @if ($noRestaurant)
         <div class="card">Choisissez d'abord un maquis.</div>
     @else

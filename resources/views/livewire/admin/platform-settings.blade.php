@@ -7,11 +7,7 @@
         <h1>Réglages de la plateforme</h1>
     </div>
 
-    @if (session('success'))
-        <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
-            {{ session('success') }}
-        </div>
-    @endif
+    <x-flash />
 
     <div class="card" style="max-width: 560px;">
         <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">

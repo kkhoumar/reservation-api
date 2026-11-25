@@ -39,7 +39,7 @@ class PlatformSettings extends Component
 
         PlatformSetting::write(PlatformSetting::SUPPORT_WHATSAPP, $this->whatsapp ?: null);
 
-        session()->flash('success', $this->whatsapp
+        \App\Support\Toast::success($this->whatsapp
             ? 'Numéro enregistré. Le bouton WhatsApp mène maintenant à ce numéro.'
             : 'Numéro retiré. Le numéro du serveur est utilisé s\'il existe, sinon le bouton est caché.');
     }

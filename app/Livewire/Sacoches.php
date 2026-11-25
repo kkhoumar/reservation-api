@@ -83,7 +83,7 @@ class Sacoches extends Component
             return;
         }
 
-        session()->flash('success', 'Versement de ' . number_format($this->amount, 0, ',', ' ') . ' FCFA reçu de ' . $server->first_name . '.');
+        \App\Support\Toast::success('Versement de ' . number_format($this->amount, 0, ',', ' ') . ' FCFA reçu de ' . $server->first_name . '.');
         $this->cancel();
     }
 
