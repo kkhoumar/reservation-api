@@ -146,7 +146,7 @@ class StockService
 
             foreach ($emptiesAlerts as $alert) {
                 ActivityLog::record('empties_alert', "Livraison : {$alert['surplus']} vides de {$alert['product']} rendus en plus de ce que l'application attendait. "
-                    . 'Ce sont probablement des bouteilles vendues sans bon, soit ' . ActivityLog::fcfa($alert['value']) . '.', [
+                    . 'Des bières ont peut-être été vendues sans bon (' . ActivityLog::fcfa($alert['value']) . '). Vérifiez avec votre équipe.', [
                     'user' => $by, 'amount' => -$alert['value'],
                 ]);
             }
@@ -212,10 +212,11 @@ class StockService
      * @param  array<int, int|string|null>  $counted  quantité comptée par id de produit (vide = non compté)
      * @param  array<int, string|null>  $reasons  raison de l'écart par id de produit (voir StockCountLine::REASONS)
      * @param  array<int, int|string|null>  $empties  vides comptés par id de produit (bouteilles consignées)
+     * @param  array<int, int|string|null>  $broken  vides cassés depuis le dernier comptage (bus ici, mais plus là)
      *
      * @throws BusinessRuleException
      */
-    public function recordInventory(User $by, array $counted, ?string $note = null, array $reasons = [], array $empties = []): StockCount
+    public function recordInventory(User $by, array $counted, ?string $note = null, array $reasons = [], array $empties = [], array $broken = []): StockCount
     {
         $this->guard($by);
 
@@ -231,13 +232,13 @@ class StockService
             }
         }
 
-        foreach ($empties as $value) {
+        foreach ([...array_values($empties), ...array_values($broken)] as $value) {
             if ($value !== null && $value !== '' && (! is_numeric($value) || (int) $value < 0 || (int) $value > 1000000 || (string) (int) $value !== (string) $value)) {
-                throw new BusinessRuleException('Les vides comptés doivent être des nombres entiers positifs.');
+                throw new BusinessRuleException('Les bouteilles vides doivent être des nombres entiers positifs.');
             }
         }
 
-        return DB::transaction(function () use ($by, $counted, $note, $reasons, $empties) {
+        return DB::transaction(function () use ($by, $counted, $note, $reasons, $empties, $broken) {
             $restaurantId = $by->currentRestaurantId();
             $sheet = new StockCountSheet($restaurantId);
             $delivered = $sheet->delivered();
@@ -263,15 +264,18 @@ class StockService
                 // Vides : ils disent ce que sont devenues les bouteilles qui manquent
                 $emptiesExpected = null;
                 $emptiesCounted = null;
+                $emptiesBroken = null;
                 $unbilled = 0;
                 $takenOut = 0;
                 if ($product->is_returnable && isset($empties[$productId]) && $empties[$productId] !== '') {
                     $emptiesCounted = (int) $empties[$productId];
+                    $emptiesBroken = isset($broken[$productId]) && $broken[$productId] !== '' && (int) $broken[$productId] > 0 ? (int) $broken[$productId] : null;
                     if ($product->hasEmptiesBaseline()) {
                         $emptiesExpected = max(0, (int) $product->empty_quantity);
                         if ($diff < 0) {
                             $missing = -$diff;
-                            $unbilled = max(0, min($missing, $emptiesCounted - $emptiesExpected));
+                            // Un vide cassé est une bière bue ici : il compte comme un vide trouvé
+                            $unbilled = max(0, min($missing, $emptiesCounted + (int) $emptiesBroken - $emptiesExpected));
                             $takenOut = $missing - $unbilled;
                         }
                     }
@@ -310,6 +314,7 @@ class StockService
                     'reason' => $reason,
                     'empties_expected' => $emptiesExpected,
                     'empties_counted' => $emptiesCounted,
+                    'empties_broken' => $emptiesBroken,
                     'unbilled' => $unbilled,
                     'taken_out' => $takenOut,
                 ]);
@@ -335,7 +340,7 @@ class StockService
             Log::info('Stock : comptage', ['user_id' => $by->id, 'stock_count_id' => $count->id, 'value_gap' => $totals['gap_cost']]);
             ActivityLog::record('stock_count', 'a validé un comptage de ' . count($counted) . ' ' . (count($counted) > 1 ? 'produits' : 'produit') . ' : '
                 . ($totals['gap_sale'] === 0 ? 'tout est juste.' : 'écart de ' . ($totals['gap_sale'] > 0 ? '+' : '') . ActivityLog::fcfa($totals['gap_sale']) . ' au prix de vente.')
-                . ($totals['unbilled'] > 0 ? ' Dont ' . ActivityLog::fcfa($totals['unbilled']) . ' de boissons vendues sans bon (vides en trop).' : ''), [
+                . ($totals['unbilled'] > 0 ? ' Dont ' . ActivityLog::fcfa($totals['unbilled']) . ' de boissons peut-être vendues sans bon (vides en trop).' : ''), [
                 'user' => $by, 'amount' => $totals['gap_sale'], 'meta' => ['stock_count_id' => $count->id],
             ]);
 

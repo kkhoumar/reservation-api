@@ -86,7 +86,7 @@
                 <span>{{ $total['products'] }} {{ $total['products'] > 1 ? 'produits comptés' : 'produit compté' }}</span>
                 <span>{{ $gaps->count() }} {{ $gaps->count() > 1 ? 'écarts' : 'écart' }}</span>
                 @if ($prev)<span>Période de {{ $report->periodLabel() }}</span>@endif
-                @if ($total['unbilled'] > 0)<span>{{ $fcfa($total['unbilled']) }} F vendus sans bon</span>@endif
+                @if ($total['unbilled'] > 0)<span>{{ $fcfa($total['unbilled']) }} F peut-être vendus sans bon</span>@endif
             </div>
         </div>
     </div>
@@ -119,7 +119,7 @@
                         <div class="small muted" style="margin-top: 6px;">Soit {{ $signed($g['gap_cost']) }} au prix d'achat</div>
                     @endif
                     @if ($g['unbilled'] > 0)
-                        <div class="small" style="margin-top: 6px; font-weight: 700; color: {{ $key === 'total' ? '#FFD3D3' : 'var(--color-danger)' }};">Dont {{ $fcfa($g['unbilled']) }} F de boissons vendues sans bon</div>
+                        <div class="small" style="margin-top: 6px; font-weight: 700; color: {{ $key === 'total' ? '#FFD3D3' : 'var(--color-danger)' }};">Dont {{ $fcfa($g['unbilled']) }} F de boissons peut-être vendues sans bon</div>
                     @endif
                     @if ($g['missing_cost'] > 0 && $key !== 'total')
                         <div class="small muted" style="margin-top: 6px;">{{ $g['missing_cost'] }} sans prix d'achat, comptés au prix de vente</div>
@@ -160,14 +160,14 @@
                             @endif
                             @if ($l->empties_counted !== null)
                                 <div class="sc-calc">
-                                    Vides : <span class="out">{{ $l->empties_counted }}</span> comptés{{ $l->empties_expected !== null ? ', ' . $l->empties_expected . ' attendus' : ' (premier comptage des vides)' }}
+                                    Vides : <span class="out">{{ $l->empties_counted }}</span> trouvés{{ $l->empties_broken ? ' + ' . $l->empties_broken . ' cassés' : '' }}{{ $l->empties_expected !== null ? ', ' . $l->empties_expected . ' attendus' : ' (premier comptage des vides : le contrôle commencera la prochaine fois)' }}
                                 </div>
                             @endif
                             @if ($l->unbilled || $l->taken_out)
                                 <div class="sc-why" style="margin-top: 3px;">
-                                    @if ($l->unbilled)<b>{{ $l->unbilled }} {{ $l->unbilled > 1 ? 'vendues' : 'vendue' }} sans bon</b> ({{ $signed(-$l->unbilled * $l->unit_price) }})@endif
+                                    @if ($l->unbilled)<b>{{ $l->unbilled }} peut-être {{ $l->unbilled > 1 ? 'vendues' : 'vendue' }} sans bon</b> ({{ $signed(-$l->unbilled * $l->unit_price) }})@endif
                                     @if ($l->unbilled && $l->taken_out) · @endif
-                                    @if ($l->taken_out)<b>{{ $l->taken_out }} {{ $l->taken_out > 1 ? 'sorties' : 'sortie' }} du maquis</b>@endif
+                                    @if ($l->taken_out)<b>{{ $l->taken_out }} {{ $l->taken_out > 1 ? 'disparues' : 'disparue' }}</b> (ni bon ni bouteille vide)@endif
                                 </div>
                             @endif
                             </div>

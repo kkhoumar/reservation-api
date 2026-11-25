@@ -29,7 +29,7 @@ class StockCountPage extends Component
      * @return string|null  message d'erreur à afficher, null si tout va bien
      */
     #[Renderless]
-    public function save(array $counts, array $reasons = [], string $note = '', array $empties = []): ?string
+    public function save(array $counts, array $reasons = [], string $note = '', array $empties = [], array $broken = []): ?string
     {
         $counts = collect($counts)
             ->filter(fn ($v, $k) => is_numeric($k))
@@ -45,8 +45,13 @@ class StockCountPage extends Component
             ->map(fn ($v) => is_int($v) ? $v : trim($v))
             ->all();
 
+        $broken = collect($broken)
+            ->filter(fn ($v, $k) => is_numeric($k) && (is_int($v) || is_string($v)))
+            ->map(fn ($v) => is_int($v) ? $v : trim($v))
+            ->all();
+
         try {
-            $count = app(StockService::class)->recordInventory(auth()->user(), $counts, mb_substr(trim($note), 0, 255) ?: null, $reasons, $empties);
+            $count = app(StockService::class)->recordInventory(auth()->user(), $counts, mb_substr(trim($note), 0, 255) ?: null, $reasons, $empties, $broken);
         } catch (BusinessRuleException $e) {
             return $e->getMessage();
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {

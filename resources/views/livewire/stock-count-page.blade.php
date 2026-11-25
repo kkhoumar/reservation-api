@@ -159,12 +159,67 @@
                                     <button type="button" class="sc-step" aria-label="Un de plus" @click="step({{ $r['id'] }}, 1)"><x-icon name="plus" size="18" stroke="2.4" /></button>
                                 </div>
                                 <button type="button" class="sc-exact" :class="{ on: gap({{ $r['id'] }}) === 0 }" @click="exact({{ $r['id'] }})" title="Le compte est bon"><x-icon name="check" size="15" stroke="2.6" /> Juste</button>
+                                @if ($r['returnable'] && $r['crate'])
+                                    {{-- Pleines : compter en casiers, l'application fait le calcul --}}
+                                    <div class="sc-crates">
+                                        <span class="lbl">Ou en casiers de {{ $r['crate'] }}&nbsp;:</span>
+                                        <span class="sc-cr">
+                                            <input type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="Casiers pleins : {{ $r['name'] }}"
+                                                   :value="crPart('f', {{ $r['id'] }}, 'c')" @input="typeCrate('f', {{ $r['id'] }}, 'c', $event)" @focus="$event.target.select()">
+                                            <small>casiers</small>
+                                        </span>
+                                        <span class="plus">+</span>
+                                        <span class="sc-cr">
+                                            <input type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="Bouteilles pleines en plus : {{ $r['name'] }}"
+                                                   :value="crPart('f', {{ $r['id'] }}, 'l')" @input="typeCrate('f', {{ $r['id'] }}, 'l', $event)" @focus="$event.target.select()">
+                                            <small>bouteilles</small>
+                                        </span>
+                                    </div>
+                                @endif
                                 @if ($r['returnable'])
                                     <div class="sc-empties">
-                                        <span class="lbl"><x-icon name="bottle" size="16" /> Vides comptés</span>
-                                        <input type="text" inputmode="numeric" autocomplete="off" placeholder="—" aria-label="Vides comptés : {{ $r['name'] }}"
-                                               :value="empties[{{ $r['id'] }}] ?? ''" @input="typeEmpty({{ $r['id'] }}, $event)" @focus="$event.target.select()">
-                                        <span class="exp">{{ $r['emptiesExpected'] !== null ? 'attendus : ' . $r['emptiesExpected'] : 'premier comptage des vides' }}</span>
+                                        <div class="sc-em-head">
+                                            <span class="lbl"><x-icon name="bottle" size="16" /> Bouteilles vides</span>
+                                            <span class="exp">
+                                                @if ($r['emptiesExpected'] !== null)
+                                                    @php
+                                                        $ec = $r['crate'] ? intdiv($r['emptiesExpected'], $r['crate']) : 0;
+                                                        $el = $r['crate'] ? $r['emptiesExpected'] % $r['crate'] : 0;
+                                                    @endphp
+                                                    L'application attend <b>{{ $r['emptiesExpected'] }}</b> vides{{ $ec > 0 ? ' (' . $ec . ' ' . ($ec > 1 ? 'casiers' : 'casier') . ($el ? ' + ' . $el : '') . ')' : '' }}
+                                                @else
+                                                    Premier comptage des vides : le contrôle commencera la prochaine fois.
+                                                @endif
+                                            </span>
+                                        </div>
+                                        <div class="sc-em-fields">
+                                            @if ($r['crate'])
+                                                <span class="sc-cr">
+                                                    <input type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="Casiers de vides : {{ $r['name'] }}"
+                                                           :value="crPart('e', {{ $r['id'] }}, 'c')" @input="typeCrate('e', {{ $r['id'] }}, 'c', $event)" @focus="$event.target.select()">
+                                                    <small>casiers</small>
+                                                </span>
+                                                <span class="plus">+</span>
+                                                <span class="sc-cr">
+                                                    <input type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="Bouteilles vides en plus : {{ $r['name'] }}"
+                                                           :value="crPart('e', {{ $r['id'] }}, 'l')" @input="typeCrate('e', {{ $r['id'] }}, 'l', $event)" @focus="$event.target.select()">
+                                                    <small>bouteilles</small>
+                                                </span>
+                                                <span class="eq" x-show="emptyValue({{ $r['id'] }}) !== null" x-cloak>= <b x-text="emptyValue({{ $r['id'] }})"></b></span>
+                                            @else
+                                                <span class="sc-cr">
+                                                    <input type="text" inputmode="numeric" autocomplete="off" placeholder="—" aria-label="Bouteilles vides trouvées : {{ $r['name'] }}"
+                                                           :value="empties[{{ $r['id'] }}] ?? ''" @input="typeEmpty({{ $r['id'] }}, $event)" @focus="$event.target.select()">
+                                                    <small>trouvées</small>
+                                                </span>
+                                            @endif
+                                            <span class="br" aria-hidden="true"></span>
+                                            <span class="sc-cr broken">
+                                                <input type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="Bouteilles vides cassées : {{ $r['name'] }}"
+                                                       :value="broken[{{ $r['id'] }}] ?? ''" @input="typeBroken({{ $r['id'] }}, $event)" @focus="$event.target.select()">
+                                                <small>cassées</small>
+                                            </span>
+                                        </div>
                                     </div>
                                 @endif
                                 <div class="sc-result" x-show="(gap({{ $r['id'] }}) ?? 0) !== 0" x-cloak>
@@ -267,6 +322,8 @@
             rows,
             counts: {},
             empties: {},
+            broken: {},
+            crates: {},
             reasons: {},
             note: '',
             kind: 'all',
@@ -281,6 +338,7 @@
                         for (const id in draft.counts) if (this.rows[id]) this.counts[id] = draft.counts[id];
                         this.reasons = draft.reasons || {};
                         this.empties = draft.empties || {};
+                        this.broken = draft.broken || {};
                         this.note = draft.note || '';
                         this.restored = true;
                         setTimeout(() => this.restored = false, 6000);
@@ -292,7 +350,7 @@
             },
 
             saveDraft() {
-                try { localStorage.setItem(draftKey, JSON.stringify({ counts: this.counts, reasons: this.reasons, note: this.note, empties: this.empties })); } catch (e) {}
+                try { localStorage.setItem(draftKey, JSON.stringify({ counts: this.counts, reasons: this.reasons, note: this.note, empties: this.empties, broken: this.broken })); } catch (e) {}
             },
 
             value(id) {
@@ -311,6 +369,42 @@
                 const d = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 6);
                 e.target.value = d;
                 if (d === '') { delete this.empties[id]; this.empties = { ...this.empties }; } else { this.empties[id] = d; }
+                this.saveDraft();
+            },
+            // Casiers + bouteilles : 'f' = pleines (counts), 'e' = vides (empties)
+            crPart(which, id, part) {
+                const key = which + id, size = this.rows[id].crate;
+                if (this.crates[key]) return this.crates[key][part];
+                const total = which === 'f' ? this.value(id) : this.emptyValue(id);
+                if (total === null) return '';
+                return String(part === 'c' ? Math.floor(total / size) : total % size);
+            },
+            typeCrate(which, id, part, e) {
+                const d = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 4);
+                e.target.value = d;
+                const key = which + id, size = this.rows[id].crate;
+                const cur = this.crates[key] ? { ...this.crates[key] } : { c: this.crPart(which, id, 'c'), l: this.crPart(which, id, 'l') };
+                cur[part] = d;
+                this.crates = { ...this.crates, [key]: cur };
+                const target = which === 'f' ? 'counts' : 'empties';
+                const next = { ...this[target] };
+                if (cur.c === '' && cur.l === '') delete next[id];
+                else next[id] = String(parseInt(cur.c || '0', 10) * size + parseInt(cur.l || '0', 10));
+                this[target] = next;
+                this.error = '';
+                this.saveDraft();
+            },
+            typeBroken(id, e) {
+                const d = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 4);
+                e.target.value = d;
+                const next = { ...this.broken };
+                if (d === '' || d === '0') delete next[id]; else next[id] = d;
+                this.broken = next;
+                this.saveDraft();
+            },
+            brokenValue(id) {
+                const v = this.broken[id];
+                return v === undefined || v === '' ? 0 : parseInt(v, 10);
             },
             emptyValue(id) {
                 const v = this.empties[id];
@@ -321,40 +415,47 @@
                 const r = this.rows[id], g = this.gap(id), e = this.emptyValue(id);
                 if (!r.returnable || r.emptiesExpected === null || e === null || g === null || g >= 0) return null;
                 const missing = -g;
-                const unbilled = Math.max(0, Math.min(missing, e - r.emptiesExpected));
+                // Un vide cassé est une bière bue ici : il compte comme un vide trouvé
+                const unbilled = Math.max(0, Math.min(missing, e + this.brokenValue(id) - r.emptiesExpected));
                 return { unbilled, out: missing - unbilled };
             },
             why(id) {
                 const s = this.split(id), r = this.rows[id];
                 if (!s) return '';
                 const parts = [];
-                if (s.unbilled) parts.push('<b>' + s.unbilled + ' vendue' + (s.unbilled > 1 ? 's' : '') + ' sans bon</b> (vides en trop, ' + this.signed(-s.unbilled * r.price) + ')');
-                if (s.out) parts.push('<b>' + s.out + ' sortie' + (s.out > 1 ? 's' : '') + ' du maquis</b> (pas de vide)');
-                return parts.join(' · ');
+                if (s.unbilled) parts.push('<b>' + s.unbilled + ' peut-être vendue' + (s.unbilled > 1 ? 's' : '') + ' sans bon</b> : vides en trop, ' + this.signed(-s.unbilled * r.price) + ' dans la caisse');
+                if (s.out) parts.push('<b>' + s.out + ' disparue' + (s.out > 1 ? 's' : '') + '</b> : ni bon ni bouteille vide');
+                return parts.join(' · ') + '. Vérifiez avec votre équipe.';
             },
             type(id, e) {
                 const d = e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 6);
                 e.target.value = d;
                 if (d === '') { delete this.counts[id]; this.counts = { ...this.counts }; } else { this.counts[id] = d; }
+                this.dropCrate(id);
                 this.error = '';
             },
             step(id, delta) {
                 // Premier appui : on part de ce qui doit rester (34 → − → 33)
                 const base = this.value(id) ?? Math.max(0, this.rows[id].expected);
                 this.counts[id] = String(Math.max(0, base + delta));
+                this.dropCrate(id);
                 this.error = '';
             },
             exact(id) {
                 this.counts[id] = String(Math.max(0, this.rows[id].expected));
+                this.dropCrate(id);
                 delete this.reasons[id];
                 this.error = '';
+            },
+            dropCrate(id) {
+                if (this.crates['f' + id]) { const c = { ...this.crates }; delete c['f' + id]; this.crates = c; }
             },
             reason(id, key) {
                 this.reasons[id] = this.reasons[id] === key ? null : key;
             },
             clearAll() {
                 if (!confirm('Effacer tout ce que vous avez compté ?')) return;
-                this.counts = {}; this.reasons = {}; this.note = ''; this.empties = {};
+                this.counts = {}; this.reasons = {}; this.note = ''; this.empties = {}; this.broken = {}; this.crates = {};
             },
 
             unitCost(r) { return r.cost ?? r.price; },
@@ -411,13 +512,14 @@
 
                 this.sending = true;
                 this.error = '';
-                const counts = {}, reasons = {}, empties = {};
+                const counts = {}, reasons = {}, empties = {}, broken = {};
                 for (const id in this.empties) if (this.emptyValue(id) !== null && this.value(id) !== null) empties[id] = String(this.emptyValue(id));
                 for (const id in this.counts) if (this.value(id) !== null) counts[id] = String(this.value(id));
+                for (const id in this.broken) if (this.brokenValue(id) > 0 && empties[id] !== undefined) broken[id] = String(this.brokenValue(id));
                 for (const id in this.reasons) if (this.reasons[id] && counts[id] !== undefined) reasons[id] = this.reasons[id];
 
                 try {
-                    const error = await this.$wire.save(counts, reasons, this.note, empties);
+                    const error = await this.$wire.save(counts, reasons, this.note, empties, broken);
                     if (error) { this.error = error; this.sending = false; return; }
                     try { localStorage.removeItem(draftKey); } catch (e) {}
                 } catch (e) {

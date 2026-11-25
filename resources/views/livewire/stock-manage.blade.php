@@ -134,8 +134,8 @@
             <x-icon name="alert" size="18" style="margin-top: 1px;" />
             <div>
                 @foreach (session('empties_alerts') as $alert)
-                    <strong>{{ $alert['surplus'] }} vides de {{ $alert['product'] }} rendus en plus de ce que l'application attendait.</strong>
-                    Ce sont probablement des bouteilles vendues sans bon, soit {{ $fcfa($alert['value']) }} F.<br>
+                    <strong>Le dépôt a repris {{ $alert['surplus'] }} vides de {{ $alert['product'] }} de plus que prévu.</strong>
+                    Des bières ont peut-être été vendues sans bon ({{ $fcfa($alert['value']) }} F). Vérifiez avec votre équipe.<br>
                 @endforeach
                 <span style="font-weight: 500;">C'est noté dans le Journal.</span>
             </div>
@@ -240,7 +240,7 @@
                                     <div class="sc-calc">
                                         @if ($p->stock_alert_threshold !== null) Alerte à {{ $p->stock_alert_threshold }} @endif
                                         @if ($p->is_returnable)
-                                            {{ $p->stock_alert_threshold !== null ? '·' : '' }} Consignée{{ $p->crate_size ? ', casier de ' . $p->crate_size : '' }} ·
+                                            {{ $p->stock_alert_threshold !== null ? '·' : '' }} Vides rendus au dépôt{{ $p->crate_size ? ', casier de ' . $p->crate_size : '' }} ·
                                             {{ $p->hasEmptiesBaseline() ? $p->empty_quantity . ' vides attendus' : 'vides pas encore comptés' }}
                                         @endif
                                     </div>
@@ -317,7 +317,7 @@
                                     <x-stock-ava :kind="$k" />
                                     <div class="sc-txt">
                                         <div class="sc-name">{{ $p->name }}</div>
-                                        <div class="stock">{{ $p->stock_quantity }} en stock @if ($p->is_returnable)· consignée, autant de vides rendus @endif</div>
+                                        <div class="stock">{{ $p->stock_quantity }} en stock @if ($p->is_returnable)· le dépôt reprend autant de vides @endif</div>
                                     </div>
                                 </div>
                                 <div><small class="st-m">Quantité</small><input type="number" min="0" inputmode="numeric" wire:model="deliveryLines.{{ $p->id }}.quantity" placeholder="0" aria-label="Quantité livrée : {{ $p->name }}"></div>

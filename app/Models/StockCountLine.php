@@ -23,7 +23,7 @@ class StockCountLine extends Model
     protected $fillable = [
         'stock_count_id', 'product_id', 'product_name', 'kind', 'expected', 'counted', 'gap',
         'unit_cost', 'unit_price', 'delivered', 'sold', 'lost', 'reason',
-        'empties_expected', 'empties_counted', 'unbilled', 'taken_out',
+        'empties_expected', 'empties_counted', 'empties_broken', 'unbilled', 'taken_out',
     ];
 
     protected $casts = [
@@ -37,6 +37,7 @@ class StockCountLine extends Model
         'lost' => 'integer',
         'empties_expected' => 'integer',
         'empties_counted' => 'integer',
+        'empties_broken' => 'integer',
         'unbilled' => 'integer',
         'taken_out' => 'integer',
     ];

@@ -57,7 +57,8 @@ class ProductsManage extends Component
             'stockQuantity' => $this->editingProductId || ! $this->trackStock ? 'nullable' : 'required|integer|min:0|max:1000000',
             'stockAlertThreshold' => 'nullable|integer|min:0',
             'isReturnable' => 'boolean',
-            'crateSize' => 'nullable|in:6,12,15,20,24',
+            // Casier : 12 et 24 en boutons, « Autre » pour écrire son nombre
+            'crateSize' => $this->trackStock && $this->isReturnable ? 'required|integer|min:1|max:50' : 'nullable',
         ];
     }
 
@@ -67,6 +68,10 @@ class ProductsManage extends Component
             'sellingPrice.required' => 'Entrez le prix de vente.',
             'costPrice.required' => 'Entrez le prix d\'achat : il sert à calculer votre bénéfice.',
             'costPrice.lte' => 'Le prix d\'achat dépasse le prix de vente : vous perdriez de l\'argent à chaque vente. Vérifiez les deux prix.',
+            'crateSize.required' => 'Dites combien de bouteilles il y a dans un casier.',
+            'crateSize.integer' => 'Un casier a entre 1 et 50 bouteilles. Vérifiez le nombre.',
+            'crateSize.min' => 'Un casier a entre 1 et 50 bouteilles. Vérifiez le nombre.',
+            'crateSize.max' => 'Un casier a entre 1 et 50 bouteilles. Vérifiez le nombre.',
         ];
     }
 
@@ -109,8 +114,9 @@ class ProductsManage extends Component
             'stock_alert_threshold' => $this->stockAlertThreshold !== '' ? $this->stockAlertThreshold : null,
             'is_available' => $this->isAvailable,
             'track_stock' => $this->trackStock,
-            'is_returnable' => $this->isReturnable,
-            'crate_size' => $this->isReturnable && $this->crateSize !== '' ? (int) $this->crateSize : null,
+            // Un plat sans suivi de stock ne laisse pas de bouteille vide
+            'is_returnable' => $this->trackStock && $this->isReturnable,
+            'crate_size' => $this->trackStock && $this->isReturnable && $this->crateSize !== '' ? (int) $this->crateSize : null,
         ];
 
         if ($this->editingProductId) {
@@ -151,6 +157,16 @@ class ProductsManage extends Component
 
         $kind = Category::where('restaurant_id', auth()->user()->currentRestaurantId())->whereKey($value)->value('kind');
         $this->trackStock = $kind !== 'food';
+    }
+
+    /** « Vous rendez les bouteilles vides au dépôt ? » Oui / Non. À « Oui », 12 est proposé (le casier le plus courant). */
+    public function setReturnable(bool $yes): void
+    {
+        $this->isReturnable = $yes;
+        if ($yes && $this->crateSize === '') {
+            $this->crateSize = '12';
+        }
+        $this->resetErrorBag('crateSize');
     }
 
     /** « Fini pour aujourd'hui » : la cuisine n'en a plus ; il revient tout seul demain. */

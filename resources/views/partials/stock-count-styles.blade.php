@@ -140,10 +140,29 @@
         .sc-bar .sc-seg button { flex: 1; }
     }
     /* --- Vides (bouteilles consignées) --- */
-    .sc-empties { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #F2F7FD; border: 1px dashed #B9D2EE; border-radius: 12px; padding: 8px 12px; }
+    .sc-crates { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+    .sc-crates .lbl { color: var(--color-text-secondary); font-weight: 600; }
+    .sc-cr { display: inline-flex; align-items: center; gap: 6px; }
+    .sc-cr input { width: 64px; height: 40px; text-align: center; font-size: 17px; font-weight: 800; border-radius: 10px; padding: 0 6px; }
+    .sc-cr small { font-size: 12.5px; color: var(--color-text-secondary); font-weight: 600; }
+    .sc-crates .plus, .sc-em-fields .plus { color: var(--color-text-secondary); font-weight: 800; }
+    .sc-empties { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; background: #F2F7FD; border: 1px dashed #B9D2EE; border-radius: 12px; padding: 10px 12px; }
+    .sc-em-head { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; }
     .sc-empties .lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #2463B5; }
-    .sc-empties input { width: 84px; height: 40px; text-align: center; font-size: 17px; font-weight: 800; border-radius: 10px; }
-    .sc-empties .exp { font-size: 12.5px; color: var(--color-text-secondary); }
+    .sc-empties .exp { font-size: 12.5px; color: var(--color-text-secondary); line-height: 1.4; }
+    .sc-empties .exp b { color: var(--color-text); }
+    .sc-em-fields { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .sc-em-fields .eq { font-size: 14px; color: var(--color-text-secondary); }
+    .sc-em-fields .eq b { color: #2463B5; font-size: 16px; }
+    .sc-em-fields .br { display: none; }
+    .sc-cr.broken { margin-left: auto; padding-left: 10px; border-left: 1px solid #CFE0F3; }
+    .sc-cr.broken input { width: 56px; }
+    @media (max-width: 520px) {
+        .sc-em-fields .eq { order: 5; margin-left: auto; }
+        .sc-cr.broken { order: 4; margin-left: 0; padding-left: 0; border-left: 0; }
+        .sc-em-fields .br { display: block; order: 3; flex-basis: 100%; height: 0; }
+        .sc-crates .lbl { flex-basis: 100%; }
+    }
     .sc-why { font-size: 12.5px; color: var(--color-text); line-height: 1.45; }
     .sc-why b { color: var(--color-danger); }
 

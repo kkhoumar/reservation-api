@@ -120,6 +120,8 @@ class StockCountSheet
                 'returnable' => (bool) $p->is_returnable,
                 // null = vides jamais comptés : pas encore de contrôle possible
                 'emptiesExpected' => $p->hasEmptiesBaseline() ? max(0, (int) $p->empty_quantity) : null,
+                // Bouteilles par casier : on compte « 3 casiers + 5 » au lieu de 41
+                'crate' => $p->is_returnable && $p->crate_size ? (int) $p->crate_size : null,
             ]);
     }
 

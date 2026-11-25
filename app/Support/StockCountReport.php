@@ -93,8 +93,9 @@ class StockCountReport
                     $out[] = '• ' . $l->product_name . ' : ' . ($l->gap > 0 ? '+' : '') . $l->gap
                         . ' (' . self::signed($l->gap * $l->unit_price) . ')'
                         . ($l->reasonLabel() ? ' · ' . mb_strtolower($l->reasonLabel()) : '')
-                        . ($l->unbilled ? " · {$l->unbilled} vendue" . ($l->unbilled > 1 ? 's' : '') . ' sans bon' : '')
-                        . ($l->taken_out ? " · {$l->taken_out} sortie" . ($l->taken_out > 1 ? 's' : '') . ' du maquis' : '');
+                        . ($l->unbilled ? " · {$l->unbilled} peut-être vendue" . ($l->unbilled > 1 ? 's' : '') . ' sans bon' : '')
+                        . ($l->taken_out ? " · {$l->taken_out} disparue" . ($l->taken_out > 1 ? 's' : '') . ' (ni bon ni vide)' : '')
+                        . ($l->empties_broken ? " · {$l->empties_broken} vide" . ($l->empties_broken > 1 ? 's' : '') . ' cassé' . ($l->empties_broken > 1 ? 's' : '') : '');
                 }
 
                 $out[] = $gaps->isEmpty() ? '• Tout est juste ✅' : '• Écart : ' . self::signed($g['gap_sale']) . ($g['gap_sale'] < 0 ? ' ⚠️' : '');
@@ -104,7 +105,7 @@ class StockCountReport
                 $out[] = '• Bénéfice possible : ' . self::fcfa($g['margin']);
                 $out[] = '• Écart : ' . self::signed($g['gap_sale']) . ($g['gap_sale'] < 0 ? ' ⚠️' : ($g['gap_sale'] === 0 ? ' ✅' : ''));
                 if ($g['unbilled'] > 0) {
-                    $out[] = '• Vendu sans bon (vides en trop) : ' . self::fcfa($g['unbilled']) . ' ⚠️';
+                    $out[] = '• Peut-être vendu sans bon (vides en trop) : ' . self::fcfa($g['unbilled']) . ' ⚠️ Vérifiez avec votre équipe.';
                 }
             }
         }

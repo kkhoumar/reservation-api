@@ -191,9 +191,9 @@ class AntiFraudTest extends TestCase
         $this->assertSame(13, $this->flag->fresh()->empty_quantity);
 
         $text = (new StockCountReport($count))->toWhatsappText();
-        $this->assertStringContainsString('• Flag : -5 (-3 500 F) · 3 vendues sans bon · 2 sorties du maquis', $text);
-        $this->assertStringContainsString('Vendu sans bon (vides en trop) : 2 100 F', $text);
-        $this->assertStringContainsString('Dont 2 100 F de boissons vendues sans bon', ActivityLog::where('action', 'stock_count')->latest('id')->value('description'));
+        $this->assertStringContainsString('• Flag : -5 (-3 500 F) · 3 peut-être vendues sans bon · 2 disparues (ni bon ni vide)', $text);
+        $this->assertStringContainsString('Peut-être vendu sans bon (vides en trop) : 2 100 F', $text);
+        $this->assertStringContainsString('Dont 2 100 F de boissons peut-être vendues sans bon', ActivityLog::where('action', 'stock_count')->latest('id')->value('description'));
     }
 
     public function test_sans_comptage_des_vides_prealable_pas_de_conclusion(): void
