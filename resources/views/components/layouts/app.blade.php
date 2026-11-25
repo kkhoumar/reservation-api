@@ -178,6 +178,9 @@
         .btn-ghost:hover { border-color: var(--color-primary-300); background: var(--color-mint); }
         .btn-danger { background: var(--color-danger); color: white; }
         .btn-danger:hover { background: #BF2F2F; }
+        /* Dans une liste, un bouton qui retire ou bloque reste rouge mais sans fond : il ne crie pas sur chaque ligne */
+        main table .btn-danger { background: var(--color-surface); color: var(--color-danger); border: 1px solid #F1C4C4; box-shadow: none; }
+        main table .btn-danger:hover { background: var(--color-danger-bg); }
 
         /* ---------- Formulaires ---------- */
         select, input, textarea {
@@ -288,6 +291,10 @@
             main table:not(.keep-table) td[data-label=""]::before { content: none; }
             main table:not(.keep-table) td[data-label=""] { gap: 8px; }
             main table:not(.keep-table) td[data-label=""] > * { flex: 0 0 auto; margin: 0 !important; }
+            /* Les boutons d'une fiche se partagent la ligne : aucun ne reste seul en dessous */
+            main table:not(.keep-table) td[data-label=""] { flex-wrap: nowrap; }
+            main table:not(.keep-table) td[data-label=""] > .btn { flex: 1 1 0; min-width: 0; white-space: normal !important; line-height: 1.2; text-align: center; }
+            main table:not(.keep-table) td[data-label=""]:has(> :not(.btn):not(button)) { flex-wrap: wrap; }
             main table:not(.keep-table) td:first-child > * { margin-left: 0 !important; }
             main table:not(.keep-table) td:empty { display: none !important; }
             /* Ligne vide « aucun résultat » (une seule cellule) */

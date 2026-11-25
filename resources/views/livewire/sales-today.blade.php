@@ -1,4 +1,12 @@
 <div>
+    <style>
+        /* Téléphone : le total sur toute la largeur, sous le titre */
+        @media (max-width: 640px) {
+            .st-total { flex-basis: 100%; text-align: left !important; background: var(--color-primary) !important; border-color: var(--color-primary) !important; padding: 16px 18px !important; }
+            .st-total > div:first-child { color: rgba(255,255,255,.75) !important; }
+            .st-total > div:last-child { color: #fff !important; font-size: 28px !important; }
+        }
+    </style>
     <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; gap: 16px; flex-wrap: wrap; margin-bottom: 24px;">
         <div>
             <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
@@ -7,7 +15,7 @@
             <h1>Ventes du jour</h1>
         </div>
 
-        <div class="card" style="padding: 12px 20px; text-align: right;">
+        <div class="card st-total" style="padding: 12px 20px; text-align: right;">
             <div style="font-size: 12px; color: var(--color-text-secondary);">Total vendu aujourd'hui</div>
             <div style="font-size: 24px; font-weight: 800; color: var(--color-primary);">
                 {{ number_format($summary->total(), 0, ',', ' ') }} FCFA

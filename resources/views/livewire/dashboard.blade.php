@@ -98,8 +98,8 @@
 
     {{-- ===== Sur la période ===== --}}
     <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary); margin-bottom: 8px;">{{ $periods[$period][0] }}</div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;">
-        <div class="card" style="background: var(--color-primary); border-color: var(--color-primary); color: white;">
+    <div class="dash-kpis" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;">
+        <div class="card dash-wide" style="background: var(--color-primary); border-color: var(--color-primary); color: white;">
             <div style="font-size: 13px; color: rgba(255,255,255,0.75);">Chiffre d'affaires</div>
             <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">{{ $fcfa($revenue) }} <span style="font-size: 14px; color: rgba(255,255,255,0.7);">FCFA</span></div>
             <div style="font-size: 12px; margin-top: 4px; color: rgba(255,255,255,0.85);">
@@ -133,7 +133,7 @@
             @endforeach
         </div>
 
-        <div class="card">
+        <div class="card dash-wide">
             <div style="font-size: 13px; color: var(--color-text-secondary);">Bénéfice estimé</div>
             <div style="font-size: 28px; font-weight: 800; margin-top: 4px; color: {{ $profit < 0 ? 'var(--color-danger)' : 'var(--color-primary)' }};">{{ $fcfa($profit) }}</div>
             <div style="{{ $small }} line-height: 1.6; margin-top: 4px;">
@@ -203,7 +203,16 @@
             </div>
         @endforeach
     </div>
-    <style>@media (max-width: 760px) { .kinds { grid-template-columns: minmax(0, 1fr) !important; } }</style>
+    <style>
+        @media (max-width: 760px) { .kinds { grid-template-columns: minmax(0, 1fr) !important; } }
+        /* Téléphone : « Bons réglés » et « Dépenses » côte à côte, les grands chiffres sur toute la largeur */
+        @media (max-width: 640px) {
+            main div.dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+            .dash-kpis > .card { padding: 14px !important; min-width: 0; }
+            .dash-kpis > .dash-wide { grid-column: 1 / -1; }
+            .dash-kpis > .card [style*="font-size: 28px"] { font-size: 24px !important; overflow-wrap: anywhere; }
+        }
+    </style>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start;">
         <div class="card">

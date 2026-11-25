@@ -1,4 +1,8 @@
-<div>
+<div x-data="{
+        q: '',
+        norm(s) { return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); },
+        has(names) { const q = this.norm(this.q); return !q || names.some(n => this.norm(n).includes(q)); },
+    }">
     @if (session('success'))
         <div class="card" style="border-left: 6px solid var(--color-primary-300); margin-bottom: 16px;">
             {{ session('success') }}
@@ -8,14 +12,14 @@
         <div class="flash flash-error" role="alert">{{ session('error') }}</div>
     @endif
 
-    <div class="page-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 24px;">
+    <div class="page-head pm-head" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 20px;">
         <div>
             <div style="font-size: 12px; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
                 Carte
             </div>
             <h1>Menu & produits</h1>
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div class="pm-head-btns" style="display: flex; gap: 10px;">
             <button wire:click="$set('showCategoryForm', true)" class="btn btn-ghost">+ Catégorie</button>
             <button wire:click="openCreateForm" class="btn btn-primary">+ Produit</button>
         </div>
@@ -30,9 +34,26 @@
         </div>
     @endif
 
+    @php $allProducts = $categories->flatMap->products; @endphp
+    @if ($allProducts->count() >= 6)
+        <div class="pm-search">
+            <x-icon name="search" size="18" />
+            <input type="search" x-model="q" placeholder="Chercher un produit…" aria-label="Chercher un produit" autocomplete="off" enterkeyhint="search">
+            <button type="button" x-show="q" x-cloak @click="q = ''" aria-label="Effacer la recherche"><x-icon name="x" size="16" /></button>
+        </div>
+        <div class="pm-noresult card" x-show="q && !has(@js($allProducts->pluck('name')->values()))" x-cloak>
+            Aucun produit ne s'appelle « <span x-text="q"></span> ».
+        </div>
+    @endif
+
     @if ($showCategoryForm)
-        <div class="card" style="max-width: 400px; margin-bottom: 20px;">
-            <h3 style="margin-top: 0;">Nouvelle catégorie</h3>
+        <div class="pm-sheet" role="dialog" aria-modal="true" aria-label="Nouvelle catégorie" @keydown.escape.window="$wire.set('showCategoryForm', false)">
+        <div class="pm-sheet-bg" wire:click="$set('showCategoryForm', false)"></div>
+        <div class="card pm-sheet-card" style="max-width: 420px;">
+            <div class="pm-sheet-head">
+                <h3>Nouvelle catégorie</h3>
+                <button type="button" class="pm-x" wire:click="$set('showCategoryForm', false)" aria-label="Fermer"><x-icon name="x" size="18" /></button>
+            </div>
             <label style="font-size: 13px; font-weight: 600;">Nom</label>
             <input type="text" wire:model="newCategoryName" placeholder="Ex : Grillades" style="width: 100%; margin: 6px 0 14px 0;">
             @error('newCategoryName') <div style="color: var(--color-danger); font-size: 12px; margin-bottom: 10px;">{{ $message }}</div> @enderror
@@ -43,16 +64,22 @@
                     <button type="button" wire:click="$set('newCategoryKind', '{{ $kind }}')" class="btn {{ $newCategoryKind === $kind ? 'btn-secondary' : 'btn-ghost' }}" style="flex: 1; justify-content: center;">{{ $kindLabel }}</button>
                 @endforeach
             </div>
-            <div style="display: flex; gap: 10px;">
+            <div class="pm-sheet-actions">
                 <button wire:click="saveCategory" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
                 <button wire:click="$set('showCategoryForm', false)" class="btn btn-ghost" style="flex: 1;">Annuler</button>
             </div>
         </div>
+        </div>
     @endif
 
     @if ($showProductForm)
-        <div class="card" style="max-width: 460px; margin-bottom: 20px;">
-            <h3 style="margin-top: 0;">{{ $editingProductId ? 'Modifier' : 'Nouveau' }} produit</h3>
+        <div class="pm-sheet" role="dialog" aria-modal="true" aria-label="{{ $editingProductId ? 'Modifier le produit' : 'Nouveau produit' }}" @keydown.escape.window="$wire.set('showProductForm', false)">
+        <div class="pm-sheet-bg" wire:click="$set('showProductForm', false)"></div>
+        <div class="card pm-sheet-card">
+            <div class="pm-sheet-head">
+                <h3>{{ $editingProductId ? 'Modifier « ' . $name . ' »' : 'Nouveau produit' }}</h3>
+                <button type="button" class="pm-x" wire:click="$set('showProductForm', false)" aria-label="Fermer"><x-icon name="x" size="18" /></button>
+            </div>
 
             <div style="margin-bottom: 14px;">
                 <label style="font-size: 13px; font-weight: 600;">Nom</label>
@@ -170,16 +197,18 @@
                 <label for="isAvailable" style="font-size: 13px; font-weight: 600;">Disponible à la vente</label>
             </div>
 
-            <div style="display: flex; gap: 10px;">
+            <div class="pm-sheet-actions">
                 <button wire:click="saveProduct" class="btn btn-primary" style="flex: 1;">Enregistrer</button>
                 <button wire:click="$set('showProductForm', false)" class="btn btn-ghost" style="flex: 1;">Annuler</button>
             </div>
         </div>
+        </div>
     @endif
 
     @foreach ($categories as $category)
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 24px 0 10px;">
-            <h3 style="margin: 0; color: var(--color-text-secondary);">{{ $category->name }}</h3>
+        <section wire:key="cat-{{ $category->id }}" x-show="!q || has(@js($category->products->pluck('name')->values()))">
+        <div class="pm-cat-head">
+            <h3>{{ $category->name }} <span class="pm-count">{{ $category->products->count() }}</span></h3>
             <div style="display: inline-flex; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 3px;" title="Famille de la catégorie, pour le comptage">
                 @foreach (\App\Models\Category::KINDS as $kind => $kindLabel)
                     <button type="button" wire:click="setCategoryKind({{ $category->id }}, '{{ $kind }}')" style="border: 0; border-radius: 7px; padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; background: {{ $category->kind === $kind ? 'var(--color-primary)' : 'transparent' }}; color: {{ $category->kind === $kind ? '#fff' : 'var(--color-text-secondary)' }};">{{ $kindLabel }}</button>
@@ -191,7 +220,7 @@
             @if ($category->products->isEmpty())
                 <p style="padding: 16px 20px; color: var(--color-text-secondary); font-size: 13px;">Aucun produit dans cette catégorie.</p>
             @else
-                <table style="width: 100%; border-collapse: collapse;">
+                <table class="pm-table" style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="border-bottom: 1px solid var(--color-border); text-align: left;">
                             <th style="padding: 10px 20px;">Produit</th>
@@ -203,7 +232,7 @@
                     </thead>
                     <tbody>
                         @foreach ($category->products as $product)
-                            <tr style="border-bottom: 1px solid var(--color-border);">
+                            <tr style="border-bottom: 1px solid var(--color-border);" x-show="has([@js($product->name)])">
                                 <td style="padding: 12px 20px; font-weight: 600;">{{ $product->name }}</td>
                                 <td style="padding: 12px 20px; color: var(--color-text-secondary);"><div>
                                     {{ number_format($product->selling_price, 0, ',', ' ') }} FCFA
@@ -251,8 +280,71 @@
                         @endforeach
                     </tbody>
                 </table>
+
+                {{-- Téléphone : une ligne courte par produit ; toucher la ligne = modifier --}}
+                <div class="pm-list">
+                    @foreach ($category->products as $product)
+                        @php
+                            $soldOut = $product->is_available && $product->isSoldOutToday();
+                            $low = $product->track_stock && $product->isLowStock();
+                        @endphp
+                        <div class="pm-item {{ $product->is_available ? '' : 'off' }}" wire:key="pmi-{{ $product->id }}" x-show="has([@js($product->name)])">
+                            <button type="button" class="pm-main" wire:click="editProduct({{ $product->id }})" aria-label="Modifier {{ $product->name }}">
+                                <span class="pm-ava {{ $category->kind === 'food' ? 'food' : 'drink' }}"><x-icon :name="$category->kind === 'food' ? 'utensils' : 'bottle'" size="18" /></span>
+                                <span class="pm-txt">
+                                    <span class="pm-name">{{ $product->name }}</span>
+                                    <span class="pm-meta">
+                                        @if (! $product->is_available)
+                                            <span class="pm-pill off">Désactivé</span>
+                                        @elseif ($soldOut)
+                                            <span class="pm-pill sold">Fini aujourd'hui</span>
+                                        @endif
+                                        @if (! $product->track_stock)
+                                            <span>Stock non suivi</span>
+                                        @elseif ($low)
+                                            <span class="pm-low"><x-icon name="alert" size="13" /> {{ $product->stock_quantity }} en stock</span>
+                                        @else
+                                            <span>{{ $product->stock_quantity }} en stock</span>
+                                        @endif
+                                    </span>
+                                    @if ($product->cost_price === null)
+                                        <span class="pm-warn">Prix d'achat manquant</span>
+                                    @endif
+                                </span>
+                                <span class="pm-price">{{ number_format($product->selling_price, 0, ',', ' ') }}<small> F</small></span>
+                                <span class="pm-chev"><x-icon name="chevron-right" size="18" /></span>
+                            </button>
+
+                            <div class="pm-more" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                                <button type="button" class="pm-dots" @click="open = !open" :aria-expanded="open" aria-label="Plus d'actions pour {{ $product->name }}"><x-icon name="dots" size="20" /></button>
+                                <div class="pm-menu" x-show="open" x-transition.origin.top.right x-cloak>
+                                    <button type="button" wire:click="editProduct({{ $product->id }})" @click="open = false"><x-icon name="pencil" size="17" /> Modifier</button>
+                                    <button type="button" wire:click="toggleAvailability({{ $product->id }})" @click="open = false">
+                                        <x-icon :name="$product->is_available ? 'eye-off' : 'eye'" size="17" />
+                                        {{ $product->is_available ? 'Ne plus vendre (désactiver)' : 'Remettre en vente (activer)' }}
+                                    </button>
+                                    <button type="button" class="danger" @click="open = false" wire:click="deleteProduct({{ $product->id }})"
+                                            wire:confirm="Retirer « {{ $product->name }} » de la carte ?&#10;&#10;Vos anciennes ventes restent dans vos rapports. Vous pourrez le remettre sur la carte quand vous voulez.">
+                                        <x-icon name="trash" size="17" /> Retirer de la carte
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (! $product->track_stock && $product->is_available)
+                                <button type="button" wire:click="toggleSoldOut({{ $product->id }})" class="pm-sold {{ $soldOut ? 'on' : '' }}">
+                                    @if ($soldOut)
+                                        <x-icon name="check" size="16" stroke="2.4" /> Remettre en vente aujourd'hui
+                                    @else
+                                        <x-icon name="clock" size="16" /> Fini pour aujourd'hui
+                                    @endif
+                                </button>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
             @endif
         </div>
+        </section>
     @endforeach
 
     {{-- Produits retirés de la carte : plus vendus, mais leurs anciennes ventes restent dans les rapports --}}
@@ -303,6 +395,84 @@
         .rt-why summary::-webkit-details-marker { display: none; }
         .rt-why summary::before { content: '?'; width: 18px; height: 18px; border-radius: 50%; background: var(--color-accent); color: #fff; font-size: 11.5px; display: inline-flex; align-items: center; justify-content: center; }
         .rt-why p { margin: 8px 0 0; padding: 10px 12px; background: #FFF8F2; border-radius: 10px; line-height: 1.5; color: var(--color-text); }
+        /* ---------- Recherche ---------- */
+        .pm-search { position: relative; display: flex; align-items: center; margin: 0 0 6px; }
+        .pm-search > svg { position: absolute; left: 14px; color: var(--color-text-secondary); pointer-events: none; }
+        .pm-search input { width: 100%; height: 48px; padding: 0 44px 0 42px; border-radius: 14px; font-size: 16px; background: var(--color-surface); }
+        .pm-search input::-webkit-search-cancel-button { display: none; }
+        .pm-search button { position: absolute; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--color-bg); color: var(--color-text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .pm-noresult { margin-top: 12px; color: var(--color-text-secondary); text-align: center; }
+
+        /* ---------- En-tête de catégorie ---------- */
+        .pm-cat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 24px 0 10px; }
+        .pm-cat-head h3 { margin: 0; color: var(--color-text-secondary); display: inline-flex; align-items: center; gap: 8px; }
+        .pm-count { font-size: 12px; font-weight: 700; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-text-secondary); border-radius: 999px; padding: 1px 8px; }
+
+        /* ---------- Fenêtre (formulaires) : au-dessus de la page, jamais perdue en haut ---------- */
+        body:has(.pm-sheet) { overflow: hidden; }
+        .pm-sheet { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .pm-sheet-bg { position: absolute; inset: 0; background: rgba(10, 28, 22, .45); backdrop-filter: blur(2px); animation: pm-fade .18s ease-out; }
+        .pm-sheet-card { position: relative; width: 100%; max-width: 480px; max-height: calc(100dvh - 48px); overflow-y: auto; overflow-x: hidden; margin: 0 !important; padding: 20px 24px 0 !important; overscroll-behavior: contain; animation: pm-pop .2s ease-out; }
+        .pm-sheet-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--color-surface); margin: -4px 0 12px; padding: 4px 0 10px; border-bottom: 1px solid var(--color-border); }
+        .pm-sheet-head h3 { margin: 0; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pm-x { flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--color-bg); color: var(--color-text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .pm-sheet-actions { position: sticky; bottom: 0; z-index: 2; display: flex; gap: 10px; background: var(--color-surface); margin: 0 -24px; padding: 12px 24px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); }
+        @keyframes pm-fade { from { opacity: 0; } }
+        @keyframes pm-pop { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+        @keyframes pm-up { from { transform: translateY(100%); } }
+
+        /* ---------- Liste téléphone ---------- */
+        .pm-list { display: none; }
+        .pm-item { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-bottom: 1px solid var(--color-border); }
+        .pm-item:last-child { border-bottom: 0; }
+        .pm-main { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px 4px 14px 16px; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .pm-main:active { background: var(--color-bg); }
+        .pm-ava { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+        .pm-ava.drink { background: #E6F0FA; color: #2463B5; }
+        .pm-ava.food { background: #FCEFE6; color: var(--color-accent); }
+        .pm-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+        .pm-name { font-size: 15.5px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+        .pm-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; color: var(--color-text-secondary); }
+        .pm-low { color: var(--color-danger); font-weight: 700; display: inline-flex; align-items: center; gap: 3px; }
+        .pm-warn { font-size: 12.5px; font-weight: 600; color: var(--color-accent); }
+        .pm-pill { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 2px 8px; }
+        .pm-pill.off { background: var(--color-danger-bg); color: var(--color-danger); }
+        .pm-pill.sold { background: #FFF1E3; color: #A84A1C; }
+        .pm-price { flex-shrink: 0; font-size: 15.5px; font-weight: 800; color: var(--color-text); white-space: nowrap; }
+        .pm-price small { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+        .pm-chev { flex-shrink: 0; color: #B6C2BD; display: inline-flex; margin-left: -4px; }
+        .pm-item.off .pm-name, .pm-item.off .pm-price { color: var(--color-text-secondary); }
+        .pm-item.off .pm-ava { filter: grayscale(1); opacity: .6; }
+        .pm-more { position: relative; padding-right: 8px; }
+        .pm-dots { width: 40px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--color-text-secondary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .pm-dots:active, .pm-dots[aria-expanded="true"] { background: var(--color-bg); color: var(--color-text); }
+        .pm-menu { position: absolute; right: 8px; top: calc(100% - 2px); z-index: 30; min-width: 250px; padding: 6px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; box-shadow: 0 14px 34px -10px rgba(16,35,29,.35); }
+        .pm-menu button { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; font: inherit; font-size: 14.5px; font-weight: 600; color: var(--color-text); text-align: left; cursor: pointer; }
+        .pm-menu button:active, .pm-menu button:hover { background: var(--color-bg); }
+        .pm-menu button.danger { color: var(--color-danger); }
+        .pm-sold { grid-column: 1 / -1; margin: -4px 16px 14px 68px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 11px; border: 1px solid #CFE6DB; background: var(--color-mint); color: var(--color-primary); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+        .pm-sold.on { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+
+        @media (max-width: 640px) {
+            .pm-head { flex-direction: column; align-items: stretch !important; }
+            .pm-head-btns > .btn { flex: 1; justify-content: center; }
+            .pm-table { display: none !important; }
+            .pm-list { display: block; }
+            .pm-cat-head { margin-top: 20px; }
+            /* Fenêtre : feuille qui monte du bas, comme les applications de téléphone */
+            .pm-sheet { align-items: flex-end; padding: 0; }
+            .pm-sheet-card { max-width: none; max-height: 92dvh; border-radius: 22px 22px 0 0 !important; padding: 16px 16px 0 !important; animation: pm-up .24s cubic-bezier(.2,.8,.2,1); }
+            .pm-sheet-card::before { content: ''; display: block; width: 40px; height: 4px; border-radius: 4px; background: var(--color-border); margin: -6px auto 10px; }
+            .pm-sheet-head { top: -16px; padding-top: 12px; margin-top: -12px; }
+            .pm-sheet-actions { margin: 0 -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+        }
+
+        @media (max-width: 380px) {
+            .pm-chev { display: none; }
+            .pm-main { gap: 10px; padding-left: 14px; }
+            .pm-sold { margin-left: 64px; }
+        }
+
         /* « Désactiver » : contour rouge, pas un gros bouton rouge qui fait peur */
         .pm-off { color: var(--color-danger) !important; border-color: #F1C4C4 !important; }
         .pm-off:hover { background: var(--color-danger-bg) !important; }

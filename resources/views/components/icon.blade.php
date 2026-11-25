@@ -50,6 +50,12 @@
         'service'      => '<path d="M3 18h18"/><path d="M5 18a7 7 0 0 1 14 0"/><path d="M12 11V9"/><path d="M10.5 9h3"/>',
         'clipboard'    => '<rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 2h6v4H9z"/><path d="M9 11h6"/><path d="M9 15h6"/>',
         'crown'        => '<path d="M3 7.5 7.5 12 12 4.5l4.5 7.5L21 7.5 19 18H5z"/><path d="M5 21h14"/>',
+        'search'       => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
+        'dots'         => '<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+        'pencil'       => '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+        'eye-off'      => '<path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c5.5 0 9 5.5 9 7a9.6 9.6 0 0 1-2.3 3.2"/><path d="M6.6 6.6C4.3 8 3 10.6 3 12c0 1.5 3.5 7 9 7a9.3 9.3 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m3 3 18 18"/>',
+        'eye'          => '<path d="M3 12c0-1.5 3.5-7 9-7s9 5.5 9 7-3.5 7-9 7-9-5.5-9-7z"/><circle cx="12" cy="12" r="3"/>',
+        'chevron-right' => '<path d="m9 6 6 6-6 6"/>',
     ];
     $svg = $paths[$name] ?? $paths['alert'];
 @endphp
