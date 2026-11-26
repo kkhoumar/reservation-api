@@ -111,6 +111,8 @@ class StockCountSheet
                 'name' => $p->name,
                 'category' => $p->category?->name,
                 'kind' => $p->category?->kind ?? 'food',
+                'icon' => $p->iconKey($p->category),
+                'photo' => $p->photoUrl(),
                 'cost' => $p->cost_price,
                 'price' => (int) $p->selling_price,
                 'expected' => (int) $p->stock_quantity,

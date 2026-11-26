@@ -126,6 +126,12 @@ Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/sales-today', SalesToday::class)->middleware('role:owner,manager,cashier,associate')->name('sales.today');
     Route::get('/users', UsersManage::class)->middleware('role:owner,manager')->name('users.manage');
     Route::get('/products', ProductsManage::class)->middleware('role:owner,manager')->name('products.manage');
+    // Photo d'un produit (prise par le patron) : visible par toute l'équipe du maquis, pas par les autres
+    Route::get('/produit/photo/{product}', function (\App\Models\Product $product) {
+        abort_unless($product->photo, 404);
+
+        return \App\Support\PhotoStore::response($product->photo);
+    })->name('products.photo');
     Route::get('/stock', \App\Livewire\StockManage::class)->middleware('role:owner,manager,associate')->name('stock.index');
     Route::get('/stock/photo/{movement}', function (\App\Models\StockMovement $movement) {
         abort_unless(\App\Actions\StockService::canView(auth()->user()) && $movement->photo_path, 404);

@@ -143,7 +143,7 @@
                 @foreach ($gaps as $l)
                     <div class="scs-line">
                         <div class="sc-info with-ava">
-                            <x-stock-ava :kind="$l->kind" />
+                            <x-stock-ava :kind="$l->kind" :name="$l->product_name" />
                             <div class="sc-txt">
                             <div class="sc-name">{{ $l->product_name }}</div>
                             @if ($prev)

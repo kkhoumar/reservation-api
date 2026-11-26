@@ -746,6 +746,7 @@
 
     @include('partials.money-input-script')
     @include('partials.avatar-picker-script')
+    @include('partials.product-icons')
     {{-- Service client WhatsApp : patron et gérant seulement, jamais sur les écrans de service --}}
     @php
         $waUser = auth()->user();

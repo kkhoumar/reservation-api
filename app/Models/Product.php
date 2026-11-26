@@ -13,7 +13,7 @@ class Product extends Model
     use BelongsToRestaurant, HasFactory;
 
     protected $fillable = [
-        'restaurant_id', 'category_id', 'name', 'photo',
+        'restaurant_id', 'category_id', 'name', 'photo', 'icon',
         'selling_price', 'cost_price', 'is_available', 'stock_quantity', 'stock_alert_threshold',
         'is_returnable', 'crate_size', 'empty_quantity', 'empties_counted_at', 'track_stock',
     ];
@@ -50,6 +50,24 @@ class Product extends Model
     public function unitMargin(): ?int
     {
         return $this->cost_price === null ? null : $this->selling_price - $this->cost_price;
+    }
+
+    /**
+     * Petit dessin du produit (bière verte, canette, plat…) : celui choisi par
+     * le patron, sinon deviné d'après le nom et la catégorie.
+     * On passe la catégorie quand on l'a déjà sous la main (évite une requête par produit).
+     */
+    public function iconKey(?Category $category = null): string
+    {
+        $category ??= $this->relationLoaded('category') || $this->category_id ? $this->category : null;
+
+        return \App\Support\ProductIcon::keyFor($this->icon, (string) $this->name, $category?->name, $category?->kind);
+    }
+
+    /** Adresse de la vraie photo (null s'il n'y en a pas). Le « v » change à chaque nouvelle photo. */
+    public function photoUrl(): ?string
+    {
+        return $this->photo ? route('products.photo', ['product' => $this->id, 'v' => substr(md5($this->photo), 0, 8)]) : null;
     }
 
     public function stockMovements(): HasMany

@@ -136,7 +136,7 @@
                             @php $start = $r['expected'] - $r['delivered'] + $r['sold'] + $r['lost']; @endphp
                             <div class="sc-row" :class="state({{ $r['id'] }})" x-show="kind !== 'gaps' || (gap({{ $r['id'] }}) ?? 0) !== 0" wire:key="row-{{ $r['id'] }}">
                                 <div class="sc-info with-ava">
-                                    <x-stock-ava :kind="$r['kind']" />
+                                    <x-stock-ava :kind="$r['kind']" :name="$r['name']" :icon="$r['icon'] ?? null" :photo-url="$r['photo'] ?? null" />
                                     <div class="sc-txt">
                                     <div class="sc-name">{{ $r['name'] }}@if ($r['category'] && mb_strtolower($r['category']) !== mb_strtolower($label))<span class="cat">{{ $r['category'] }}</span>@endif @if ($r['cost'] === null)<span class="sc-tag">prix d'achat manquant</span>@endif</div>
                                     <div class="sc-calc">

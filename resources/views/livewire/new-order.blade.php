@@ -38,6 +38,8 @@
         .new-order .pc:hover { border-color: var(--color-primary-300); }
         .new-order .pc:active:not(:disabled) { transform: scale(.96); }
         .new-order .pc.on { border-color: var(--color-primary); background: linear-gradient(180deg, #fff, var(--color-mint, #EAF4F0)); box-shadow: 0 6px 18px rgba(11,77,60,.14); }
+        .new-order .pc .pimg { margin-bottom: -4px; }
+        .new-order .pc:disabled .pimg { filter: grayscale(1); opacity: .55; }
         .new-order .pc .pn { font-weight: 700; font-size: 15px; line-height: 1.25; padding-right: 22px; }
         .new-order .pc .pp { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
         .new-order .pc .price { font-weight: 800; font-size: 15px; color: var(--color-accent); white-space: nowrap; }
@@ -172,6 +174,7 @@
                         @if ($left <= 0)
                             <button type="button" class="pc" disabled wire:key="pc-{{ $product->id }}-{{ $q }}-0">
                                 @if ($q)<span class="q">{{ $q }}</span>@endif
+                                <x-product-icon :product="$product" :category="$category" size="40" class="pimg" />
                                 <span class="pn">{{ $product->name }}</span>
                                 <span class="pp"><span class="price">{{ $fcfa($product->selling_price) }} F</span><span class="out">{{ $product->isSoldOutToday() ? 'Fini aujourd\'hui' : 'Épuisé' }}</span></span>
                             </button>
@@ -182,6 +185,7 @@
                                     aria-label="Ajouter {{ $product->name }}">
                                 <span class="plus" aria-hidden="true"><x-icon name="plus" size="14" stroke="2.6" /></span>
                                 <span class="q" x-cloak x-show="count({{ $q }}, {{ $product->id }}) > 0" x-text="count({{ $q }}, {{ $product->id }})">{{ $q }}</span>
+                                <x-product-icon :product="$product" :category="$category" size="40" class="pimg" />
                                 <span class="pn">{{ $product->name }}</span>
                                 <span class="pp">
                                     <span class="price">{{ $fcfa($product->selling_price) }} F</span>

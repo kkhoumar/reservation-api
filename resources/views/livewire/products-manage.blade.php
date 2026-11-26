@@ -86,7 +86,7 @@
 
             <div style="margin-bottom: 14px;">
                 <label style="font-size: 13px; font-weight: 600;">Nom</label>
-                <input type="text" wire:model="name" style="width: 100%; margin-top: 6px;">
+                <input type="text" wire:model.blur="name" style="width: 100%; margin-top: 6px;">
                 @error('name') <div class="pm-err" style="color: var(--color-danger); font-size: 12.5px; font-weight: 600; margin-top: 4px;">{{ $message }}</div> @enderror
             </div>
 
@@ -99,6 +99,59 @@
                     @endforeach
                 </select>
                 @error('categoryId') <div class="pm-err" style="color: var(--color-danger); font-size: 12.5px; font-weight: 600; margin-top: 4px;">{{ $message }}</div> @enderror
+            </div>
+
+            {{-- Petite image : choisie toute seule d'après le nom, ou un autre dessin, ou une vraie photo --}}
+            <div class="pm-img" x-data="{ choose: false }">
+                <div class="pm-img-head">
+                    <span class="pi pm-img-big" style="--c: {{ \App\Support\ProductIcon::color($formIconKey) }};">
+                        @if ($editingPhotoUrl)
+                            <img src="{{ $editingPhotoUrl }}" alt="">
+                        @else
+                            <svg viewBox="0 0 64 64"><use href="#pi-{{ \App\Support\ProductIcon::shape($formIconKey) }}"/></svg>
+                        @endif
+                    </span>
+                    <div class="pm-img-txt">
+                        <strong>Image</strong>
+                        <span>
+                            @if ($editingPhotoUrl)
+                                Votre photo
+                            @elseif ($icon === '')
+                                Choisie toute seule : {{ mb_strtolower(\App\Support\ProductIcon::label($formIconKey)) }}
+                            @else
+                                {{ \App\Support\ProductIcon::label($formIconKey) }}
+                            @endif
+                        </span>
+                        <div class="pm-img-actions">
+                            @unless ($editingPhotoUrl)
+                                <button type="button" class="pm-img-link" @click="choose = !choose" x-text="choose ? 'Fermer' : 'Changer le dessin'">Changer le dessin</button>
+                            @endunless
+                            @if ($editingProductId)
+                                <span x-data="avatarPicker('saveProductPhoto', {{ $editingProductId }})">
+                                    <input type="file" accept="image/*" capture="environment" x-ref="file" @change="chosen($event)" hidden>
+                                    <button type="button" class="pm-img-link" @click="pick()" :disabled="busy">
+                                        <span x-show="!busy">{{ $editingPhotoUrl ? 'Changer la photo' : 'Prendre en photo' }}</span><span x-show="busy" x-cloak>Envoi…</span>
+                                    </button>
+                                    <span class="pm-err" x-show="error" x-text="error" x-cloak style="display: block; color: var(--color-danger); font-size: 12.5px; font-weight: 600;"></span>
+                                </span>
+                                @if ($editingPhotoUrl)
+                                    <button type="button" class="pm-img-link muted" wire:click="removeProductPhoto({{ $editingProductId }})">Retirer la photo</button>
+                                @endif
+                            @endif
+                        </div>
+                        @unless ($editingProductId)
+                            <span class="pm-img-hint">Vous pourrez prendre une vraie photo après l'enregistrement.</span>
+                        @endunless
+                    </div>
+                </div>
+                <div class="pm-img-grid" x-show="choose" x-cloak>
+                    <button type="button" class="pm-img-opt auto {{ $icon === '' ? 'on' : '' }}" wire:click="$set('icon', '')" @click="choose = false">Auto</button>
+                    @foreach (\App\Support\ProductIcon::ICONS as $key => [$label, $color, $shape])
+                        <button type="button" class="pm-img-opt {{ $icon === $key ? 'on' : '' }}" wire:click="$set('icon', '{{ $key }}')" @click="choose = false" title="{{ $label }}" aria-label="{{ $label }}">
+                            <span class="pi" style="width: 40px; height: 40px; --c: {{ $color }};"><svg viewBox="0 0 64 64"><use href="#pi-{{ $shape }}"/></svg></span>
+                        </button>
+                    @endforeach
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
@@ -237,7 +290,7 @@
                     <tbody>
                         @foreach ($category->products as $product)
                             <tr style="border-bottom: 1px solid var(--color-border);" x-show="has([@js($product->name)])">
-                                <td style="padding: 12px 20px; font-weight: 600;">{{ $product->name }}</td>
+                                <td style="padding: 12px 20px; font-weight: 600;"><span style="display: inline-flex; align-items: center; gap: 12px;"><x-product-icon :product="$product" :category="$category" size="36" />{{ $product->name }}</span></td>
                                 <td style="padding: 12px 20px; color: var(--color-text-secondary);"><div>
                                     {{ number_format($product->selling_price, 0, ',', ' ') }} FCFA
                                     @if ($product->cost_price !== null)
@@ -294,7 +347,7 @@
                         @endphp
                         <div class="pm-item {{ $product->is_available ? '' : 'off' }}" wire:key="pmi-{{ $product->id }}" x-show="has([@js($product->name)])">
                             <button type="button" class="pm-main" wire:click="editProduct({{ $product->id }})" aria-label="Modifier {{ $product->name }}">
-                                <span class="pm-ava {{ $category->kind === 'food' ? 'food' : 'drink' }}"><x-icon :name="$category->kind === 'food' ? 'utensils' : 'bottle'" size="18" /></span>
+                                <x-product-icon :product="$product" :category="$category" size="44" class="pm-ava" />
                                 <span class="pm-txt">
                                     <span class="pm-name">{{ $product->name }}</span>
                                     <span class="pm-meta">
@@ -431,9 +484,20 @@
         .pm-item:last-child { border-bottom: 0; }
         .pm-main { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px 4px 14px 16px; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         .pm-main:active { background: var(--color-bg); }
-        .pm-ava { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
-        .pm-ava.drink { background: #E6F0FA; color: #2463B5; }
-        .pm-ava.food { background: #FCEFE6; color: var(--color-accent); }
+        .pm-ava { flex-shrink: 0; }
+        .pm-img { margin-bottom: 14px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 14px; }
+        .pm-img-head { display: flex; align-items: center; gap: 14px; }
+        .pm-img-big { width: 60px; height: 60px; }
+        .pm-img-txt { min-width: 0; flex: 1; } .pm-img-txt strong { display: block; font-size: 14px; }
+        .pm-img-txt > span { display: block; font-size: 12.5px; color: var(--color-text-secondary); margin-top: 1px; }
+        .pm-img-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
+        .pm-img-link { border: 0; background: none; padding: 4px 0; font: inherit; font-size: 13px; font-weight: 700; color: var(--color-accent); cursor: pointer; }
+        .pm-img-link.muted { color: var(--color-text-secondary); }
+        .pm-img-hint { display: block; font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+        .pm-img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 8px; margin-top: 12px; }
+        .pm-img-opt { height: 52px; border: 1.5px solid var(--color-border); border-radius: 12px; background: #fff; display: grid; place-items: center; cursor: pointer; padding: 0; }
+        .pm-img-opt.auto { font: inherit; font-size: 12.5px; font-weight: 800; color: var(--color-primary); }
+        .pm-img-opt.on { border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-mint, #EAF4F0); }
         .pm-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
         .pm-name { font-size: 15.5px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
         .pm-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; color: var(--color-text-secondary); }

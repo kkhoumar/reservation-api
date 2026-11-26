@@ -229,7 +229,7 @@
                     @foreach ($group as $p)
                         <div class="st-row">
                             <div class="sc-info with-ava">
-                                <x-stock-ava :kind="$k" />
+                                <x-stock-ava :kind="$k" :product="$p" />
                                 <div class="sc-txt">
                                 <div class="sc-name">{{ $p->name }}@if ($p->category && mb_strtolower($p->category->name) !== mb_strtolower($label))<span class="cat">{{ $p->category->name }}</span>@endif@if ($p->isLowStock())<span class="st-low"><x-icon name="alert" size="12" stroke="2.4" /> Bientôt en rupture</span>@endif</div>
                                 @if ($p->stock_alert_threshold !== null || $p->is_returnable)
@@ -310,7 +310,7 @@
                         @foreach ($byKind[$k] as $p)
                             <div class="st-line">
                                 <div class="sc-info with-ava">
-                                    <x-stock-ava :kind="$k" />
+                                    <x-stock-ava :kind="$k" :product="$p" />
                                     <div class="sc-txt">
                                         <div class="sc-name">{{ $p->name }}</div>
                                         <div class="stock">{{ $p->stock_quantity }} en stock @if ($p->is_returnable)· le dépôt reprend autant de vides @endif</div>

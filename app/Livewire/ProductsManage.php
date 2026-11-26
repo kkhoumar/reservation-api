@@ -6,6 +6,8 @@ use App\Actions\StockService;
 use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 use App\Models\Product;
+use App\Support\PhotoStore;
+use App\Support\ProductIcon;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -36,6 +38,9 @@ class ProductsManage extends Component
     public bool $isReturnable = false;
     public string $crateSize = '';
 
+    /** Petit dessin choisi (vide = choisi tout seul d'après le nom). */
+    public string $icon = '';
+
     public string $newCategoryName = '';
     public string $newCategoryKind = '';
 
@@ -59,6 +64,7 @@ class ProductsManage extends Component
             'isReturnable' => 'boolean',
             // Casier : 12 et 24 en boutons, « Autre » pour écrire son nombre
             'crateSize' => $this->trackStock && $this->isReturnable ? 'required|integer|min:1|max:50' : 'nullable',
+            'icon' => ['nullable', Rule::in(array_keys(ProductIcon::ICONS))],
         ];
     }
 
@@ -80,7 +86,7 @@ class ProductsManage extends Component
 
     public function openCreateForm()
     {
-        $this->reset(['editingProductId', 'name', 'sellingPrice', 'costPrice', 'categoryId', 'stockQuantity', 'stockAlertThreshold', 'isReturnable', 'crateSize']);
+        $this->reset(['editingProductId', 'name', 'sellingPrice', 'costPrice', 'categoryId', 'stockQuantity', 'stockAlertThreshold', 'isReturnable', 'crateSize', 'icon']);
         $this->isAvailable = true;
         $this->trackStock = true;
         $this->showProductForm = true;
@@ -101,6 +107,7 @@ class ProductsManage extends Component
         $this->trackStock = (bool) $product->track_stock;
         $this->isReturnable = (bool) $product->is_returnable;
         $this->crateSize = $product->crate_size ? (string) $product->crate_size : '';
+        $this->icon = ProductIcon::isValid($product->icon) ? $product->icon : '';
         $this->showProductForm = true;
     }
 
@@ -120,6 +127,7 @@ class ProductsManage extends Component
             // Un plat sans suivi de stock ne laisse pas de bouteille vide
             'is_returnable' => $this->trackStock && $this->isReturnable,
             'crate_size' => $this->trackStock && $this->isReturnable && $this->crateSize !== '' ? (int) $this->crateSize : null,
+            'icon' => ProductIcon::isValid($this->icon) ? $this->icon : null,
         ];
 
         if ($this->editingProductId) {
@@ -211,7 +219,9 @@ class ProductsManage extends Component
         }
 
         if (! $product->hasHistory()) {
+            $photo = $product->photo;
             $product->delete();
+            PhotoStore::delete($photo);
             \App\Models\ActivityLog::record('product_removed', "a retiré le produit {$product->name} de la carte (jamais vendu, effacé).");
             \App\Support\Toast::success("« {$product->name} » est retiré de la carte.");
 
@@ -221,6 +231,42 @@ class ProductsManage extends Component
         $product->forceFill(['archived_at' => now(), 'is_available' => false])->save();
         \App\Models\ActivityLog::record('product_removed', "a retiré le produit {$product->name} de la carte (stock restant : {$product->stock_quantity}).", ['meta' => ['product_id' => $product->id]]);
         \App\Support\Toast::success("« {$product->name} » est retiré de la carte. Ses ventes restent dans vos rapports.", ['call' => 'restoreProduct', 'args' => [$product->id]]);
+    }
+
+    /**
+     * Vraie photo du produit : le téléphone l'a déjà réduite (carré de 320 px).
+     * @return string|null message d'erreur, null si c'est enregistré
+     */
+    public function saveProductPhoto($productId, string $dataUrl): ?string
+    {
+        $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
+
+        [$path, $error] = PhotoStore::store($dataUrl, 'produits', (string) $product->restaurant_id, 1024, 400_000);
+
+        if ($error) {
+            return $error;
+        }
+
+        $old = $product->photo;
+        $product->forceFill(['photo' => $path])->save();
+        if ($old && $old !== $path) {
+            PhotoStore::delete($old);
+        }
+
+        \App\Support\Toast::success("Photo de « {$product->name} » enregistrée.");
+
+        return null;
+    }
+
+    public function removeProductPhoto($productId): void
+    {
+        $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
+
+        if ($product->photo) {
+            PhotoStore::delete($product->photo);
+            $product->forceFill(['photo' => null])->save();
+            \App\Support\Toast::success("Photo retirée : « {$product->name} » reprend son dessin.");
+        }
     }
 
     public function restoreProduct($productId): void
@@ -281,6 +327,22 @@ class ProductsManage extends Component
             ->orderBy('name')
             ->get();
 
-        return view('livewire.products-manage', ['categories' => $categories, 'archived' => $archived]);
+        // Aperçu de l'image dans le formulaire (suit le nom et la catégorie tapés)
+        $formIconKey = 'boisson';
+        $editingPhotoUrl = null;
+        if ($this->showProductForm) {
+            $formCategory = $categories->firstWhere('id', (int) $this->categoryId);
+            $formIconKey = ProductIcon::keyFor($this->icon, $this->name, $formCategory?->name, $formCategory?->kind);
+            if ($this->editingProductId) {
+                $editingPhotoUrl = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->find($this->editingProductId)?->photoUrl();
+            }
+        }
+
+        return view('livewire.products-manage', [
+            'categories' => $categories,
+            'archived' => $archived,
+            'formIconKey' => $formIconKey,
+            'editingPhotoUrl' => $editingPhotoUrl,
+        ]);
     }
 }
