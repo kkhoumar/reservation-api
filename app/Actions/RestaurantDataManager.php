@@ -50,6 +50,7 @@ class RestaurantDataManager
             // Ordre : d'abord ce qui dépend des autres
             DB::table('credit_transactions')->where('restaurant_id', $id)->delete();
             DB::table('cash_remittances')->where('restaurant_id', $id)->delete();
+            DB::table('cash_movements')->where('restaurant_id', $id)->delete();
             DB::table('stock_movements')->where('restaurant_id', $id)->delete();
             DB::table('stock_counts')->where('restaurant_id', $id)->delete();
             DB::table('activity_logs')->where('restaurant_id', $id)->delete();

@@ -196,8 +196,17 @@ class CashRegister extends Model
             ]));
         }
 
-        return $rows->sortByDesc('at')->values();
-    }
+        foreach ($this->movements()->with('user')->get() as $m) {
+            $in = $m->type === 'in';
+            $rows->push($row([
+                'at' => $m->created_at, 'kind' => $in ? 'cash_in' : 'cash_out',
+                'label' => ($in ? 'Argent ajouté au tiroir — ' : 'Argent retiré du tiroir — ') . $m->reasonLabel(),
+                'detail' => $m->note, 'by' => $m->user?->first_name,
+                'amount' => $in ? (int) $m->amount : -(int) $m->amount, 'drawer' => true,
+            ]));
+        }
+
+        return $rows->sortByDesc('at')->values();    }
 
     public function restaurant(): BelongsTo
     {
@@ -217,6 +226,11 @@ class CashRegister extends Model
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
+    }
+
+    public function movements(): HasMany
+    {
+        return $this->hasMany(CashMovement::class);
     }
 
     public function remittances(): HasMany
@@ -288,6 +302,12 @@ class CashRegister extends Model
             ->where('cash_register_id', $this->id)
             ->where('type', 'repayment'), 'amount');
         [$expensesCount, $expensesTotal] = self::countAndSum($this->expenses(), 'amount');
+        // Argent du tiroir : ajouté (+) ou retiré (−) pendant la caisse
+        $moves = $this->movements()->reorder()
+            ->selectRaw("COUNT(*) as n, COALESCE(SUM(CASE WHEN type = 'in' THEN amount ELSE 0 END), 0) as added, COALESCE(SUM(CASE WHEN type = 'out' THEN amount ELSE 0 END), 0) as removed, COALESCE(SUM(CASE WHEN type = 'in' THEN 1 ELSE 0 END), 0) as n_in")
+            ->first();
+        $added = (int) $moves->added;
+        $removed = (int) $moves->removed;
 
         return [
             'opening_amount' => $this->opening_amount,
@@ -302,7 +322,11 @@ class CashRegister extends Model
             'repayments_total' => $repaymentsTotal,
             'expenses_count' => $expensesCount,
             'expenses_total' => $expensesTotal,
-            'theoretical' => $this->opening_amount + $received - $changeGiven + $remittancesTotal + $repaymentsTotal - $expensesTotal,
+            'added_count' => (int) $moves->n_in,
+            'added_total' => $added,
+            'removed_count' => (int) $moves->n - (int) $moves->n_in,
+            'removed_total' => $removed,
+            'theoretical' => $this->opening_amount + $received - $changeGiven + $remittancesTotal + $repaymentsTotal - $expensesTotal + $added - $removed,
         ];
     }
 

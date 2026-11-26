@@ -137,6 +137,12 @@ class RegisterReport
             $lines[] = '• À crédit : ' . $f($this->creditSales);
         }
         $lines[] = '• Dépenses : ' . $f($this->breakdown['expenses_total']);
+        if (($this->breakdown['added_total'] ?? 0) > 0) {
+            $lines[] = '• Argent ajouté au tiroir : +' . $f($this->breakdown['added_total']);
+        }
+        if (($this->breakdown['removed_total'] ?? 0) > 0) {
+            $lines[] = '• Argent retiré du tiroir : −' . $f($this->breakdown['removed_total']);
+        }
         if ($this->breakdown['repayments_total'] > 0) {
             $lines[] = '• Remboursements de crédits : ' . $f($this->breakdown['repayments_total']);
         }

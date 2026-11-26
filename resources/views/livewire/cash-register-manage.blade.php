@@ -60,11 +60,92 @@
                     <a href="{{ route('counter') }}" class="btn btn-ghost" style="text-decoration: none;">Comptoir</a>
                 @endif
                 <a href="{{ route('expenses.index') }}" class="btn btn-ghost" style="text-decoration: none;">+ Dépense</a>
+                @if ($canAddCash && ! \App\Support\ReadOnlyGuard::isReadOnly())
+                    <button type="button" wire:click="openMove('in')" class="btn btn-ghost"><x-icon name="cash" size="16" /> Argent du tiroir</button>
+                @endif
                 @if (! $showCloseForm)
                     <button type="button" @click="$wire.set('showCloseForm', true).then(() => $nextTick(() => document.getElementById('compter-tiroir')?.scrollIntoView({ behavior: 'smooth', block: 'start' })))" class="btn btn-danger">Clôturer la caisse</button>
                 @endif
             </div>
         </div>
+
+        @if ($showMove)
+            <div class="cm-back" wire:click.self="$set('showMove', false)" wire:key="cash-move" @keydown.escape.window="$wire.set('showMove', false)">
+                <div class="cm-sheet" role="dialog" aria-modal="true" aria-labelledby="cm-title">
+                    <div class="cm-head">
+                        <h3 id="cm-title">Argent du tiroir</h3>
+                        <button type="button" wire:click="$set('showMove', false)" class="cm-x" aria-label="Fermer"><x-icon name="x" size="20" /></button>
+                    </div>
+
+                    @if ($canRemoveCash)
+                        <div class="cm-seg" role="radiogroup" aria-label="Ajouter ou retirer">
+                            <button type="button" role="radio" aria-checked="{{ $moveType === 'in' ? 'true' : 'false' }}" wire:click="$set('moveType', 'in')" class="{{ $moveType === 'in' ? 'on in' : '' }}"><x-icon name="plus" size="18" /> J'ajoute</button>
+                            <button type="button" role="radio" aria-checked="{{ $moveType === 'out' ? 'true' : 'false' }}" wire:click="$set('moveType', 'out')" class="{{ $moveType === 'out' ? 'on out' : '' }}"><x-icon name="minus" size="18" /> Je retire</button>
+                        </div>
+                    @else
+                        <p class="cm-help">Vous avez mis de l'argent dans le tiroir après l'ouverture ? Dites-le ici pour que la caisse reste juste.</p>
+                    @endif
+
+                    <label class="cm-label" for="cm-amount">Combien ?</label>
+                    <div class="cm-amount">
+                        <x-money-input model="moveAmount" live id="cm-amount" placeholder="0" />
+                        <span>F</span>
+                    </div>
+                    @error('moveAmount') <div class="error cm-err">{{ $message }}</div> @enderror
+
+                    <div class="cm-label">Pourquoi ?</div>
+                    <div class="cm-reasons">
+                        @foreach ($moveReasons[$moveType] as $key => $label)
+                            <button type="button" wire:click="$set('moveReason', '{{ $key }}')" class="{{ $moveReason === $key ? 'on' : '' }}" aria-pressed="{{ $moveReason === $key ? 'true' : 'false' }}">{{ $label }}</button>
+                        @endforeach
+                    </div>
+                    @error('moveReason') <div class="error cm-err">{{ $message }}</div> @enderror
+
+                    @if ($moveReason === 'other')
+                        <input type="text" wire:model="moveNote" maxlength="255" placeholder="En quelques mots…" class="cm-note">
+                        @error('moveNote') <div class="error cm-err">{{ $message }}</div> @enderror
+                    @endif
+
+                    @if ($moveType === 'out')
+                        <p class="cm-help">Ce n'est pas une dépense : l'argent reste au patron, le bénéfice ne change pas. Le patron le verra dans le rapport du soir.</p>
+                    @endif
+
+                    <button type="button" wire:click="saveMovement" wire:loading.attr="disabled" wire:target="saveMovement" class="btn {{ $moveType === 'out' ? 'btn-danger' : 'btn-primary' }} cm-go">
+                        {{ $moveType === 'out' ? 'Retirer' : 'Ajouter' }} {{ $moveAmount ? $fcfa($moveAmount) . ' F' : "l'argent" }} {{ $moveType === 'out' ? 'du tiroir' : 'au tiroir' }}
+                    </button>
+                </div>
+            </div>
+        @endif
+        <style>
+            .cr-link { background: none; border: none; padding: 0; color: var(--color-accent); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+            .cr-fix { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+            .cm-back { position: fixed; inset: 0; z-index: 90; background: rgba(12, 28, 22, .5); display: flex; align-items: center; justify-content: center; padding: 16px; }
+            .cm-sheet { background: #fff; width: 100%; max-width: 440px; border-radius: 18px; padding: 20px 22px 22px; box-shadow: 0 24px 60px rgba(0, 0, 0, .25); max-height: calc(100vh - 32px); overflow-y: auto; }
+            .cm-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+            .cm-head h3 { margin: 0; font-size: 18px; }
+            .cm-x { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; margin-right: -8px; }
+            .cm-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #F1F4F2; padding: 4px; border-radius: 14px; margin-bottom: 16px; }
+            .cm-seg button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; border: none; border-radius: 11px; background: none; font: inherit; font-size: 15px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; }
+            .cm-seg button.on { background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .12); }
+            .cm-seg button.on.in { color: var(--color-primary); }
+            .cm-seg button.on.out { color: var(--color-danger); }
+            .cm-label { display: block; font-size: 14px; font-weight: 700; margin: 4px 0 8px; }
+            .cm-amount { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+            .cm-amount input { flex: 1; font-size: 22px !important; font-weight: 800; padding: 12px 14px; }
+            .cm-amount span { font-size: 18px; font-weight: 700; color: var(--color-text-secondary); }
+            .cm-reasons { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+            .cm-reasons button { text-align: left; min-height: 48px; padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--color-border); background: #fff; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+            .cm-reasons button.on { border-color: var(--color-primary); background: #E6F2EC; color: var(--color-primary); }
+            .cm-note { width: 100%; margin-bottom: 12px; }
+            .cm-help { font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); margin: 0 0 14px; }
+            .cm-err { margin: -8px 0 12px; color: var(--color-danger); font-size: 13px; font-weight: 600; }
+            .cm-go { width: 100%; justify-content: center; min-height: 52px; font-size: 16px; margin-top: 4px; }
+            body:has(.cm-back) { overflow: hidden; }
+            @media (max-width: 640px) {
+                .cm-back { align-items: flex-end; padding: 0; }
+                .cm-sheet { max-width: none; border-radius: 22px 22px 0 0; padding: 16px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 92vh; }
+            }
+        </style>
 
         {{-- 2. Les chiffres de la session --}}
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px;">
@@ -103,7 +184,20 @@
                     <h3 style="margin-top: 0;">Comment on arrive à ce montant</h3>
 
                     <div style="{{ $line }}">
-                        <span>Fonds de départ<span style="{{ $hint }}">Espèces mises dans le tiroir à l'ouverture</span></span>
+                        <span>Fonds de départ<span style="{{ $hint }}">Espèces mises dans le tiroir à l'ouverture
+                            @if ($journal->isEmpty() && $canAddCash && ! $fixingOpening)
+                                · <button type="button" wire:click="$set('fixingOpening', true)" class="cr-link">Corriger</button>
+                            @endif
+                        </span>
+                            @if ($fixingOpening)
+                                <span class="cr-fix">
+                                    <x-money-input model="newOpening" placeholder="Bon montant" style="width: 130px;" />
+                                    <button type="button" wire:click="fixOpening" class="btn btn-primary" style="padding: 7px 12px; font-size: 13px;">Enregistrer</button>
+                                    <button type="button" wire:click="$set('fixingOpening', false)" class="btn btn-ghost" style="padding: 7px 12px; font-size: 13px;">Annuler</button>
+                                </span>
+                                @error('newOpening') <span class="error" style="display: block;">{{ $message }}</span> @enderror
+                            @endif
+                        </span>
                         <strong>{{ $fcfa($breakdown['opening_amount']) }}</strong>
                     </div>
                     <div style="{{ $line }}">
@@ -122,6 +216,18 @@
                         <div style="{{ $line }}">
                             <span>+ Remboursements de crédits<span style="{{ $hint }}">{{ $breakdown['repayments_count'] }} {{ $breakdown['repayments_count'] > 1 ? 'clients venus payer leur crédit' : 'client venu payer son crédit' }} en espèces</span></span>
                             <strong style="color: var(--color-primary-300);">+{{ $fcfa($breakdown['repayments_total']) }}</strong>
+                        </div>
+                    @endif
+                    @if ($breakdown['added_count'] > 0)
+                        <div style="{{ $line }}">
+                            <span>+ Argent ajouté au tiroir<span style="{{ $hint }}">{{ $breakdown['added_count'] }} fois : monnaie oubliée à l'ouverture ou apportée (détail dans le journal)</span></span>
+                            <strong style="color: var(--color-primary-300);">+{{ $fcfa($breakdown['added_total']) }}</strong>
+                        </div>
+                    @endif
+                    @if ($breakdown['removed_count'] > 0)
+                        <div style="{{ $line }}">
+                            <span>− Argent retiré du tiroir<span style="{{ $hint }}">{{ $breakdown['removed_count'] }} fois : argent récupéré par le patron ou mis en sécurité (ce n'est pas une dépense)</span></span>
+                            <strong style="color: var(--color-danger);">−{{ $fcfa($breakdown['removed_total']) }}</strong>
                         </div>
                     @endif
                     <div style="{{ $line }}">
