@@ -111,13 +111,14 @@ class Dashboard extends Component
 
         $pending = Order::where('status', 'awaiting_payment');
 
-        // 7 derniers jours (une requête par jour, tout compris)
-        $chartData = collect(range(6, 0))->map(function (int $daysAgo) use ($restaurantId) {
+        // 7 derniers jours, tout compris (deux demandes à la base pour les 7 jours)
+        $byDay = SalesSummary::totalsByDay($restaurantId, now()->subDays(6)->startOfDay(), now()->endOfDay());
+        $chartData = collect(range(6, 0))->map(function (int $daysAgo) use ($byDay) {
             $day = now()->subDays($daysAgo);
 
             return [
                 'label' => $daysAgo === 0 ? "Auj." : ucfirst($day->locale('fr')->isoFormat('ddd D')),
-                'value' => (new SalesSummary($restaurantId, $day->copy()->startOfDay(), $day->copy()->endOfDay()))->total(),
+                'value' => $byDay[$day->toDateString()] ?? 0,
             ];
         })->all();
 

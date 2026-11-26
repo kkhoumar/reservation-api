@@ -25,7 +25,10 @@ if [ -n "$SUPERADMIN_PHONE" ] && [ -n "$SUPERADMIN_PASSWORD" ]; then
     php artisan app:create-super-admin "$SUPERADMIN_PHONE" --first="${SUPERADMIN_FIRST:-Super}" --last="${SUPERADMIN_LAST:-Admin}" --password="$SUPERADMIN_PASSWORD" || true
 fi
 
-# Maquis de démonstration (ne crée rien s'il existe déjà)
+# Comptes de démo : jamais le mot de passe « password » sur le serveur en ligne
+php artisan app:secure-demo || true
+
+# Maquis de démonstration (ne crée rien s'il existe déjà ; demande DEMO_PASSWORD)
 if [ "${SEED_DEMO:-false}" = "true" ]; then
     php artisan db:seed --class=DemoSeeder --force || true
 fi

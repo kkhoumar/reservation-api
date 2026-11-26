@@ -55,6 +55,42 @@ class SalesSummary
         $this->credit = (int) $charges->total;
     }
 
+    /**
+     * Chiffre d'affaires jour par jour (même calcul que total()), en deux
+     * demandes à la base au lieu de trois par jour.
+     *
+     * @return array<string, int> 'AAAA-MM-JJ' => montant
+     */
+    public static function totalsByDay(int $restaurantId, CarbonInterface $from, CarbonInterface $to): array
+    {
+        $days = [];
+
+        $paid = Payment::query()
+            ->where('status', 'completed')
+            ->whereBetween('paid_at', [$from, $to])
+            ->whereHas('order', fn ($q) => $q->where('restaurant_id', $restaurantId))
+            ->selectRaw('DATE(paid_at) as day, COALESCE(SUM(amount_due - mobile_amount), 0) + COALESCE(SUM(CASE WHEN mobile_amount > 0 THEN mobile_amount ELSE 0 END), 0) as total')
+            ->groupByRaw('DATE(paid_at)')
+            ->get();
+        foreach ($paid as $row) {
+            $days[substr((string) $row->day, 0, 10)] = (int) $row->total;
+        }
+
+        $charges = CreditTransaction::query()
+            ->where('restaurant_id', $restaurantId)
+            ->where('type', 'charge')
+            ->whereBetween('created_at', [$from, $to])
+            ->selectRaw('DATE(created_at) as day, COALESCE(SUM(amount), 0) as total')
+            ->groupByRaw('DATE(created_at)')
+            ->get();
+        foreach ($charges as $row) {
+            $day = substr((string) $row->day, 0, 10);
+            $days[$day] = ($days[$day] ?? 0) + (int) $row->total;
+        }
+
+        return $days;
+    }
+
     public function mobileTotal(): int
     {
         return array_sum($this->mobile);

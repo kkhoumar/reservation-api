@@ -14,13 +14,15 @@ use Illuminate\Support\Facades\DB;
 /**
  * Maquis de démonstration « Maquis Chez Koffi ».
  *
- * - Refuse de tourner en production (mots de passe « password »).
+ * - Mot de passe « password » seulement sur l'ordinateur du développeur.
+ *   Sur un serveur en ligne : refuse, sauf si DEMO_PASSWORD (8 caractères ou plus)
+ *   est réglé dans Render ; ce mot de passe est alors utilisé.
  * - Peut être relancé sans créer de doublon : si le patron de démo
  *   existe déjà, rien n'est fait.
  */
 class DemoSeeder extends Seeder
 {
-    private const ACCOUNTS = [
+    public const ACCOUNTS = [
         'owner' => ['Koffi', 'Kouassi', '0711111111'],
         'manager' => ['Mariam', 'Bamba', '0744444444'],
         'server' => ['Aya', 'Konan', '0722222222'],
@@ -29,8 +31,10 @@ class DemoSeeder extends Seeder
 
     public function run(): void
     {
-        if (app()->environment('production')) {
-            $this->command?->error('DemoSeeder refusé en production : il crée des comptes avec le mot de passe « password ».');
+        $password = self::password();
+
+        if ($password === null) {
+            $this->command?->error('Maquis de démo refusé sur un serveur en ligne : réglez DEMO_PASSWORD (8 caractères ou plus) pour le créer.');
 
             return;
         }
@@ -42,7 +46,7 @@ class DemoSeeder extends Seeder
             return;
         }
 
-        DB::transaction(function () {
+        DB::transaction(function () use ($password) {
             $restaurant = Restaurant::create([
                 'name' => 'Maquis Chez Koffi',
                 'type' => 'maquis',
@@ -62,7 +66,7 @@ class DemoSeeder extends Seeder
                     'first_name' => $first,
                     'last_name' => $last,
                     'phone' => $phone,
-                    'password' => 'password', // haché par le cast « hashed »
+                    'password' => $password, // haché par le cast « hashed »
                     'role' => $role,
                     'status' => 'active',
                 ]);
@@ -124,10 +128,22 @@ class DemoSeeder extends Seeder
         $this->printAccounts();
     }
 
+    /** Mot de passe des comptes de démo, ou null si on ne doit pas les créer ici. */
+    public static function password(): ?string
+    {
+        if (app()->environment('local', 'testing')) {
+            return 'password';
+        }
+        $password = (string) config('app.demo_password');
+
+        return strlen($password) >= 8 && $password !== 'password' ? $password : null;
+    }
+
     private function printAccounts(): void
     {
+        $shown = app()->environment('local', 'testing') ? 'password' : '(DEMO_PASSWORD)';
         foreach (self::ACCOUNTS as $role => [$first, , $phone]) {
-            $this->command?->line("  {$role} : {$first} · {$phone} / password");
+            $this->command?->line("  {$role} : {$first} · {$phone} / {$shown}");
         }
     }
 }

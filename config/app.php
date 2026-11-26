@@ -88,6 +88,9 @@ return [
     // Application en français uniquement : les messages d'erreur des formulaires sont dans lang/fr
     'locale' => 'fr',
 
+    // Mot de passe des comptes du maquis de démo sur un serveur en ligne (réglé dans Render)
+    'demo_password' => env('DEMO_PASSWORD'),
+
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),

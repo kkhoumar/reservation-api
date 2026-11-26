@@ -15,7 +15,7 @@ services:
       - key: APP_NAME
         value: Maquis Express
       - key: APP_ENV
-        value: staging
+        value: production
       - key: APP_DEBUG
         value: "false"
       - key: APP_KEY
@@ -74,4 +74,6 @@ services:
       - key: SUPERADMIN_PASSWORD
         sync: false
       - key: SEED_DEMO
-        value: "true"
+        value: "false"
+      - key: DEMO_PASSWORD
+        sync: false

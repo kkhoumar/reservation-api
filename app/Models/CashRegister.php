@@ -276,18 +276,18 @@ class CashRegister extends Model
      */
     public function breakdown(): array
     {
-        $paymentsCount = $this->cashPaymentsQuery()->count();
-        $received = (int) $this->cashPaymentsQuery()->sum('amount_received');
-        $changeGiven = (int) $this->cashPaymentsQuery()->sum('change_given');
-        $remittancesCount = $this->remittances()->count();
-        $remittancesTotal = (int) $this->remittances()->sum('amount');
-        $repayments = CreditTransaction::withoutGlobalScopes()
+        // Une seule demande à la base par type (nombre + total ensemble)
+        $cash = $this->cashPaymentsQuery()->reorder()
+            ->selectRaw('COUNT(*) as n, COALESCE(SUM(amount_received), 0) as received, COALESCE(SUM(change_given), 0) as change_given')
+            ->first();
+        $paymentsCount = (int) $cash->n;
+        $received = (int) $cash->received;
+        $changeGiven = (int) $cash->change_given;
+        [$remittancesCount, $remittancesTotal] = self::countAndSum($this->remittances(), 'amount');
+        [$repaymentsCount, $repaymentsTotal] = self::countAndSum(CreditTransaction::withoutGlobalScopes()
             ->where('cash_register_id', $this->id)
-            ->where('type', 'repayment');
-        $repaymentsCount = (clone $repayments)->count();
-        $repaymentsTotal = (int) (clone $repayments)->sum('amount');
-        $expensesCount = $this->expenses()->count();
-        $expensesTotal = (int) $this->expenses()->sum('amount');
+            ->where('type', 'repayment'), 'amount');
+        [$expensesCount, $expensesTotal] = self::countAndSum($this->expenses(), 'amount');
 
         return [
             'opening_amount' => $this->opening_amount,
@@ -304,6 +304,14 @@ class CashRegister extends Model
             'expenses_total' => $expensesTotal,
             'theoretical' => $this->opening_amount + $received - $changeGiven + $remittancesTotal + $repaymentsTotal - $expensesTotal,
         ];
+    }
+
+    /** @return array{0: int, 1: int} nombre de lignes et total, en une demande */
+    private static function countAndSum($query, string $column): array
+    {
+        $row = $query->reorder()->selectRaw("COUNT(*) as n, COALESCE(SUM({$column}), 0) as total")->first();
+
+        return [(int) $row->n, (int) $row->total];
     }
 
     /**
