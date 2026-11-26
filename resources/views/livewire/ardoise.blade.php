@@ -43,7 +43,7 @@
     @endif
 
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start;">
-        <div class="card">
+        <div class="card" id="ardoise-liste" style="scroll-margin-top: 84px;">
             <input type="search" wire:model.live.debounce.300ms="search" placeholder="Nom ou numéro du client" style="width: 100%; margin-bottom: 12px;">
 
             @if ($customers->isEmpty())
@@ -74,7 +74,7 @@
                                     {{ $customer->credit_limit !== null ? number_format($customer->credit_limit, 0, ',', ' ') : '—' }}
                                 </td>
                                 <td style="padding: 10px 0 10px 12px; text-align: right;">
-                                    <button wire:click="select({{ $customer->id }})" class="btn btn-ghost" style="padding: 6px 12px; font-size: 13px;">Ouvrir</button>
+                                    <button type="button" @click="$wire.select({{ $customer->id }}).then(() => $nextTick(() => document.getElementById('ardoise-client')?.scrollIntoView({ behavior: 'smooth', block: 'start' })))" class="btn btn-ghost" style="padding: 6px 12px; font-size: 13px;">Ouvrir</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -83,11 +83,11 @@
             @endif
         </div>
 
-        <div class="card">
+        <div class="card" id="ardoise-client" style="scroll-margin-top: 84px;">
             @if ($selected)
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
                     <h3 style="margin: 0;">{{ $selected->name }}</h3>
-                    <button wire:click="closeCustomer" style="background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 18px;" aria-label="Fermer"><x-icon name="x" size="20" /></button>
+                    <button type="button" @click="$wire.closeCustomer().then(() => $nextTick(() => document.getElementById('ardoise-liste')?.scrollIntoView({ behavior: 'smooth', block: 'start' })))" style="background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 18px;" aria-label="Fermer"><x-icon name="x" size="20" /></button>
                 </div>
                 <div style="font-size: 26px; font-weight: 800; margin: 8px 0 4px 0; color: {{ $selectedBalance > 0 ? 'var(--color-accent)' : 'var(--color-primary-300)' }};">
                     {{ number_format($selectedBalance, 0, ',', ' ') }} FCFA
