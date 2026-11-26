@@ -105,6 +105,8 @@ class User extends Authenticatable
         return $this->must_change_password === true;
     }
 
+    public const ROLE_LABELS = ['owner' => 'Patron', 'manager' => 'Gérant', 'cashier' => 'Caissier', 'server' => 'Serveur', 'associate' => 'Associé'];
+
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);

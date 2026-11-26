@@ -8,6 +8,8 @@ use App\Exceptions\BusinessRuleException;
 use App\Models\Plan;
 use App\Models\Restaurant;
 use App\Models\SubscriptionPayment;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -109,6 +111,58 @@ class RestaurantSubscription extends Component
         \App\Support\Toast::success('Formule enregistrée.');
     }
 
+    // ---------- Comptes du maquis : mot de passe oublié ----------
+
+    /** Le mot de passe provisoire qu'on vient de créer, montré une seule fois. */
+    #[Locked]
+    public ?array $newPassword = null;
+
+    /**
+     * Mot de passe oublié (le patron aussi) : le Super Admin donne un mot de
+     * passe provisoire. La personne est déconnectée partout et doit en choisir
+     * un nouveau à sa prochaine connexion. C'est noté dans le Journal du maquis.
+     */
+    public function resetUserPassword($userId): void
+    {
+        $user = User::withoutGlobalScopes()
+            ->where('restaurant_id', $this->restaurantId)
+            ->where('is_platform_admin', false)
+            ->findOrFail((int) $userId);
+
+        $password = \App\Actions\CreateRestaurantWithOwner::temporaryPassword();
+
+        $user->forceFill([
+            'password' => $password,
+            'must_change_password' => true,
+            'remember_token' => null,
+        ])->save();
+        DB::table('sessions')->where('user_id', $user->id)->delete();
+
+        $who = trim("{$user->first_name} {$user->last_name}");
+        \App\Models\ActivityLog::record('password_reset',
+            "Le support Maquis Express a donné un mot de passe provisoire à {$who}, qui devra le changer à sa prochaine connexion.",
+            ['user' => null, 'restaurant_id' => $this->restaurantId, 'meta' => ['user_id' => $user->id, 'by_support' => auth()->id()]]);
+        Log::info('Super Admin : mot de passe provisoire donné', ['admin_id' => auth()->id(), 'user_id' => $user->id, 'restaurant_id' => $this->restaurantId]);
+
+        $phone = User::normalizePhone($user->phone);
+        $this->newPassword = [
+            'user_id' => $user->id,
+            'name' => $who,
+            'phone' => $phone,
+            'password' => $password,
+            'message' => "Bonjour {$user->first_name},\n\nVoici votre mot de passe provisoire Maquis Express : {$password}\n\n"
+                . "Connectez-vous avec votre numéro {$phone} sur " . route('login') . "\n"
+                . "L'application vous demandera ensuite de choisir votre propre mot de passe.",
+        ];
+
+        \App\Support\Toast::success("Nouveau mot de passe prêt pour {$who}. Envoyez-le sur WhatsApp.");
+    }
+
+    public function hideNewPassword(): void
+    {
+        $this->newPassword = null;
+    }
+
     // ---------- Zone dangereuse ----------
 
     public string $resetConfirm = '';
@@ -172,6 +226,10 @@ class RestaurantSubscription extends Component
             'methods' => SubscriptionPayment::METHODS,
             'allowedMonths' => RecordSubscriptionPayment::ALLOWED_MONTHS,
             'activeUsers' => $restaurant->activeUsersCount(),
+            'accounts' => User::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)
+                ->where('is_platform_admin', false)->whereNull('left_at')
+                ->orderByRaw("CASE role WHEN 'owner' THEN 0 WHEN 'manager' THEN 1 WHEN 'cashier' THEN 2 ELSE 3 END")
+                ->orderBy('first_name')->get(),
             'activity' => [
                 'orders' => \Illuminate\Support\Facades\DB::table('orders')->where('restaurant_id', $restaurant->id)->count(),
                 'registers' => \Illuminate\Support\Facades\DB::table('cash_registers')->where('restaurant_id', $restaurant->id)->count(),

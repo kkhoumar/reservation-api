@@ -31,6 +31,19 @@
                                 @if ($demo->message)
                                     <div style="font-size: 12px; margin-top: 4px;">« {{ $demo->message }} »</div>
                                 @endif
+                                @if ($match = $demoMatches[$demo->id] ?? null)
+                                    <div class="demo-tag demo-tag-{{ $match['kind'] }}">
+                                        {{ $match['label'] }}
+                                        <span>
+                                            @switch($match['kind'])
+                                                @case('client') Il a sûrement oublié son mot de passe : donnez-lui-en un nouveau. @break
+                                                @case('former') Réactivez son maquis ou prolongez son essai plutôt que d'en créer un autre. @break
+                                                @case('staff') Pour son propre maquis, il faudra un autre numéro pour son compte patron. @break
+                                                @default Ce numéro est déjà pris.
+                                            @endswitch
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
                             <td style="padding: 12px 20px; white-space: nowrap;">
                                 <a href="tel:{{ $demo->phone }}" style="font-weight: 600;">{{ $demo->phone }}</a>
@@ -42,7 +55,11 @@
                                 </span>
                             </td>
                             <td style="padding: 12px 20px; text-align: right; white-space: nowrap;">
-                                <a href="{{ route('admin.restaurants.create', ['demande' => $demo->id]) }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">Créer le maquis</a>
+                                @if (in_array($match['kind'] ?? null, ['client', 'former'], true))
+                                    <a href="{{ route('admin.restaurants.subscription', $match['restaurant']->id) }}{{ $match['kind'] === 'client' ? '#comptes' : '' }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">{{ $match['kind'] === 'client' ? 'Nouveau mot de passe' : 'Gérer son maquis' }}</a>
+                                @else
+                                    <a href="{{ route('admin.restaurants.create', ['demande' => $demo->id]) }}" class="btn btn-primary" style="padding: 7px 14px; font-size: 13px; text-decoration: none;">Créer le maquis</a>
+                                @endif
                                 @if ($demo->status === 'new')
                                     <button wire:click="setDemoStatus({{ $demo->id }}, 'contacted')" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">Contacté</button>
                                 @endif
@@ -94,6 +111,28 @@
         </div>
     </div>
 
+    <div class="adm-search">
+        <x-icon name="search" size="18" />
+        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Maquis, patron ou téléphone…" aria-label="Rechercher un maquis">
+        @if ($search !== '')
+            <span class="adm-count">{{ $restaurants->count() }} / {{ $totalCount }}</span>
+        @endif
+    </div>
+    <style>
+        .adm-search { position: relative; display: flex; align-items: center; margin-bottom: 12px; }
+        .adm-search svg { position: absolute; left: 14px; color: var(--color-text-secondary); pointer-events: none; }
+        .adm-search input { width: 100%; padding: 12px 70px 12px 42px; border-radius: 12px; border: 1px solid var(--color-border); background: #fff; }
+        .adm-count { position: absolute; right: 14px; font-size: 12px; color: var(--color-text-secondary); }
+        .adm-owner { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 6px; font-size: 13px; }
+        .adm-owner a { font-size: 12px; font-weight: 600; text-decoration: none; }
+        .adm-owner .none { color: var(--color-danger); font-size: 12px; }
+        .demo-tag { display: inline-block; margin-top: 8px; padding: 6px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; line-height: 1.4; }
+        .demo-tag span { display: block; font-weight: 500; }
+        .demo-tag-client { background: #E6F4EC; color: #146C43; }
+        .demo-tag-former { background: #FFF1DD; color: #8A4B00; }
+        .demo-tag-staff, .demo-tag-admin { background: #E7F0FB; color: #1F4E8C; }
+    </style>
+
     <div class="card" style="padding: 0; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
@@ -115,6 +154,16 @@
                         <td style="padding: 14px 20px;">
                             <strong>{{ $restaurant->name }}</strong>
                             <span style="display: block; font-size: 12px; color: var(--color-text-secondary);">{{ collect([$restaurant->commune, $restaurant->city])->filter()->join(', ') ?: '—' }} · {{ $restaurant->paymentReference() }}</span>
+                            @php $owner = $restaurant->users->first(); $ownerPhone = $owner ? \App\Models\User::normalizePhone($owner->phone) : null; @endphp
+                            <div class="adm-owner">
+                                @if ($owner)
+                                    <span>👤 <strong>{{ trim($owner->first_name . ' ' . $owner->last_name) }}</strong> · {{ trim(chunk_split($ownerPhone, 2, ' ')) }}</span>
+                                    <a href="tel:{{ $ownerPhone }}">Appeler</a>
+                                    <a href="https://wa.me/225{{ $ownerPhone }}" target="_blank" rel="noopener">WhatsApp</a>
+                                @else
+                                    <span class="none">Pas de patron actif</span>
+                                @endif
+                            </div>
                         </td>
                         <td style="padding: 14px 20px;">
                             {{ $restaurant->plan?->name ?? '—' }}
@@ -156,6 +205,9 @@
                         </td>
                     </tr>
                 @endforeach
+                @if ($restaurants->isEmpty())
+                    <tr><td colspan="5" style="padding: 24px 20px; text-align: center; color: var(--color-text-secondary);">Aucun maquis ne correspond à « {{ $search }} ».</td></tr>
+                @endif
             </tbody>
         </table>
     </div>

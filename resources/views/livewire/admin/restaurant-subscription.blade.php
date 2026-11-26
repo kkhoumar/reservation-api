@@ -118,6 +118,70 @@
         </div>
     </div>
 
+    {{-- ================= Comptes du maquis ================= --}}
+    <div class="card acc" id="comptes" style="margin-top: 16px; scroll-margin-top: 90px;">
+        <h3 style="margin: 0 0 4px;">Comptes du maquis</h3>
+        <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 12px;">Quelqu'un a oublié son mot de passe, même le patron ? Donnez-lui un mot de passe provisoire. Il choisira le sien à sa prochaine connexion.</p>
+
+        @if ($newPassword)
+            <div class="acc-new" wire:key="pwd-{{ $newPassword['user_id'] }}">
+                <div style="font-size: 13px; color: var(--color-text-secondary);">Mot de passe provisoire de <strong style="color: var(--color-text);">{{ $newPassword['name'] }}</strong> · {{ trim(chunk_split($newPassword['phone'], 2, ' ')) }}</div>
+                <div class="acc-pwd">{{ $newPassword['password'] }}</div>
+                <div style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 12px;">Il ne sera plus affiché après. Si vous le perdez, refaites-en un.</div>
+                <div class="acc-acts">
+                    <a href="https://wa.me/225{{ $newPassword['phone'] }}?text={{ rawurlencode($newPassword['message']) }}" target="_blank" rel="noopener" class="btn btn-primary" style="text-decoration: none; justify-content: center;">
+                        <x-icon name="message" size="16" /> Envoyer sur WhatsApp
+                    </a>
+                    <button type="button" wire:click="hideNewPassword" class="btn btn-ghost" style="justify-content: center;">C'est envoyé</button>
+                </div>
+            </div>
+        @endif
+
+        @forelse ($accounts as $account)
+            <div class="acc-row" wire:key="acc-{{ $account->id }}">
+                <x-avatar :user="$account" :name="trim($account->first_name . ' ' . $account->last_name)" size="34" />
+                <div class="acc-who">
+                    <strong>{{ trim($account->first_name . ' ' . $account->last_name) }}</strong>
+                    <span>
+                        {{ \App\Models\User::ROLE_LABELS[$account->role] ?? $account->role }}
+                        · <a href="tel:{{ $account->phone }}">{{ trim(chunk_split(\App\Models\User::normalizePhone($account->phone), 2, ' ')) }}</a>
+                        @if ($account->status !== 'active') · <em>désactivé</em> @endif
+                        @if ($account->must_change_password) · <em>mot de passe provisoire pas encore changé</em> @endif
+                    </span>
+                </div>
+                <button type="button" wire:click="resetUserPassword({{ $account->id }})"
+                        wire:confirm="Donner un nouveau mot de passe à {{ trim($account->first_name . ' ' . $account->last_name) }} ? Son mot de passe actuel ne marchera plus et il sera déconnecté de tous ses téléphones."
+                        data-confirm-ok="Nouveau mot de passe" data-confirm-danger="false"
+                        class="btn btn-ghost acc-btn">Nouveau mot de passe</button>
+            </div>
+        @empty
+            <p style="font-size: 13px; color: var(--color-text-secondary);">Aucun compte dans ce maquis.</p>
+        @endforelse
+
+        <div class="acc-warn">
+            <x-icon name="alert" size="16" />
+            <span>Envoyez le mot de passe <strong>seulement au numéro du compte</strong>. La personne écrit d'un autre numéro ? Demandez-lui d'abord le code du maquis (<strong>{{ $restaurant->paymentReference() }}</strong>) et le montant de son dernier paiement. Un doute : ne donnez rien.</span>
+        </div>
+    </div>
+    <style>
+        .acc-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--color-border); }
+        .acc-who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .acc-who strong { font-size: 14px; }
+        .acc-who span { font-size: 12px; color: var(--color-text-secondary); }
+        .acc-who a { color: inherit; }
+        .acc-btn { padding: 7px 12px; font-size: 13px; white-space: nowrap; }
+        .acc-new { background: var(--color-mint, #E6F2EC); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+        .acc-pwd { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 26px; font-weight: 800; letter-spacing: .06em; margin: 6px 0 4px; user-select: all; }
+        .acc-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+        .acc-acts > * { flex: 1 1 180px; }
+        .acc-warn { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: #FFF6E5; color: #7A4B00; font-size: 12px; line-height: 1.5; }
+        .acc-warn svg { flex: none; margin-top: 1px; }
+        @media (max-width: 640px) {
+            .acc-row { flex-wrap: wrap; }
+            .acc-btn { width: 100%; justify-content: center; min-height: 44px; }
+        }
+    </style>
+
     {{-- ================= Zone dangereuse ================= --}}
     <div style="margin-top: 32px;">
         <h3 style="margin: 0 0 4px; color: var(--color-danger);">Zone dangereuse</h3>

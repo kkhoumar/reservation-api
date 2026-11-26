@@ -89,9 +89,9 @@ class Login extends Component
         $whatsapp = \App\Support\SupportContact::whatsappNumber();
 
         return view('livewire.login', [
-            'supportUrl' => $whatsapp
-                ? 'https://wa.me/225' . User::normalizePhone($whatsapp) . '?text=' . rawurlencode('Bonjour, j\'ai oublié le mot de passe de mon compte patron Maquis Express.')
-                : null,
+            // Le numéro tapé est ajouté au message dans la page (voir la vue)
+            'supportUrl' => $whatsapp ? 'https://wa.me/225' . User::normalizePhone($whatsapp) . '?text=' : null,
+            'supportText' => "Bonjour, j'ai oublié le mot de passe de mon compte patron Maquis Express.\nMon numéro de compte : ",
         ]);
     }
 }

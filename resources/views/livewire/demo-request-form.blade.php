@@ -80,6 +80,9 @@
                     <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="btn-secondary-outline" style="display: block; text-align: center; margin-bottom: 10px;">Nous écrire sur WhatsApp</a>
                 @endif
                 <a href="{{ route('landing') }}" class="btn-primary" style="display: block; text-align: center;">Retour à l'accueil</a>
+                <p style="font-size: 13px; color: var(--color-text-secondary); text-align: center; margin: 16px 0 0;">
+                    Déjà client ? <a href="{{ route('login') }}" style="font-weight: 700;">Se connecter</a>
+                </p>
             </div>
         @else
             <h2>Demander une démo</h2>

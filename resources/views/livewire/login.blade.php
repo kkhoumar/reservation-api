@@ -33,9 +33,12 @@
 
         <div x-show="help" x-cloak x-transition style="background: var(--color-mint); border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.55; margin-bottom: 14px;">
             <strong>Vous êtes serveuse, caissière ou gérante ?</strong> Demandez à votre patron (ou à la gérante) de vous donner un nouveau mot de passe depuis <em>Utilisateurs</em>.<br>
-            <strong>Vous êtes le patron ?</strong> Contactez Maquis Express
+            <strong>Vous êtes le patron ?</strong> Écrivez-nous sur WhatsApp <strong>depuis le numéro de votre compte</strong> : on vous envoie un nouveau mot de passe.
             @if ($supportUrl)
-                : <a href="{{ $supportUrl }}" target="_blank" rel="noopener">écrire sur WhatsApp</a>
+                <a :href="@js($supportUrl) + encodeURIComponent(@js($supportText) + (($wire.phone || '').trim() || '…'))" target="_blank" rel="noopener"
+                   style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; padding: 11px 14px; border-radius: 10px; background: #1FA855; color: #fff; font-weight: 700; text-decoration: none;">
+                    Écrire sur WhatsApp
+                </a>
             @endif
         </div>
 
