@@ -758,6 +758,7 @@
     @endif
     @include('partials.tap-feedback')
     @include('partials.offline-banner')
+    @include('partials.confirm')
     @livewireScripts
 </body>
 </html>

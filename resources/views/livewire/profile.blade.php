@@ -53,7 +53,7 @@
             <div class="pf-actions">
                 <button type="button" class="light" @click="pick()" :disabled="busy">{{ $user->avatar_path ? 'Changer la photo' : 'Ajouter une photo' }}</button>
                 @if ($user->avatar_path)
-                    <button type="button" wire:click="removePhoto" wire:confirm="Retirer votre photo de profil ?">Retirer la photo</button>
+                    <button type="button" wire:click="removePhoto" wire:confirm="Retirer votre photo de profil ? Vos initiales s'afficheront à la place." data-confirm-ok="Retirer la photo">Retirer la photo</button>
                 @endif
             </div>
             <div class="pf-err" x-show="error" x-text="error" x-cloak></div>

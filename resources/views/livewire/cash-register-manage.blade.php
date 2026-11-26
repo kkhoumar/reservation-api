@@ -61,7 +61,7 @@
                 @endif
                 <a href="{{ route('expenses.index') }}" class="btn btn-ghost" style="text-decoration: none;">+ Dépense</a>
                 @if (! $showCloseForm)
-                    <button wire:click="$set('showCloseForm', true)" class="btn btn-danger">Clôturer la caisse</button>
+                    <button type="button" @click="$wire.set('showCloseForm', true).then(() => $nextTick(() => document.getElementById('compter-tiroir')?.scrollIntoView({ behavior: 'smooth', block: 'start' })))" class="btn btn-danger">Clôturer la caisse</button>
                 @endif
             </div>
         </div>
@@ -212,7 +212,7 @@
                             Avant de clôturer, récupérez les sacoches : <a href="{{ route('sacoches') }}" style="color: var(--color-accent);">Recevoir les versements →</a>
                         </p>
                     @endif
-                    <button wire:click="$set('showCloseForm', true)" class="btn btn-danger" style="width: 100%; justify-content: center;">
+                    <button type="button" @click="$wire.set('showCloseForm', true).then(() => $nextTick(() => document.getElementById('compter-tiroir')?.scrollIntoView({ behavior: 'smooth', block: 'start' })))" class="btn btn-danger" style="width: 100%; justify-content: center;">
                         Clôturer la caisse
                     </button>
 
@@ -228,7 +228,7 @@
                         @endforeach
                     @endif
                 @else
-                    <h3 style="margin-top: 0;">Compter le tiroir</h3>
+                    <h3 id="compter-tiroir" style="margin-top: 0; scroll-margin-top: 84px;">Compter le tiroir</h3>
 
                     @if (! $directEntry)
                         <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: 0;">Indiquez combien vous avez de chaque billet et pièce.</p>

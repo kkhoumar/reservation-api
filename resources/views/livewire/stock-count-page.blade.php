@@ -454,8 +454,8 @@
             reason(id, key) {
                 this.reasons[id] = this.reasons[id] === key ? null : key;
             },
-            clearAll() {
-                if (!confirm('Effacer tout ce que vous avez compté ?')) return;
+            async clearAll() {
+                if (!(await window.meConfirm({ title: 'Effacer tout ce que vous avez compté ?', body: 'Les chiffres tapés sur cet écran seront perdus. Le stock ne change pas.', ok: 'Effacer tout', cancel: 'Garder', danger: true }))) return;
                 this.counts = {}; this.reasons = {}; this.note = ''; this.empties = {}; this.broken = {}; this.crates = {};
             },
 
@@ -506,10 +506,13 @@
             async submit() {
                 const n = this.countedCount();
                 const gap = this.totals('all').gapSale;
-                const msg = 'Valider le comptage de ' + n + ' produit' + (n > 1 ? 's' : '') + ' ?\n'
-                    + (gap === 0 ? 'Tout est juste.' : 'Écart : ' + this.signed(gap) + '.')
-                    + '\nLe stock de l\'application sera remplacé par vos chiffres.';
-                if (!confirm(msg)) return;
+                const ok = await window.meConfirm({
+                    title: 'Valider le comptage de ' + n + ' produit' + (n > 1 ? 's' : '') + ' ?',
+                    body: (gap === 0 ? 'Tout est juste.' : 'Écart : ' + this.signed(gap) + '.')
+                        + '\nLe stock de l\'application sera remplacé par vos chiffres.',
+                    ok: 'Valider le comptage', cancel: 'Revoir',
+                });
+                if (!ok) return;
 
                 this.sending = true;
                 this.error = '';

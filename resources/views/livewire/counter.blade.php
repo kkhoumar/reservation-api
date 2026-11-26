@@ -94,7 +94,7 @@
                             @if ($canGestures)
                                 <button wire:click="startGestures({{ $order->id }})" class="btn btn-ghost">Offrir / remise</button>
                             @endif
-                            <button wire:click="cancelOrder({{ $order->id }})" wire:confirm="Annuler ce bon ? Les articles seront remis en stock." class="btn btn-ghost" style="color: var(--color-danger);">Annuler le bon</button>
+                            <button wire:click="cancelOrder({{ $order->id }})" wire:confirm="Annuler ce bon ? Les articles seront remis en stock." data-confirm-ok="Annuler le bon" data-confirm-cancel="Garder le bon" class="btn btn-ghost" style="color: var(--color-danger);">Annuler le bon</button>
                         </div>
                     @endif
                 </div>

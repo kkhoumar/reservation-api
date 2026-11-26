@@ -331,10 +331,9 @@
             if (b.dataset.minus) { if (--cart[b.dataset.minus] <= 0) delete cart[b.dataset.minus]; renderGrid(); renderCart(); return; }
             if (b.dataset.bill) { setCash(b.dataset.bill); return; }
             if (b.dataset.remove) {
-                if (confirm('Retirer cette vente refusée ? Elle ne sera pas enregistrée. Vérifiez d\'abord l\'argent avec le patron.')) {
-                    ME.removeSale(b.dataset.remove);
-                    renderPending();
-                }
+                var saleId = b.dataset.remove;
+                window.meConfirm({ title: 'Retirer cette vente refusée ?', body: 'Elle ne sera pas enregistrée. Vérifiez d\'abord l\'argent avec le patron.', ok: 'Retirer la vente', danger: true })
+                    .then(function (yes) { if (yes) { ME.removeSale(saleId); renderPending(); } });
                 return;
             }
             if (b.id === 'go') validate();
@@ -363,5 +362,6 @@
         if (catalog && navigator.onLine !== false) ME.sync();
     })();
     </script>
+@include('partials.confirm')
 </body>
 </html>

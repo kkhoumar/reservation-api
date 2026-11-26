@@ -89,7 +89,7 @@
             <label style="font-size: 13px; font-weight: 600;">Note</label>
             <input type="text" wire:model="note" maxlength="255" placeholder="Facultatif" style="width: 100%; margin: 6px 0 16px 0;">
 
-            <button wire:click="recordPayment" wire:confirm="Enregistrer ce paiement ?" class="btn btn-primary" style="width: 100%; justify-content: center;">
+            <button wire:click="recordPayment" wire:confirm="Enregistrer ce paiement ? L'abonnement du maquis sera prolongé." data-confirm-ok="Enregistrer le paiement" class="btn btn-primary" style="width: 100%; justify-content: center;">
                 Enregistrer le paiement
             </button>
             <button wire:click="changePlan" class="btn btn-ghost" style="width: 100%; justify-content: center; margin-top: 8px;">
@@ -142,7 +142,7 @@
                 </label>
                 <input type="text" wire:model="resetConfirm" placeholder="Nom du maquis pour confirmer" autocomplete="off" style="width: 100%; margin-bottom: 6px;">
                 @error('resetConfirm') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 6px;">{{ $message }}</div> @enderror
-                <button wire:click="resetData" wire:confirm="Vider les données de test de {{ $restaurant->name }} ? C'est définitif." class="btn btn-ghost" style="width: 100%; justify-content: center; color: var(--color-warning); border-color: #F3DDB8; margin-top: 6px;">
+                <button wire:click="resetData" wire:confirm="Vider les données de test de {{ $restaurant->name }} ? Les ventes, la caisse et le stock de test seront effacés. On ne peut pas revenir en arrière." data-confirm-ok="Vider les données" class="btn btn-ghost" style="width: 100%; justify-content: center; color: var(--color-warning); border-color: #F3DDB8; margin-top: 6px;">
                     Vider les données de test
                 </button>
             </div>
@@ -160,7 +160,7 @@
                 @endif
                 <input type="text" wire:model="deleteConfirm" placeholder="Nom du maquis pour confirmer" autocomplete="off" style="width: 100%; margin-bottom: 6px;">
                 @error('deleteConfirm') <div style="color: var(--color-danger); font-size: 13px; margin-bottom: 6px;">{{ $message }}</div> @enderror
-                <button wire:click="deleteRestaurant" wire:confirm="Supprimer définitivement {{ $restaurant->name }} et toutes ses données ?" class="btn btn-danger" style="width: 100%; justify-content: center; margin-top: 6px;">
+                <button wire:click="deleteRestaurant" wire:confirm="Supprimer définitivement {{ $restaurant->name }} ? Le maquis et toutes ses données seront effacés. On ne peut pas revenir en arrière." data-confirm-ok="Supprimer le maquis" class="btn btn-danger" style="width: 100%; justify-content: center; margin-top: 6px;">
                     Supprimer définitivement le maquis
                 </button>
             </div>

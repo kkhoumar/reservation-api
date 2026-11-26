@@ -124,7 +124,7 @@
                             @endcan
                             @can('toggleStatus', $user)
                                 <button wire:click="toggleStatus({{ $user->id }})"
-                                        wire:confirm="{{ $user->status === 'active' ? 'Désactiver ' . $user->first_name . ' pour un temps (congé, absence) ? Il ne pourra plus se connecter.' : 'Réactiver ' . $user->first_name . ' ?' }}"
+                                        wire:confirm="{{ $user->status === 'active' ? 'Désactiver ' . $user->first_name . ' pour un temps (congé, absence) ? Il ne pourra plus se connecter.' : 'Réactiver ' . $user->first_name . ' ? Il pourra de nouveau se connecter.' }}"
                                         title="Pour une absence temporaire : congé, maladie…"
                                         class="btn btn-ghost"
                                         style="padding: 6px 12px; font-size: 12px; margin-right: 6px;">
@@ -133,7 +133,7 @@
                             @endcan
                             @can('remove', $user)
                                 <button wire:click="removeUser({{ $user->id }})"
-                                        wire:confirm="{{ $user->first_name }} quitte le maquis ? Il ne pourra plus se connecter et sortira de la liste. Ses ventes et son historique sont conservés. Vous pourrez le réintégrer s'il revient."
+                                        data-confirm-ok="Oui, il quitte le maquis" data-confirm-danger wire:confirm="{{ $user->first_name }} quitte le maquis ? Il ne pourra plus se connecter et sortira de la liste. Ses ventes et son historique sont conservés. Vous pourrez le réintégrer s'il revient."
                                         class="btn btn-danger"
                                         style="padding: 6px 12px; font-size: 12px;">
                                     Retirer du maquis
@@ -173,7 +173,7 @@
                                 <td style="padding: 12px 20px; text-align: right;">
                                     @can('remove', $former)
                                         <button wire:click="restoreUser({{ $former->id }})"
-                                                wire:confirm="Réintégrer {{ $former->first_name }} dans l'équipe ?"
+                                                wire:confirm="Réintégrer {{ $former->first_name }} dans l'équipe ? Il pourra de nouveau se connecter avec son numéro."
                                                 class="btn btn-ghost" style="padding: 6px 12px; font-size: 12px;">
                                             Réintégrer
                                         </button>

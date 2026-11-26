@@ -46,7 +46,7 @@
                                 @if ($demo->status === 'new')
                                     <button wire:click="setDemoStatus({{ $demo->id }}, 'contacted')" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">Contacté</button>
                                 @endif
-                                <button wire:click="setDemoStatus({{ $demo->id }}, 'rejected')" wire:confirm="Classer cette demande sans suite ?" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">Sans suite</button>
+                                <button wire:click="setDemoStatus({{ $demo->id }}, 'rejected')" wire:confirm="Classer cette demande sans suite ? Elle sortira de la liste des nouvelles demandes." data-confirm-ok="Classer sans suite" class="btn btn-ghost" style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">Sans suite</button>
                             </td>
                         </tr>
                     @endforeach
@@ -147,8 +147,8 @@
                             </button>
                             <button wire:click="toggleStatus({{ $restaurant->id }})"
                                     wire:confirm="{{ $restaurant->isLocked()
-                                        ? 'Réactiver ' . $restaurant->name . ' ?'
-                                        : 'Verrouiller ' . $restaurant->name . ' ? Son personnel n\'aura plus accès à l\'application.' }}"
+                                        ? 'Réactiver ' . $restaurant->name . ' ? Son personnel pourra de nouveau utiliser l\'application.'
+                                        : 'Verrouiller ' . $restaurant->name . ' ? Son personnel n\'aura plus accès à l\'application. Ses données sont gardées.' }}"
                                     class="btn {{ $restaurant->isLocked() ? 'btn-primary' : 'btn-danger' }}"
                                     style="padding: 7px 14px; font-size: 13px; margin-left: 6px;">
                                 {{ $restaurant->isLocked() ? 'Réactiver' : 'Verrouiller' }}

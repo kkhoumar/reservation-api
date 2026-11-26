@@ -265,7 +265,7 @@
                                         {{ $product->is_available ? 'Désactiver' : 'Activer' }}
                                     </button>
                                     <button wire:click="deleteProduct({{ $product->id }})"
-                                            wire:confirm="Retirer « {{ $product->name }} » de la carte ?&#10;&#10;Vos anciennes ventes restent dans vos rapports. Vous pourrez le remettre sur la carte quand vous voulez."
+                                            data-confirm-ok="Retirer de la carte" wire:confirm="Retirer « {{ $product->name }} » de la carte ?&#10;&#10;Vos anciennes ventes restent dans vos rapports. Vous pourrez le remettre sur la carte quand vous voulez."
                                             class="btn btn-ghost" style="padding: 6px 10px; font-size: 12px; margin-left: 6px; color: var(--color-danger);" aria-label="Retirer {{ $product->name }} de la carte" title="Retirer de la carte">
                                         <x-icon name="trash" size="15" />
                                     </button>
@@ -318,7 +318,7 @@
                                         {{ $product->is_available ? 'Ne plus vendre (désactiver)' : 'Remettre en vente (activer)' }}
                                     </button>
                                     <button type="button" class="danger" @click="open = false" wire:click="deleteProduct({{ $product->id }})"
-                                            wire:confirm="Retirer « {{ $product->name }} » de la carte ?&#10;&#10;Vos anciennes ventes restent dans vos rapports. Vous pourrez le remettre sur la carte quand vous voulez.">
+                                            data-confirm-ok="Retirer de la carte" wire:confirm="Retirer « {{ $product->name }} » de la carte ?&#10;&#10;Vos anciennes ventes restent dans vos rapports. Vous pourrez le remettre sur la carte quand vous voulez.">
                                         <x-icon name="trash" size="17" /> Retirer de la carte
                                     </button>
                                 </div>
