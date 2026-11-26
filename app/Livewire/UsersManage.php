@@ -69,6 +69,13 @@ class UsersManage extends Component
     {
         Gate::authorize('create', User::class);
 
+        // Formule pleine : on le dit tout de suite, avant de faire remplir le formulaire
+        if (! $this->ensureUserLimit()) {
+            $this->showForm = false;
+
+            return;
+        }
+
         $this->reset(['editingId', 'firstName', 'lastName', 'phone', 'password', 'role']);
         $this->role = 'server';
         $this->showForm = true;

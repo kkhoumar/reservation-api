@@ -122,10 +122,23 @@ class Dashboard extends Component
             ];
         })->all();
 
+        // « Pour bien démarrer » : tant qu'une étape n'est pas faite (nouveau maquis)
+        $hasProducts = Product::exists();
+        $setup = array_filter([
+            ['done' => $hasProducts, 'title' => 'Créez votre menu', 'text' => 'Vos boissons et vos plats, avec leurs prix.', 'url' => route('products.manage'), 'cta' => 'Créer le menu'],
+            $restaurant?->usesTables()
+                ? ['done' => RestaurantTable::where('restaurant_id', $restaurantId)->exists(), 'title' => 'Créez vos tables', 'text' => 'Table 1, Table 2… en un clic.', 'url' => route('tables.manage'), 'cta' => 'Créer les tables']
+                : null,
+            ['done' => \App\Models\User::where('restaurant_id', $restaurantId)->where('role', '!=', 'owner')->whereNull('left_at')->exists(), 'title' => 'Ajoutez votre équipe', 'text' => 'Serveuses, caissier, gérante : chacun son compte.', 'url' => route('users.manage'), 'cta' => 'Ajouter quelqu\'un'],
+            ['done' => CashRegister::where('restaurant_id', $restaurantId)->exists(), 'title' => 'Ouvrez la caisse', 'text' => 'Le jour où vous commencez à vendre avec l\'application.', 'url' => route('cash-register.manage'), 'cta' => 'Ouvrir la caisse'],
+        ]);
+        $canSetup = in_array(auth()->user()->role, ['owner', 'manager'], true) || auth()->user()->isPlatformAdmin();
+
         return view('livewire.dashboard', [
             'noRestaurant' => false,
+            'setup' => $canSetup && collect($setup)->contains('done', false) ? array_values($setup) : [],
             'stockCountDays' => (new \App\Support\StockCountSheet($restaurantId))->daysSince(),
-            'hasProducts' => \App\Models\Product::exists(),
+            'hasProducts' => $hasProducts,
             'periods' => self::PERIODS,
             'sales' => $sales,
             'revenue' => $sales->total(),

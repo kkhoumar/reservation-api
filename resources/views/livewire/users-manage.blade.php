@@ -8,8 +8,10 @@
             </div>
             <h1>Utilisateurs</h1>
             @if ($restaurant?->userLimit())
-                <div style="font-size: 13px; color: var(--color-text-secondary); margin-top: 4px;">
-                    Formule {{ $restaurant->plan->name }} : {{ $restaurant->activeUsersCount() }} / {{ $restaurant->userLimit() }} utilisateurs actifs
+                @php $used = $restaurant->activeUsersCount(); $left = max(0, $restaurant->userLimit() - $used); @endphp
+                <div style="font-size: 13px; margin-top: 4px; color: {{ $left === 0 ? 'var(--color-danger)' : 'var(--color-text-secondary)' }}; font-weight: {{ $left === 0 ? '700' : '400' }};">
+                    Formule {{ $restaurant->plan->name }} : {{ $used }} place{{ $used > 1 ? 's' : '' }} utilisée{{ $used > 1 ? 's' : '' }} sur {{ $restaurant->userLimit() }}, vous compris
+                    · {{ $left === 0 ? 'plus de place' : ($left === 1 ? 'il reste 1 place' : "il reste {$left} places") }}
                 </div>
             @endif
         </div>

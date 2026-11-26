@@ -28,7 +28,17 @@
     @endif
 
     @php $allProducts = $categories->flatMap->products; @endphp
-    @if ($allProducts->count() >= 6)
+    @if ($categories->isEmpty())
+        <div class="card" style="text-align: center; padding: 26px 20px; margin-bottom: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 16px; background: var(--color-mint); color: var(--color-primary); display: grid; place-items: center; margin: 0 auto 12px;"><x-icon name="bottle" size="24" /></div>
+            <h3 style="margin: 0 0 6px;">Votre menu est vide</h3>
+            <p style="font-size: 14px; color: var(--color-text-secondary); margin: 0 auto 4px; max-width: 420px; line-height: 1.55;">
+                <strong>1.</strong> Créez une catégorie, par exemple <em>Bières</em>, <em>Sucreries</em> ou <em>Plats</em>.<br>
+                <strong>2.</strong> Ajoutez vos produits dedans, avec le prix de vente et le prix d'achat.
+            </p>
+            <button wire:click="$set('showCategoryForm', true)" class="btn btn-primary" style="margin-top: 12px;">+ Créer ma première catégorie</button>
+        </div>
+    @endif    @if ($allProducts->count() >= 6)
         <div class="pm-search">
             <x-icon name="search" size="18" />
             <input type="search" x-model="q" placeholder="Chercher un produit…" aria-label="Chercher un produit" autocomplete="off" enterkeyhint="search">

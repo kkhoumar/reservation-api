@@ -88,7 +88,7 @@
             <h2>Demander une démo</h2>
             <p style="font-size: 14px; color: var(--color-text-secondary); margin: 0 0 20px;">Ça prend 1 minute.</p>
 
-            <form wire:submit="submit">
+            <form x-data @submit.prevent="$wire.submit().then(() => $nextTick(() => { const e = $el.querySelector('.error'); if (e) { e.scrollIntoView({ behavior: 'smooth', block: 'center' }); e.closest('.field')?.querySelector('input, select, textarea')?.focus({ preventScroll: true }); } }))">
                 <div class="row-2">
                     <div class="field">
                         <label for="contactName">Votre nom</label>

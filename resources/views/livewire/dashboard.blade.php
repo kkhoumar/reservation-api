@@ -31,6 +31,54 @@
         </div>
     </div>
 
+    {{-- ===== Pour bien démarrer (nouveau maquis) ===== --}}
+    @if ($setup)
+        @php $doneCount = collect($setup)->where('done', true)->count(); $next = collect($setup)->firstWhere('done', false); @endphp
+        <div class="card ob">
+            <div class="ob-head">
+                <div>
+                    <h3>Pour bien démarrer</h3>
+                    <p>{{ $doneCount }} étape{{ $doneCount > 1 ? 's' : '' }} sur {{ count($setup) }} · ce guide disparaît quand tout est fait.</p>
+                </div>
+                <div class="ob-bar" aria-hidden="true"><i style="width: {{ round($doneCount / count($setup) * 100) }}%"></i></div>
+            </div>
+            <ol class="ob-steps">
+                @foreach ($setup as $i => $step)
+                    <li class="{{ $step['done'] ? 'done' : ($step === $next ? 'next' : '') }}">
+                        <span class="ob-dot">@if ($step['done'])<x-icon name="check" size="16" stroke="2.6" />@else{{ $i + 1 }}@endif</span>
+                        <span class="ob-txt"><strong>{{ $step['title'] }}</strong><small>{{ $step['done'] ? 'Fait' : $step['text'] }}</small></span>
+                        @if (! $step['done'])
+                            <a href="{{ $step['url'] }}" class="btn {{ $step === $next ? 'btn-primary' : 'btn-ghost' }}">{{ $step['cta'] }}</a>
+                        @endif
+                    </li>
+                @endforeach
+            </ol>
+        </div>
+        <style>
+            .ob { margin-bottom: 24px; border: 1.5px solid var(--color-primary-300); }
+            .ob-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+            .ob-head h3 { margin: 0; font-size: 18px; }
+            .ob-head p { margin: 2px 0 0; font-size: 13px; color: var(--color-text-secondary); }
+            .ob-bar { flex: 0 1 200px; height: 8px; border-radius: 99px; background: var(--color-border); overflow: hidden; }
+            .ob-bar i { display: block; height: 100%; background: var(--color-primary-300); border-radius: 99px; }
+            .ob-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+            .ob-steps li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--color-bg); }
+            .ob-steps li.next { background: var(--color-mint); }
+            .ob-steps li.done { opacity: .7; }
+            .ob-dot { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px; background: #fff; border: 1.5px solid var(--color-border); color: var(--color-text-secondary); }
+            .ob-steps li.next .ob-dot { border-color: var(--color-primary); color: var(--color-primary); }
+            .ob-steps li.done .ob-dot { background: var(--color-success); border-color: var(--color-success); color: #fff; }
+            .ob-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+            .ob-txt strong { font-size: 15px; }
+            .ob-txt small { font-size: 12.5px; color: var(--color-text-secondary); }
+            .ob-steps .btn { white-space: nowrap; padding: 8px 14px; font-size: 13.5px; text-decoration: none; }
+            @media (max-width: 640px) {
+                .ob-steps li { flex-wrap: wrap; }
+                .ob-steps .btn { width: 100%; justify-content: center; min-height: 44px; }
+            }
+        </style>
+    @endif
+
     {{-- ===== En ce moment ===== --}}
     <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary); margin-bottom: 8px;">En ce moment</div>
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 24px;">

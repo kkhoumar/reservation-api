@@ -30,6 +30,8 @@ class TablesBoard extends Component
 
         return view('livewire.tables-board', [
             'zones' => $zones,
+            'loose' => \App\Models\RestaurantTable::whereNull('zone_id')->orderBy('label')->get(),
+            'canManage' => in_array(auth()->user()->role, ['owner', 'manager'], true) || auth()->user()->isPlatformAdmin(),
             'atCounter' => $atCounter,
             'quickSale' => (bool) auth()->user()->currentRestaurant()?->usesQuickSale(),
         ]);

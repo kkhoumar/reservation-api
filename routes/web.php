@@ -102,6 +102,7 @@ Route::view('/compte-suspendu', 'account-locked')->middleware('auth')->name('acc
 // Écrans d'un maquis : connexion + compte actif + maquis non verrouillé
 Route::middleware(['auth', 'restaurant.access'])->group(function () {
     Route::get('/tables', TablesBoard::class)->name('tables.index');
+    Route::get('/tables/gerer', \App\Livewire\TablesManage::class)->middleware('role:owner,manager')->name('tables.manage');
     Route::get('/orders/new/{table?}', NewOrder::class)->name('orders.new');
     Route::get('/payment/{order}', TakePayment::class)->name('payment.take');
     Route::get('/payment/{order}/success', PaymentSuccess::class)->name('payment.success');

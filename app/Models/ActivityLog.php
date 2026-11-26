@@ -33,6 +33,7 @@ class ActivityLog extends Model
      */
     public const ACTIONS = [
         'login' => ['Connexion', 'info', 'login', 'lock'],
+        'tables_created' => ['Tables créées', 'info', 'team', 'clipboard'],
         'order_cancelled' => ['Bon annulé', 'danger', 'money', 'x'],
         'item_removed' => ['Article retiré', 'warning', 'money', 'minus'],
         'item_offered' => ['Article offert', 'warning', 'money', 'gift'],
