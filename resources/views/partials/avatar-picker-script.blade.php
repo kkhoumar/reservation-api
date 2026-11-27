@@ -9,7 +9,9 @@
             busy: false,
             error: '',
 
-            pick() { this.$refs.file.click(); },
+            preview: '',
+
+            pick(ref = 'file') { (this.$refs[ref] || this.$refs.file).click(); },
 
             async chosen(event) {
                 const file = event.target.files && event.target.files[0];
@@ -23,7 +25,7 @@
                 try {
                     const dataUrl = await this.shrink(file, 320);
                     const message = await this.$wire[method](...args, dataUrl);
-                    if (message) this.error = message;
+                    if (message) this.error = message; else this.preview = dataUrl;
                 } catch (e) {
                     this.error = 'La photo n\'a pas pu être envoyée. Réessayez.';
                 }
@@ -64,24 +66,44 @@
     });
 </script>
 <script>
-    // Photo de preuve (perte, casse) : prise avec l'appareil photo, réduite à 1280 px (environ 100 Ko)
+    // Photo de preuve (reçu, livraison, perte), réduite à 1280 px (environ 100 Ko).
+    // withOrigin : on note aussi d'où vient la photo (appareil photo ou téléphone) et sa date.
     document.addEventListener('alpine:init', () => {
-        Alpine.data('photoCapture', (model) => ({
+        Alpine.data('photoCapture', (model, withOrigin = false) => ({
             preview: '',
             busy: false,
             error: '',
+            source: '',
+            takenAt: 0,
+            old: false,
             init() {
                 // Formulaire enregistré : le serveur vide la photo, on retire l'aperçu
                 this.$wire.$watch(model, (value) => { if (!value) this.preview = ''; });
             },
-            pick() { this.$refs.file.click(); },
+            pick(ref = 'file') { (this.$refs[ref] || this.$refs.file).click(); },
             clear() { this.preview = ''; this.$wire.$set(model, '', false); },
-            async chosen(event) {
+            originText() {
+                if (this.source !== 'gallery') return '✓ Photo prise sur place';
+                if (!this.takenAt) return '✓ Photo choisie dans le téléphone';
+                const d = new Date(this.takenAt);
+                const day = d.toDateString() === new Date().toDateString()
+                    ? "aujourd'hui"
+                    : 'du ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                return (this.old ? '⚠ Photo ancienne, ' : '✓ Photo ') + day + ' : le patron le verra';
+            },
+            async chosen(event, source = 'camera') {
                 const file = event.target.files && event.target.files[0];
                 event.target.value = '';
                 if (!file) return;
                 if (!/^image\//.test(file.type)) { this.error = 'Choisissez une photo.'; return; }
                 this.busy = true; this.error = '';
+                this.source = source;
+                this.takenAt = source === 'gallery' ? (file.lastModified || 0) : Date.now();
+                this.old = source === 'gallery' && this.takenAt > 0 && (Date.now() - this.takenAt) > 2 * 86400000;
+                if (withOrigin) {
+                    this.$wire.$set(model + 'Source', source, false);
+                    this.$wire.$set(model + 'Date', this.takenAt, false);
+                }
                 try {
                     const dataUrl = await new Promise((resolve, reject) => {
                         const url = URL.createObjectURL(file);

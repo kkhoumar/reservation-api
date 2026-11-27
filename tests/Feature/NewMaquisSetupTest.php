@@ -111,16 +111,75 @@ class NewMaquisSetupTest extends TestCase
 
     public function test_le_guide_pour_bien_demarrer_suit_le_patron_puis_disparait(): void
     {
-        Livewire::test(Dashboard::class)->assertSee('Pour bien démarrer')->assertSee('0 étape sur 4');
+        // L'ordre qui fait vendre vite : menu, première vente, puis tables et équipe
+        Livewire::test(Dashboard::class)->assertSee('Pour bien démarrer')->assertSee('0 étape sur 4')
+            ->assertSeeInOrder(['Créez votre menu', 'Ouvrez la caisse et vendez', 'Créez vos tables', 'Ajoutez votre équipe']);
 
         $cat = Category::factory()->create(['restaurant_id' => $this->maquis->id]);
         Product::factory()->create(['restaurant_id' => $this->maquis->id, 'category_id' => $cat->id]);
-        RestaurantTable::factory()->create(['restaurant_id' => $this->maquis->id]);
-        Livewire::test(Dashboard::class)->assertSee('2 étapes sur 4');
+        Livewire::test(Dashboard::class)->assertSee('1 étape sur 4')
+            ->assertSee('Ouvrir la caisse')->assertSee(route('cash-register.manage', ['puis' => 'vendre']), false);
 
-        User::factory()->create(['restaurant_id' => $this->maquis->id, 'role' => 'server']);
+        // Caisse ouverte : le bouton mène directement à la vente
         CashRegister::openFor($this->maquis->id, $this->patron, 0);
+        Livewire::test(Dashboard::class)->assertSee('Vendre maintenant')->assertSee(route('orders.new'), false);
+
+        Order::factory()->create(['restaurant_id' => $this->maquis->id, 'user_id' => $this->patron->id]);
+        Order::query()->update(['status' => 'paid']);
+        RestaurantTable::factory()->create(['restaurant_id' => $this->maquis->id]);
+        Livewire::test(Dashboard::class)->assertSee('3 étapes sur 4');
+
+        // Tout est fait : « Bravo » une seule fois, puis plus rien
+        User::factory()->create(['restaurant_id' => $this->maquis->id, 'role' => 'server']);
+        Livewire::test(Dashboard::class)->assertDontSee('Pour bien démarrer')->assertSee('Bravo, votre maquis est prêt');
+        $this->assertNotNull($this->maquis->fresh()->setup_done_at);
+        Livewire::test(Dashboard::class)->assertDontSee('Pour bien démarrer')->assertDontSee('Bravo, votre maquis est prêt');
+
+        // Le guide ne revient pas, même si la serveuse s'en va
+        User::where('role', 'server')->update(['left_at' => now()]);
         Livewire::test(Dashboard::class)->assertDontSee('Pour bien démarrer');
+    }
+
+    public function test_je_n_ai_pas_de_tables_passe_en_vente_rapide(): void
+    {
+        Livewire::test(Dashboard::class)->assertSee("Je n'ai pas de tables", false)
+            ->call('skipTables')
+            ->assertDontSee('Créez vos tables')
+            ->assertSee('0 étape sur 3');
+        $this->assertSame('quick', $this->maquis->fresh()->service_mode);
+        $this->assertSame(1, \App\Models\ActivityLog::where('action', 'settings_changed')->count());
+    }
+
+    public function test_seul_le_patron_peut_dire_je_n_ai_pas_de_tables(): void
+    {
+        $gerante = User::factory()->create(['restaurant_id' => $this->maquis->id, 'role' => 'manager']);
+        $this->actingAs($gerante);
+
+        Livewire::test(Dashboard::class)->assertSee('Créez vos tables')->assertDontSee("Je n'ai pas de tables", false)->call('skipTables');
+        $this->assertSame('both', $this->maquis->fresh()->service_mode);
+    }
+
+    public function test_service_a_table_seulement_les_tables_viennent_avant_la_vente(): void
+    {
+        $this->maquis->update(['service_mode' => 'tables']);
+
+        Livewire::test(Dashboard::class)
+            ->assertSeeInOrder(['Créez votre menu', 'Créez vos tables', 'Ouvrez la caisse et vendez', 'Ajoutez votre équipe']);
+    }
+
+    public function test_ouvrir_la_caisse_depuis_le_guide_mene_a_la_vente(): void
+    {
+        Livewire::withQueryParams(['puis' => 'vendre'])->test(\App\Livewire\CashRegisterManage::class)
+            ->set('openingAmount', 0)
+            ->call('openRegister')
+            ->assertRedirect(route('orders.new'));
+
+        // Ouverture normale : on reste sur la caisse
+        CashRegister::query()->update(['closed_at' => now()]);
+        Livewire::test(\App\Livewire\CashRegisterManage::class)
+            ->set('then', '')->set('openingAmount', 0)
+            ->call('openRegister')
+            ->assertNoRedirect();
     }
 
     public function test_formule_pleine_on_le_dit_avant_le_formulaire(): void

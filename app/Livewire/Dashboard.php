@@ -59,6 +59,79 @@ class Dashboard extends Component
         };
     }
 
+    /**
+     * « Pour bien démarrer » (nouveau maquis), dans l'ordre qui fait vendre vite :
+     * le menu, la première vente, puis les tables et l'équipe.
+     * Quand tout est fait : un « Bravo » une seule fois, puis le guide disparaît pour toujours.
+     *
+     * @return array{0: array<int, array<string, mixed>>, 1: bool} [étapes, afficher le « Bravo »]
+     */
+    protected function setupGuide(?\App\Models\Restaurant $restaurant, bool $hasProducts): array
+    {
+        $user = auth()->user();
+        $canSetup = in_array($user->role, ['owner', 'manager'], true) || $user->isPlatformAdmin();
+
+        if (! $restaurant || ! $canSetup || $restaurant->setup_done_at) {
+            return [[], false];
+        }
+
+        $registerOpen = CashRegister::where('restaurant_id', $restaurant->id)->whereNull('closed_at')->exists();
+        $saleUrl = $restaurant->usesQuickSale() ? route('orders.new') : route('tables.index');
+        $hasTables = RestaurantTable::where('restaurant_id', $restaurant->id)->exists();
+
+        $menu = ['key' => 'menu', 'done' => $hasProducts, 'title' => 'Créez votre menu', 'text' => 'Vos boissons et vos plats, avec leurs prix.', 'url' => route('products.manage'), 'cta' => 'Créer le menu'];
+        $sale = ['key' => 'sale', 'done' => Order::where('status', 'paid')->exists(), 'title' => 'Ouvrez la caisse et vendez',
+            'text' => $registerOpen ? 'La caisse est ouverte : encaissez votre première vente.' : 'Ouvrez la caisse, puis faites votre première vente.',
+            'url' => $registerOpen ? $saleUrl : route('cash-register.manage', ['puis' => 'vendre']),
+            'cta' => $registerOpen ? 'Vendre maintenant' : 'Ouvrir la caisse'];
+        $tables = $restaurant->usesTables()
+            ? ['key' => 'tables', 'done' => $hasTables, 'title' => 'Créez vos tables', 'text' => 'Table 1, Table 2… en un clic.', 'url' => route('tables.manage'), 'cta' => 'Créer les tables']
+            : null;
+        $team = ['key' => 'team', 'done' => \App\Models\User::where('restaurant_id', $restaurant->id)->where('role', '!=', 'owner')->whereNull('left_at')->exists(),
+            'title' => 'Ajoutez votre équipe', 'text' => 'Serveuses, caissier, gérante : chacun son compte.', 'url' => route('users.manage'), 'cta' => 'Ajouter quelqu\'un'];
+
+        // Service à table seulement : sans tables, pas de vente possible, donc les tables avant
+        $steps = $restaurant->service_mode === 'tables' && ! $hasTables
+            ? [$menu, $tables, $sale, $team]
+            : array_values(array_filter([$menu, $sale, $tables, $team]));
+
+        if (collect($steps)->contains('done', false)) {
+            return [$steps, false];
+        }
+
+        $restaurant->forceFill(['setup_done_at' => now()])->save();
+
+        return [[], true];
+    }
+
+    /** « Je n'ai pas de tables » : seul le patron change le fonctionnement du maquis. */
+    protected function canChangeServiceMode(): bool
+    {
+        $user = auth()->user();
+
+        return $user->role === 'owner' || $user->isPlatformAdmin();
+    }
+
+    /** Depuis le guide : « Je n'ai pas de tables » passe le maquis en vente rapide. */
+    public function skipTables(): void
+    {
+        $restaurant = auth()->user()->currentRestaurant();
+
+        if (! $restaurant || ! $this->canChangeServiceMode() || ! $restaurant->usesTables()) {
+            return;
+        }
+
+        if (RestaurantTable::where('restaurant_id', $restaurant->id)->exists()) {
+            \App\Support\Toast::error('Vous avez déjà des tables. Pour les retirer, passez par les Paramètres.');
+
+            return;
+        }
+
+        $restaurant->update(['service_mode' => 'quick']);
+        \App\Models\ActivityLog::record('settings_changed', 'a choisi la vente rapide, sans tables.');
+        \App\Support\Toast::success('C\'est noté : vente rapide, sans tables. Vous pourrez ajouter des tables plus tard dans les Paramètres.');
+    }
+
     public function render()
     {
         $restaurantId = auth()->user()->currentRestaurantId();
@@ -122,21 +195,14 @@ class Dashboard extends Component
             ];
         })->all();
 
-        // « Pour bien démarrer » : tant qu'une étape n'est pas faite (nouveau maquis)
         $hasProducts = Product::exists();
-        $setup = array_filter([
-            ['done' => $hasProducts, 'title' => 'Créez votre menu', 'text' => 'Vos boissons et vos plats, avec leurs prix.', 'url' => route('products.manage'), 'cta' => 'Créer le menu'],
-            $restaurant?->usesTables()
-                ? ['done' => RestaurantTable::where('restaurant_id', $restaurantId)->exists(), 'title' => 'Créez vos tables', 'text' => 'Table 1, Table 2… en un clic.', 'url' => route('tables.manage'), 'cta' => 'Créer les tables']
-                : null,
-            ['done' => \App\Models\User::where('restaurant_id', $restaurantId)->where('role', '!=', 'owner')->whereNull('left_at')->exists(), 'title' => 'Ajoutez votre équipe', 'text' => 'Serveuses, caissier, gérante : chacun son compte.', 'url' => route('users.manage'), 'cta' => 'Ajouter quelqu\'un'],
-            ['done' => CashRegister::where('restaurant_id', $restaurantId)->exists(), 'title' => 'Ouvrez la caisse', 'text' => 'Le jour où vous commencez à vendre avec l\'application.', 'url' => route('cash-register.manage'), 'cta' => 'Ouvrir la caisse'],
-        ]);
-        $canSetup = in_array(auth()->user()->role, ['owner', 'manager'], true) || auth()->user()->isPlatformAdmin();
+        [$setup, $celebrate] = $this->setupGuide($restaurant, $hasProducts);
 
         return view('livewire.dashboard', [
             'noRestaurant' => false,
-            'setup' => $canSetup && collect($setup)->contains('done', false) ? array_values($setup) : [],
+            'setup' => $setup,
+            'celebrate' => $celebrate,
+            'canSkipTables' => $this->canChangeServiceMode(),
             'stockCountDays' => (new \App\Support\StockCountSheet($restaurantId))->daysSince(),
             'hasProducts' => $hasProducts,
             'periods' => self::PERIODS,

@@ -35,6 +35,9 @@ class StockManage extends Component
     public bool $paidFromRegister = false;
     /** Photo du bon de livraison : obligatoire si la livraison est payée avec l'argent de la caisse. */
     public string $deliveryPhoto = '';
+    /** D'où vient la photo du bon : « camera » ou « gallery », et sa date (millisecondes). */
+    public string $deliveryPhotoSource = '';
+    public int|string $deliveryPhotoDate = 0;
     /** @var array<int, array{quantity: string, unit_cost: string}> */
     public array $deliveryLines = [];
 
@@ -118,7 +121,8 @@ class StockManage extends Component
         }
 
         try {
-            $result = $stock->recordDelivery(auth()->user(), $lines, trim($this->supplier) ?: null, $this->paidFromRegister, $receiptPath);
+            $result = $stock->recordDelivery(auth()->user(), $lines, trim($this->supplier) ?: null, $this->paidFromRegister, $receiptPath,
+                $receiptPath ? \App\Support\PhotoOrigin::fromClient($this->deliveryPhotoSource, $this->deliveryPhotoDate) : []);
         } catch (BusinessRuleException $e) {
             \App\Support\PhotoStore::delete($receiptPath);
             $this->addError('delivery', $e->getMessage());
@@ -138,6 +142,8 @@ class StockManage extends Component
         $this->supplier = '';
         $this->paidFromRegister = false;
         $this->deliveryPhoto = '';
+        $this->deliveryPhotoSource = '';
+        $this->deliveryPhotoDate = 0;
         $this->resetDeliveryLines();
         $this->tab = 'overview';
     }

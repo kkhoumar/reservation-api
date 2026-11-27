@@ -27,11 +27,21 @@ class Expense extends Model
     protected $fillable = [
         'restaurant_id', 'user_id', 'cash_register_id',
         'category', 'amount', 'description', 'expense_date', 'receipt_path',
+        'receipt_source', 'receipt_taken_at',
     ];
 
     protected $casts = [
         'expense_date' => 'datetime',
+        'receipt_taken_at' => 'datetime',
     ];
+
+    /** Une photo choisie dans le téléphone et prise plus de 2 jours avant la dépense : à regarder de près. */
+    public function receiptLooksOld(): bool
+    {
+        return $this->receipt_source === \App\Support\PhotoOrigin::GALLERY
+            && $this->receipt_taken_at
+            && $this->receipt_taken_at->lt($this->expense_date->copy()->subDays(\App\Support\PhotoOrigin::OLD_AFTER_DAYS));
+    }
 
     public function restaurant(): BelongsTo
     {

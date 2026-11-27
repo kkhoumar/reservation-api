@@ -86,6 +86,30 @@
             @error('creditEnabled') <div style="color: var(--color-danger); font-size: 13px; margin-top: 6px;">{{ $message }}</div> @enderror
         </div>
 
+        <div class="card" style="margin-bottom: 16px;">
+            <h3 style="margin-top: 0;">Photo du reçu des dépenses</h3>
+            <p style="margin: 0 0 10px; font-size: 13px; color: var(--color-text-secondary);">Pour les petites dépenses (sachet de glace, piment…), la photo peut devenir facultative.</p>
+            <div class="rs-pills" role="radiogroup" aria-label="Photo du reçu obligatoire">
+                @foreach ($receiptChoices as $value => $label)
+                    <label class="rs-pill">
+                        <input type="radio" wire:model="receiptRequiredFrom" value="{{ $value }}">
+                        <span>{{ $label }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @error('receiptRequiredFrom') <div style="color: var(--color-danger); font-size: 13px; margin-top: 6px;">{{ $message }}</div> @enderror
+        </div>
+        <style>
+            .rs-pills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .rs-pill { position: relative; cursor: pointer; }
+            .rs-pill input { position: absolute; opacity: 0; pointer-events: none; }
+            .rs-pill span { display: flex; align-items: center; justify-content: center; min-height: 46px; padding: 8px 10px; text-align: center;
+                border: 1.5px solid var(--color-border); border-radius: 12px; font-weight: 700; font-size: 14px; background: #fff; }
+            .rs-pill input:checked + span { border-color: var(--color-primary); background: var(--color-mint); color: var(--color-primary); }
+            .rs-pill input:focus-visible + span { outline: 3px solid var(--color-primary-300); outline-offset: 2px; }
+            @media (min-width: 560px) { .rs-pills { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        </style>
+
         <button type="submit" class="btn btn-primary">Enregistrer</button>
     </form>
 

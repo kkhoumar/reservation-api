@@ -33,7 +33,13 @@
             <label style="font-size: 13px; font-weight: 600;">Description <span style="font-weight: 500; color: var(--color-text-secondary);">facultatif</span></label>
             <input type="text" wire:model="description" placeholder="Ex : Achat tomates marché" style="width: 100%; margin: 6px 0 16px 0;">
 
-            @include('partials.photo-capture', ['model' => 'receiptPhoto', 'label' => 'Photo du reçu', 'hint' => 'Obligatoire. Sans reçu, photographiez ce qui a été acheté.'])
+            @include('partials.photo-capture', [
+                'model' => 'receiptPhoto',
+                'label' => 'Photo du reçu',
+                'hint' => $receiptFrom > 0
+                    ? 'Obligatoire dès ' . number_format($receiptFrom, 0, ',', ' ') . ' F. Capture Wave ou Orange Money acceptée.'
+                    : 'Obligatoire. Capture Wave ou Orange Money acceptée. Sans reçu, photographiez ce qui a été acheté.',
+            ])
 
             <button wire:click="addExpense" class="btn btn-primary" style="width: 100%;">
                 Enregistrer la dépense
@@ -115,9 +121,18 @@
                                 @if (! $expense->cash_register_id) · <em>hors caisse</em> @endif
                             </div>
                             @if ($expense->receipt_path)
-                                <a href="{{ route('expenses.receipt', $expense) }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--color-accent); text-decoration: none;">
-                                    <img src="{{ route('expenses.receipt', $expense) }}" alt="" loading="lazy" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-border);"> Voir le reçu
-                                </a>
+                                <div class="ex-rc">
+                                    <a href="{{ route('expenses.receipt', $expense) }}" target="_blank" rel="noopener" class="ex-rc-link">
+                                        <img src="{{ route('expenses.receipt', $expense) }}" alt="" loading="lazy"> Voir le reçu
+                                    </a>
+                                    @if ($expense->receiptLooksOld())
+                                        <span class="ex-tag old" title="Photo choisie dans le téléphone, prise bien avant la dépense">⚠ Photo ancienne, du {{ $expense->receipt_taken_at->locale('fr')->isoFormat('D MMM') }}</span>
+                                    @elseif ($expense->receipt_source === \App\Support\PhotoOrigin::GALLERY)
+                                        <span class="ex-tag" title="Photo choisie dans le téléphone">Du téléphone{{ $expense->receipt_taken_at ? ', photo du ' . $expense->receipt_taken_at->locale('fr')->isoFormat('D MMM') : '' }}</span>
+                                    @elseif ($expense->receipt_source === \App\Support\PhotoOrigin::CAMERA)
+                                        <span class="ex-tag cam">Prise sur place</span>
+                                    @endif
+                                </div>
                             @else
                                 <div style="font-size: 12px; color: #9A5B0C; margin-top: 4px;">Sans reçu</div>
                             @endif
@@ -135,4 +150,14 @@
         </div>
 
     </div>
+
+    <style>
+        .ex-rc { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 6px; }
+        .ex-rc-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--color-accent); text-decoration: none; min-height: 40px; }
+        .ex-rc-link img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-border); }
+        .ex-tag { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; line-height: 1.3;
+            background: var(--color-bg); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+        .ex-tag.cam { background: var(--color-mint, #E6F4EE); color: var(--color-success); border-color: transparent; }
+        .ex-tag.old { background: #FFF1DC; color: #9A5B0C; border-color: #F3C98B; }
+    </style>
 </div>

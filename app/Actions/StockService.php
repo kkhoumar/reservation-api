@@ -42,7 +42,7 @@ class StockService
      *
      * @throws BusinessRuleException
      */
-    public function recordDelivery(User $by, array $lines, ?string $supplier = null, bool $paidFromRegister = false, ?string $receiptPath = null): array
+    public function recordDelivery(User $by, array $lines, ?string $supplier = null, bool $paidFromRegister = false, ?string $receiptPath = null, array $receiptOrigin = []): array
     {
         $this->guard($by);
 
@@ -52,7 +52,7 @@ class StockService
             throw new BusinessRuleException('Indiquez au moins un produit livré et sa quantité.');
         }
 
-        return DB::transaction(function () use ($by, $lines, $supplier, $paidFromRegister, $receiptPath) {
+        return DB::transaction(function () use ($by, $lines, $supplier, $paidFromRegister, $receiptPath, $receiptOrigin) {
             $restaurantId = $by->currentRestaurantId();
             $supplier = $supplier ? mb_substr(trim($supplier), 0, 120) : null;
             $movements = [];
@@ -132,6 +132,8 @@ class StockService
                     'description' => 'Livraison' . ($supplier ? " {$supplier}" : '') . " ({$totalQty} articles)",
                     'expense_date' => now(),
                     'receipt_path' => $receiptPath,
+                    'receipt_source' => $receiptOrigin['receipt_source'] ?? null,
+                    'receipt_taken_at' => $receiptOrigin['receipt_taken_at'] ?? null,
                 ]);
 
                 foreach ($movements as $m) {

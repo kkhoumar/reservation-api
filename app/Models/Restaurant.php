@@ -20,6 +20,7 @@ class Restaurant extends Model
         'subscription_status', 'trial_ends_at',
         'service_mode', 'credit_enabled', 'payment_timing',
         'whatsapp_report_enabled', 'report_phone',
+        'receipt_required_from', 'setup_done_at',
     ];
 
     protected $casts = [
@@ -27,6 +28,8 @@ class Restaurant extends Model
         'paid_until' => 'datetime',
         'credit_enabled' => 'boolean',
         'whatsapp_report_enabled' => 'boolean',
+        'receipt_required_from' => 'integer',
+        'setup_done_at' => 'datetime',
     ];
 
     protected $attributes = [
@@ -82,6 +85,12 @@ class Restaurant extends Model
     public function usesTables(): bool
     {
         return in_array($this->service_mode, ['tables', 'both'], true);
+    }
+
+    /** La photo du reçu est-elle obligatoire pour une dépense de ce montant ? (réglage à 0 = toujours) */
+    public function receiptRequiredFor(int $amount): bool
+    {
+        return $amount >= (int) $this->receipt_required_from;
     }
 
     public function usesQuickSale(): bool

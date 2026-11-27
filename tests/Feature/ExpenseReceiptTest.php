@@ -57,7 +57,7 @@ class ExpenseReceiptTest extends TestCase
             ->set('amount', 5000)
             ->set('description', 'Achat glace')
             ->call('addExpense')
-            ->assertHasErrors(['receiptPhoto' => 'required']);
+            ->assertHasErrors('receiptPhoto');
 
         $this->assertSame(0, Expense::count());
     }

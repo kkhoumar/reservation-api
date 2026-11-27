@@ -41,6 +41,10 @@ class ProductsManage extends Component
     /** Petit dessin choisi (vide = choisi tout seul d'après le nom). */
     public string $icon = '';
 
+    /** Nouveau produit : photo déjà enregistrée, posée sur le produit à sa création. */
+    #[Locked]
+    public ?string $pendingPhoto = null;
+
     public string $newCategoryName = '';
     public string $newCategoryKind = '';
 
@@ -86,6 +90,7 @@ class ProductsManage extends Component
 
     public function openCreateForm()
     {
+        $this->discardPendingPhoto();
         $this->reset(['editingProductId', 'name', 'sellingPrice', 'costPrice', 'categoryId', 'stockQuantity', 'stockAlertThreshold', 'isReturnable', 'crateSize', 'icon']);
         $this->isAvailable = true;
         $this->trackStock = true;
@@ -96,6 +101,7 @@ class ProductsManage extends Component
     {
         $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
 
+        $this->discardPendingPhoto();
         $this->editingProductId = $product->id;
         $this->name = $product->name;
         $this->sellingPrice = (string) $product->selling_price;
@@ -150,6 +156,10 @@ class ProductsManage extends Component
         } else {
             DB::transaction(function () use ($data) {
                 $product = Product::create($data + ['stock_quantity' => $this->trackStock ? (int) $this->stockQuantity : 0]);
+                if ($this->pendingPhoto) {
+                    $product->forceFill(['photo' => $this->pendingPhoto])->save();
+                    $this->pendingPhoto = null;
+                }
                 app(StockService::class)->recordInitial(auth()->user(), $product);
                 \App\Models\ActivityLog::record('product_created', "a ajouté le produit {$product->name} à " . \App\Models\ActivityLog::fcfa((int) $product->selling_price) . ", stock de départ {$product->stock_quantity}.", ['meta' => ['product_id' => $product->id]]);
             });
@@ -258,6 +268,45 @@ class ProductsManage extends Component
         return null;
     }
 
+    /**
+     * Nouveau produit pas encore enregistré : on garde la photo de côté,
+     * elle est posée sur le produit quand on appuie sur « Enregistrer ».
+     * @return string|null message d'erreur, null si c'est bon
+     */
+    public function stageProductPhoto(string $dataUrl): ?string
+    {
+        if ($this->editingProductId) {
+            return 'Rouvrez le produit pour changer sa photo.';
+        }
+
+        [$path, $error] = PhotoStore::store($dataUrl, 'produits', (string) auth()->user()->currentRestaurantId(), 1024, 400_000);
+
+        if ($error) {
+            return $error;
+        }
+
+        $this->discardPendingPhoto();
+        $this->pendingPhoto = $path;
+
+        return null;
+    }
+
+    /** Photo gardée de côté pour un nouveau produit : on la jette (retirée, ou fiche fermée sans enregistrer). */
+    public function discardPendingPhoto(): void
+    {
+        if ($this->pendingPhoto) {
+            PhotoStore::delete($this->pendingPhoto);
+            $this->pendingPhoto = null;
+        }
+    }
+
+    public function updatedShowProductForm($open): void
+    {
+        if (! $open) {
+            $this->discardPendingPhoto();
+        }
+    }
+
     public function removeProductPhoto($productId): void
     {
         $product = Product::where('restaurant_id', auth()->user()->currentRestaurantId())->findOrFail($productId);
@@ -343,6 +392,7 @@ class ProductsManage extends Component
             'archived' => $archived,
             'formIconKey' => $formIconKey,
             'editingPhotoUrl' => $editingPhotoUrl,
+            'hasPendingPhoto' => ! $this->editingProductId && $this->pendingPhoto !== null,
         ]);
     }
 }

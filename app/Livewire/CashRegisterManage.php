@@ -25,6 +25,10 @@ class CashRegisterManage extends Component
 
     const DISCREPANCY_THRESHOLD = 500;
 
+    /** Venu du guide « Pour bien démarrer » (?puis=vendre) : après l'ouverture, on va vendre. */
+    #[\Livewire\Attributes\Url(as: 'puis')]
+    public string $then = '';
+
     // ---------- Argent du tiroir (ajouter / retirer) ----------
     public bool $showMove = false;
     public string $moveType = 'in';
@@ -173,6 +177,15 @@ class CashRegisterManage extends Component
         }
 
         $this->openingAmount = 0;
+
+        if ($this->then === 'vendre') {
+            \App\Support\Toast::success('Caisse ouverte. À vous de vendre !');
+            $restaurant = auth()->user()->currentRestaurant();
+            $this->redirect($restaurant?->usesQuickSale() ? route('orders.new') : route('tables.index'), navigate: false);
+
+            return;
+        }
+
         \App\Support\Toast::success('Caisse ouverte.');
     }
 

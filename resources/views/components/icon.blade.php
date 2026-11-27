@@ -30,6 +30,8 @@
         'box'          => '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/><path d="m7.5 5.5 9 5"/>',
         'receipt'      => '<path d="M5 2h14v20l-2.5-1.6L14 22l-2-1.6L10 22l-2.5-1.6L5 22z"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h3.5"/>',
         'phone'        => '<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>',
+        'camera'       => '<path d="M14.5 4h-5L7.6 6.5H4.5a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2h15a2 2 0 0 0 2-2V8.5a2 2 0 0 0-2-2h-3.1z"/><circle cx="12" cy="13" r="3.6"/>',
+        'image'        => '<rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="9" r="2"/><path d="m21 15.5-4.6-4.6a1.5 1.5 0 0 0-2.1 0L5 20.5"/>',
         'chart'        => '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5.5-6"/><path d="M15.5 8h4v4"/>',
         'message'      => '<path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.3A8.5 8.5 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01"/><path d="M12.5 11.5h.01"/><path d="M16.5 11.5h.01"/>',
         'gift'         => '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10.5 3 12 8 12 8s1.5-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',

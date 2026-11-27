@@ -46,7 +46,13 @@
                 @foreach ($setup as $i => $step)
                     <li class="{{ $step['done'] ? 'done' : ($step === $next ? 'next' : '') }}">
                         <span class="ob-dot">@if ($step['done'])<x-icon name="check" size="16" stroke="2.6" />@else{{ $i + 1 }}@endif</span>
-                        <span class="ob-txt"><strong>{{ $step['title'] }}</strong><small>{{ $step['done'] ? 'Fait' : $step['text'] }}</small></span>
+                        <span class="ob-txt">
+                            <strong>{{ $step['title'] }}</strong>
+                            <small>{{ $step['done'] ? 'Fait' : $step['text'] }}</small>
+                            @if ($step['key'] === 'tables' && ! $step['done'] && $canSkipTables)
+                                <button type="button" class="ob-skip" wire:click="skipTables" wire:confirm="Pas de tables : vous vendrez en vente rapide (comptoir, à emporter). Vous pourrez ajouter des tables plus tard dans les Paramètres. Continuer ?">Je n'ai pas de tables</button>
+                            @endif
+                        </span>
                         @if (! $step['done'])
                             <a href="{{ $step['url'] }}" class="btn {{ $step === $next ? 'btn-primary' : 'btn-ghost' }}">{{ $step['cta'] }}</a>
                         @endif
@@ -72,10 +78,40 @@
             .ob-txt strong { font-size: 15px; }
             .ob-txt small { font-size: 12.5px; color: var(--color-text-secondary); }
             .ob-steps .btn { white-space: nowrap; padding: 8px 14px; font-size: 13.5px; text-decoration: none; }
+            .ob-skip { align-self: flex-start; margin-top: 4px; padding: 6px 0; min-height: 32px; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 700;
+                color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
             @media (max-width: 640px) {
                 .ob-steps li { flex-wrap: wrap; }
                 .ob-steps .btn { width: 100%; justify-content: center; min-height: 44px; }
             }
+        </style>
+    @endif
+
+    {{-- ===== Fin du guide : « Bravo », une seule fois ===== --}}
+    @if ($celebrate)
+        <div class="card ob-bravo" role="status" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 9000)"
+             x-transition:leave="ob-bravo-leave" x-transition:leave-start="ob-bravo-from" x-transition:leave-end="ob-bravo-to">
+            <span class="ob-bravo-ic" aria-hidden="true">🎉</span>
+            <div class="ob-bravo-txt">
+                <strong>Bravo, votre maquis est prêt !</strong>
+                <span>Tout est en place pour vendre et suivre votre argent. Bonnes ventes !</span>
+            </div>
+            <button type="button" class="ob-bravo-x" @click="show = false" aria-label="Fermer"><x-icon name="x" size="18" /></button>
+        </div>
+        <style>
+            .ob-bravo { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; background: var(--color-mint); border: 1.5px solid var(--color-primary-300);
+                animation: ob-bravo-in .35s ease-out both; }
+            .ob-bravo-ic { font-size: 34px; line-height: 1; flex: none; }
+            .ob-bravo-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+            .ob-bravo-txt strong { font-size: 17px; }
+            .ob-bravo-txt span { font-size: 13.5px; color: var(--color-text-secondary); }
+            .ob-bravo-x { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; cursor: pointer; color: var(--color-text-secondary); }
+            .ob-bravo-leave { transition: opacity .3s ease, transform .3s ease; }
+            .ob-bravo-from { opacity: 1; }
+            .ob-bravo-to { opacity: 0; transform: translateY(-6px); }
+            @keyframes ob-bravo-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+            @media (prefers-reduced-motion: reduce) { .ob-bravo { animation: none; } .ob-bravo-leave { transition: none; } }
+            @media (max-width: 400px) { .ob-bravo { gap: 10px; padding: 14px; } .ob-bravo-ic { font-size: 28px; } .ob-bravo-txt strong { font-size: 16px; } }
         </style>
     @endif
 

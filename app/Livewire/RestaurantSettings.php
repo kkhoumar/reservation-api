@@ -23,6 +23,15 @@ class RestaurantSettings extends Component
     public string $paymentTiming = 'before';
     public bool $whatsappReportEnabled = true;
     public string $reportPhone = '';
+    public int|string $receiptRequiredFrom = 0;
+
+    /** Montant à partir duquel la photo du reçu est obligatoire. */
+    public const RECEIPT_CHOICES = [
+        0 => 'Toujours',
+        1000 => 'Dès 1 000 F',
+        2000 => 'Dès 2 000 F',
+        5000 => 'Dès 5 000 F',
+    ];
 
     public function mount(): void
     {
@@ -33,6 +42,7 @@ class RestaurantSettings extends Component
         $this->paymentTiming = $restaurant->payment_timing;
         $this->whatsappReportEnabled = (bool) $restaurant->whatsapp_report_enabled;
         $this->reportPhone = (string) $restaurant->report_phone;
+        $this->receiptRequiredFrom = (int) $restaurant->receipt_required_from;
     }
 
     private function restaurant(): Restaurant
@@ -50,6 +60,7 @@ class RestaurantSettings extends Component
             'paymentTiming' => ['required', Rule::in(array_keys(Restaurant::PAYMENT_TIMINGS))],
             'whatsappReportEnabled' => 'boolean',
             'reportPhone' => ['nullable', 'regex:' . User::PHONE_REGEX],
+            'receiptRequiredFrom' => ['required', Rule::in(array_keys(self::RECEIPT_CHOICES))],
         ], [
             'reportPhone.regex' => 'Numéro invalide : 10 chiffres, par exemple 07 11 22 33 44.',
         ]);
@@ -100,6 +111,7 @@ class RestaurantSettings extends Component
             'payment_timing' => $this->paymentTiming,
             'whatsapp_report_enabled' => $this->whatsappReportEnabled,
             'report_phone' => $this->reportPhone ?: null,
+            'receipt_required_from' => (int) $this->receiptRequiredFrom,
         ]);
 
         Log::info('Réglages du maquis modifiés', [
@@ -110,7 +122,7 @@ class RestaurantSettings extends Component
             'payment_timing' => $this->paymentTiming,
         ]);
 
-        $labels = ['service_mode' => 'mode de service', 'credit_enabled' => 'crédit client', 'payment_timing' => 'moment du paiement', 'whatsapp_report_enabled' => 'rapport WhatsApp', 'report_phone' => 'numéro du rapport'];
+        $labels = ['service_mode' => 'mode de service', 'credit_enabled' => 'crédit client', 'payment_timing' => 'moment du paiement', 'whatsapp_report_enabled' => 'rapport WhatsApp', 'report_phone' => 'numéro du rapport', 'receipt_required_from' => 'photo du reçu obligatoire'];
         $changed = array_values(array_intersect_key($labels, $restaurant->getChanges()));
         if ($changed !== []) {
             \App\Models\ActivityLog::record('settings_changed', 'a modifié les réglages : ' . implode(', ', $changed) . '.');
@@ -124,6 +136,7 @@ class RestaurantSettings extends Component
         return view('livewire.restaurant-settings', [
             'modes' => Restaurant::SERVICE_MODES,
             'timings' => Restaurant::PAYMENT_TIMINGS,
+            'receiptChoices' => self::RECEIPT_CHOICES,
             'restaurant' => $this->restaurant()->loadMissing('plan'),
             'subscriptionPayments' => $this->restaurant()->subscriptionPayments()->with('plan')->latest()->limit(12)->get(),
             'plans' => \App\Models\Plan::where('is_active', true)->orderBy('sort_order')->get(),

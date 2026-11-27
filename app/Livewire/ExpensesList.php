@@ -26,8 +26,12 @@ class ExpensesList extends Component
     public string $category = 'goods_purchase';
     public ?int $amount = null;
     public string $description = '';
-    /** Photo du reçu, déjà réduite par le téléphone (JPEG en base64). Obligatoire. */
+    /** Photo du reçu, déjà réduite par le téléphone (JPEG en base64). Obligatoire dès le montant réglé par le patron. */
     public string $receiptPhoto = '';
+    /** D'où vient la photo : « camera » (prise sur place) ou « gallery » (choisie dans le téléphone). */
+    public string $receiptPhotoSource = '';
+    /** Date du fichier donnée par le téléphone (millisecondes). */
+    public int|string $receiptPhotoDate = 0;
 
     // Filtres de l'historique
     public string $period = 'today'; // today | 7days | month | last_month | custom
@@ -66,17 +70,30 @@ class ExpensesList extends Component
             'category' => ['required', 'string', Rule::in(array_keys($this->categories))],
             'amount' => 'required|integer|min:1|max:100000000',
             'description' => 'nullable|string|max:255',
-            'receiptPhoto' => 'required|string',
-        ], [
-            'receiptPhoto.required' => 'Prenez une photo du reçu. Sans reçu, photographiez ce qui a été acheté.',
+            'receiptPhoto' => 'nullable|string',
         ]);
 
-        [$receiptPath, $photoError] = \App\Support\PhotoStore::store($this->receiptPhoto, 'recus', (string) auth()->user()->currentRestaurantId(), 1600, 900_000);
+        $restaurant = auth()->user()->currentRestaurant();
 
-        if ($photoError) {
-            $this->addError('receiptPhoto', $photoError);
+        if ($this->receiptPhoto === '' && (! $restaurant || $restaurant->receiptRequiredFor((int) $this->amount))) {
+            $this->addError('receiptPhoto', 'Ajoutez la photo du reçu. Sans reçu, photographiez ce qui a été acheté.');
 
             return;
+        }
+
+        $receiptPath = null;
+        $origin = ['receipt_source' => null, 'receipt_taken_at' => null];
+
+        if ($this->receiptPhoto !== '') {
+            [$receiptPath, $photoError] = \App\Support\PhotoStore::store($this->receiptPhoto, 'recus', (string) auth()->user()->currentRestaurantId(), 1600, 900_000);
+
+            if ($photoError) {
+                $this->addError('receiptPhoto', $photoError);
+
+                return;
+            }
+
+            $origin = \App\Support\PhotoOrigin::fromClient($this->receiptPhotoSource, $this->receiptPhotoDate);
         }
 
         $openRegister = CashRegister::where('restaurant_id', auth()->user()->currentRestaurantId())
@@ -93,14 +110,22 @@ class ExpensesList extends Component
             'description' => $this->description ?: null,
             'expense_date' => now(),
             'receipt_path' => $receiptPath,
-        ]);
+        ] + $origin);
 
-        \App\Models\ActivityLog::record('expense', 'a enregistré une dépense de ' . \App\Models\ActivityLog::fcfa((int) $this->amount) . ' : ' . ($this->categories[$this->category] ?? $this->category) . ($this->description ? ', ' . trim($this->description) : '') . '. Reçu joint.', ['amount' => -(int) $this->amount]);
+        $receiptNote = match (true) {
+            ! $receiptPath => ' Sans reçu (petite dépense).',
+            $origin['receipt_source'] === \App\Support\PhotoOrigin::GALLERY => ' Reçu joint, choisi dans le téléphone'
+                . ($origin['receipt_taken_at'] ? ' (photo du ' . $origin['receipt_taken_at']->format('d/m/Y') . ')' : '') . '.',
+            default => ' Reçu joint.',
+        };
+        \App\Models\ActivityLog::record('expense', 'a enregistré une dépense de ' . \App\Models\ActivityLog::fcfa((int) $this->amount) . ' : ' . ($this->categories[$this->category] ?? $this->category) . ($this->description ? ', ' . trim($this->description) : '') . '.' . $receiptNote, ['amount' => -(int) $this->amount]);
 
         $savedAmount = (int) $this->amount;
         $this->amount = null;
         $this->description = '';
         $this->receiptPhoto = '';
+        $this->receiptPhotoSource = '';
+        $this->receiptPhotoDate = 0;
 
         \App\Support\Toast::success('Dépense de ' . number_format($savedAmount, 0, ',', ' ') . ' F enregistrée.');
     }
@@ -160,6 +185,7 @@ class ExpensesList extends Component
             'count' => (int) $byCategory->sum('n'),
             'byCategory' => $byCategory,
             'canSeeHistory' => $history,
+            'receiptFrom' => (int) auth()->user()->currentRestaurant()?->receipt_required_from,
             'periods' => self::PERIODS,
             'rangeLabel' => $start->isSameDay($end)
                 ? ($start->isToday() ? "Aujourd'hui" : $start->format('d/m/Y'))

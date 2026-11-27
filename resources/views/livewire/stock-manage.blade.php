@@ -333,7 +333,7 @@
             </label>
 
             @if ($paidFromRegister)
-                @include('partials.photo-capture', ['model' => 'deliveryPhoto', 'label' => 'Photo du bon de livraison', 'hint' => 'Obligatoire : l\'argent sort de la caisse.'])
+                @include('partials.photo-capture', ['model' => 'deliveryPhoto', 'label' => 'Photo du bon de livraison', 'hint' => 'Obligatoire : l\'argent sort de la caisse. Bon reçu par WhatsApp accepté.'])
             @endif
 
             <div class="st-total">

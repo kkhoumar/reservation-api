@@ -102,11 +102,19 @@
             </div>
 
             {{-- Petite image : choisie toute seule d'après le nom, ou un autre dessin, ou une vraie photo --}}
-            <div class="pm-img" x-data="{ choose: false }">
+            {{-- Nouveau produit : la photo est gardée de côté et posée à l'enregistrement --}}
+            @php $hasPhoto = $editingPhotoUrl || $hasPendingPhoto; @endphp
+            <div class="pm-img" wire:key="pm-img-{{ $editingProductId ?? 'new' }}"
+                 x-data="{{ $editingProductId ? "avatarPicker('saveProductPhoto', {$editingProductId})" : "avatarPicker('stageProductPhoto')" }}">
+                <input type="file" accept="image/*" capture="environment" x-ref="camera" @change="chosen($event)" hidden>
+                <input type="file" accept="image/*" x-ref="gallery" @change="chosen($event)" hidden>
+                <div x-data="{ choose: false }">
                 <div class="pm-img-head">
                     <span class="pi pm-img-big" style="--c: {{ \App\Support\ProductIcon::color($formIconKey) }};">
                         @if ($editingPhotoUrl)
                             <img src="{{ $editingPhotoUrl }}" alt="">
+                        @elseif ($hasPendingPhoto)
+                            <img :src="preview" x-show="preview" alt="">
                         @else
                             <svg viewBox="0 0 64 64"><use href="#pi-{{ \App\Support\ProductIcon::shape($formIconKey) }}"/></svg>
                         @endif
@@ -114,36 +122,20 @@
                     <div class="pm-img-txt">
                         <strong>Image</strong>
                         <span>
-                            @if ($editingPhotoUrl)
-                                Votre photo
+                            @if ($hasPhoto)
+                                Votre photo{{ $hasPendingPhoto ? ' (posée à l\'enregistrement)' : '' }}
                             @elseif ($icon === '')
                                 Choisie toute seule : {{ mb_strtolower(\App\Support\ProductIcon::label($formIconKey)) }}
                             @else
                                 {{ \App\Support\ProductIcon::label($formIconKey) }}
                             @endif
                         </span>
-                        <div class="pm-img-actions">
-                            @unless ($editingPhotoUrl)
-                                <button type="button" class="pm-img-link" @click="choose = !choose" x-text="choose ? 'Fermer' : 'Changer le dessin'">Changer le dessin</button>
-                            @endunless
-                            @if ($editingProductId)
-                                <span x-data="avatarPicker('saveProductPhoto', {{ $editingProductId }})">
-                                    <input type="file" accept="image/*" capture="environment" x-ref="file" @change="chosen($event)" hidden>
-                                    <button type="button" class="pm-img-link" @click="pick()" :disabled="busy">
-                                        <span x-show="!busy">{{ $editingPhotoUrl ? 'Changer la photo' : 'Prendre en photo' }}</span><span x-show="busy" x-cloak>Envoi…</span>
-                                    </button>
-                                    <span class="pm-err" x-show="error" x-text="error" x-cloak style="display: block; color: var(--color-danger); font-size: 12.5px; font-weight: 600;"></span>
-                                </span>
-                                @if ($editingPhotoUrl)
-                                    <button type="button" class="pm-img-link muted" wire:click="removeProductPhoto({{ $editingProductId }})">Retirer la photo</button>
-                                @endif
-                            @endif
-                        </div>
-                        @unless ($editingProductId)
-                            <span class="pm-img-hint">Vous pourrez prendre une vraie photo après l'enregistrement.</span>
+                        @unless ($hasPhoto)
+                            <button type="button" class="pm-img-link" @click="choose = !choose" x-text="choose ? 'Fermer les dessins' : 'Changer le dessin'">Changer le dessin</button>
                         @endunless
                     </div>
                 </div>
+
                 <div class="pm-img-grid" x-show="choose" x-cloak>
                     <button type="button" class="pm-img-opt auto {{ $icon === '' ? 'on' : '' }}" wire:click="$set('icon', '')" @click="choose = false">Auto</button>
                     @foreach (\App\Support\ProductIcon::ICONS as $key => [$label, $color, $shape])
@@ -151,6 +143,26 @@
                             <span class="pi" style="width: 40px; height: 40px; --c: {{ $color }};"><svg viewBox="0 0 64 64"><use href="#pi-{{ $shape }}"/></svg></span>
                         </button>
                     @endforeach
+                </div>
+                </div>
+
+                {{-- Vraie photo : prise maintenant, ou déjà dans le téléphone (WhatsApp, galerie) --}}
+                <div class="pm-photo-btns">
+                    <button type="button" class="pm-photo-btn" @click="pick('camera')" :disabled="busy">
+                        <x-icon name="camera" size="20" /> <span>{{ $hasPhoto ? 'Reprendre' : 'Prendre une photo' }}</span>
+                    </button>
+                    <button type="button" class="pm-photo-btn" @click="pick('gallery')" :disabled="busy">
+                        <x-icon name="image" size="20" /> <span>{{ $hasPhoto ? 'Autre photo' : 'Choisir dans le téléphone' }}</span>
+                    </button>
+                </div>
+                <div class="pm-img-foot">
+                    <span class="pm-img-hint" x-show="busy" x-cloak>Préparation de la photo…</span>
+                    <span class="pm-err" x-show="error" x-text="error" x-cloak style="display: block; color: var(--color-danger); font-size: 12.5px; font-weight: 600;"></span>
+                    @if ($editingPhotoUrl)
+                        <button type="button" class="pm-img-link muted" wire:click="removeProductPhoto({{ $editingProductId }})">Retirer la photo, garder le dessin</button>
+                    @elseif ($hasPendingPhoto)
+                        <button type="button" class="pm-img-link muted" wire:click="discardPendingPhoto" @click="preview = ''">Retirer la photo, garder le dessin</button>
+                    @endif
                 </div>
             </div>
 
@@ -494,6 +506,18 @@
         .pm-img-link { border: 0; background: none; padding: 4px 0; font: inherit; font-size: 13px; font-weight: 700; color: var(--color-accent); cursor: pointer; }
         .pm-img-link.muted { color: var(--color-text-secondary); }
         .pm-img-hint { display: block; font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+        .pm-photo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .pm-photo-btn { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 10px;
+            border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-bg); font: inherit; font-size: 13.5px; font-weight: 700;
+            line-height: 1.2; text-align: left; color: var(--color-text); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .pm-photo-btn svg { flex: none; color: var(--color-primary); }
+        .pm-photo-btn:hover { border-color: var(--color-primary-300); }
+        .pm-photo-btn:active { transform: scale(.98); }
+        .pm-photo-btn:focus-visible { outline: 3px solid var(--color-primary-300); outline-offset: 2px; }
+        .pm-photo-btn[disabled] { opacity: .6; cursor: wait; }
+        .pm-img-foot:empty { display: none; }
+        .pm-img-foot .pm-img-link { margin-top: 6px; }
+        @media (max-width: 340px) { .pm-photo-btns { grid-template-columns: 1fr; } }
         .pm-img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 8px; margin-top: 12px; }
         .pm-img-opt { height: 52px; border: 1.5px solid var(--color-border); border-radius: 12px; background: #fff; display: grid; place-items: center; cursor: pointer; padding: 0; }
         .pm-img-opt.auto { font: inherit; font-size: 12.5px; font-weight: 800; color: var(--color-primary); }
