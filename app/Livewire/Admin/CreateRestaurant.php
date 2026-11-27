@@ -59,17 +59,30 @@ class CreateRestaurant extends Component
             return;
         }
 
-        // Pré-remplissage : « Koffi Yao » → prénom Koffi, nom Yao
-        $parts = preg_split('/\s+/', trim($demo->contact_name), 2);
-
         $this->demoRequestId = $demo->id;
         $this->name = $demo->restaurant_name;
         $this->commune = (string) $demo->commune;
         $this->restaurantPhone = $demo->phone;
         $this->ownerPhone = $demo->phone;
+
+        // Demande récente : le prénom et le nom ont été écrits séparément, on les reprend tels quels
+        if (filled($demo->contact_first_name)) {
+            $this->ownerFirstName = $demo->contact_first_name;
+            $this->ownerLastName = (string) $demo->contact_last_name;
+
+            return;
+        }
+
+        // Ancienne demande (un seul champ) : on devine, et on demande de vérifier
+        $parts = preg_split('/\s+/', trim($demo->contact_name), 2);
         $this->ownerFirstName = $parts[0] ?? '';
         $this->ownerLastName = $parts[1] ?? '';
+        $this->nameGuessed = true;
     }
+
+    /** Prénom et nom devinés depuis une ancienne demande : avertissement « Vérifiez ». */
+    #[Locked]
+    public bool $nameGuessed = false;
 
     protected function rules(): array
     {

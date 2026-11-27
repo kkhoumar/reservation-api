@@ -26,7 +26,7 @@ class DemoAlertTest extends TestCase
     private function demander(string $phone = '07 88 99 00 11', string $website = '')
     {
         return Livewire::test(DemoRequestForm::class)
-            ->set('contactName', 'Koffi Yao')
+            ->set('contactFirstName', 'Koffi')->set('contactLastName', 'Yao')
             ->set('restaurantName', 'Maquis Chez Koffi')
             ->set('phone', $phone)
             ->set('commune', 'Yopougon')

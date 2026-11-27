@@ -25,7 +25,8 @@ class DemoRequestTest extends TestCase
         $component = Livewire::test(DemoRequestForm::class);
 
         foreach (array_merge([
-            'contactName' => 'Koffi Yao',
+            'contactFirstName' => 'Koffi',
+            'contactLastName' => 'Yao',
             'restaurantName' => 'Maquis Le Baobab',
             'phone' => '07 88 99 00 11',
             'commune' => 'Marcory',
@@ -153,5 +154,45 @@ class DemoRequestTest extends TestCase
             ->call('setDemoStatus', $demo->id, 'converted');
 
         $this->assertSame('new', $demo->fresh()->status);
+    }
+
+    public function test_le_prenom_et_le_nom_sont_demandes_separement(): void
+    {
+        $this->demander(['contactFirstName' => 'Adjoua', 'contactLastName' => 'YAO'])->assertHasNoErrors();
+
+        $demo = DemoRequest::sole();
+        $this->assertSame('Adjoua', $demo->contact_first_name);
+        $this->assertSame('YAO', $demo->contact_last_name);
+        $this->assertSame('Adjoua YAO', $demo->contact_name);
+    }
+
+    public function test_sans_nom_de_famille_la_demande_est_refusee(): void
+    {
+        $this->demander(['contactLastName' => ''])->assertHasErrors('contactLastName')->assertSee('Écrivez votre nom de famille.');
+        $this->assertSame(0, DemoRequest::count());
+    }
+
+    public function test_le_prenom_est_repris_tel_quel_sans_rien_deviner(): void
+    {
+        // « YAO Adjoua » : avant, l'application aurait pris « YAO » pour le prénom
+        $demo = DemoRequest::factory()->create([
+            'contact_name' => 'Adjoua YAO', 'contact_first_name' => 'Adjoua', 'contact_last_name' => 'YAO',
+            'restaurant_name' => 'Chez Adjoua', 'phone' => '0788990022',
+        ]);
+
+        Livewire::actingAs($this->admin())->withQueryParams(['demande' => $demo->id])->test(CreateRestaurant::class)
+            ->assertSet('ownerFirstName', 'Adjoua')
+            ->assertSet('ownerLastName', 'YAO')
+            ->assertSet('nameGuessed', false)
+            ->assertDontSee('Vérifiez le prénom et le nom');
+    }
+
+    public function test_une_ancienne_demande_a_un_seul_champ_demande_de_verifier(): void
+    {
+        $demo = DemoRequest::factory()->create(['contact_name' => 'YAO Adjoua', 'restaurant_name' => 'Chez Adjoua', 'phone' => '0788990033']);
+
+        Livewire::actingAs($this->admin())->withQueryParams(['demande' => $demo->id])->test(CreateRestaurant::class)
+            ->assertSet('nameGuessed', true)
+            ->assertSee('Vérifiez le prénom et le nom');
     }
 }

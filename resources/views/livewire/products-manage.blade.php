@@ -302,7 +302,7 @@
                     <tbody>
                         @foreach ($category->products as $product)
                             <tr style="border-bottom: 1px solid var(--color-border);" x-show="has([@js($product->name)])">
-                                <td style="padding: 12px 20px; font-weight: 600;"><span style="display: inline-flex; align-items: center; gap: 12px;"><x-product-icon :product="$product" :category="$category" size="36" />{{ $product->name }}</span></td>
+                                <td style="padding: 12px 20px; font-weight: 600;"><span style="display: inline-flex; align-items: center; gap: 12px;"><x-product-icon :product="$product" :category="$category" size="44" photo-size="48" />{{ $product->name }}</span></td>
                                 <td style="padding: 12px 20px; color: var(--color-text-secondary);"><div>
                                     {{ number_format($product->selling_price, 0, ',', ' ') }} FCFA
                                     @if ($product->cost_price !== null)
@@ -359,7 +359,7 @@
                         @endphp
                         <div class="pm-item {{ $product->is_available ? '' : 'off' }}" wire:key="pmi-{{ $product->id }}" x-show="has([@js($product->name)])">
                             <button type="button" class="pm-main" wire:click="editProduct({{ $product->id }})" aria-label="Modifier {{ $product->name }}">
-                                <x-product-icon :product="$product" :category="$category" size="44" class="pm-ava" />
+                                <x-product-icon :product="$product" :category="$category" size="52" class="pm-ava" />
                                 <span class="pm-txt">
                                     <span class="pm-name">{{ $product->name }}</span>
                                     <span class="pm-meta">
@@ -499,7 +499,8 @@
         .pm-ava { flex-shrink: 0; }
         .pm-img { margin-bottom: 14px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 14px; }
         .pm-img-head { display: flex; align-items: center; gap: 14px; }
-        .pm-img-big { width: 60px; height: 60px; }
+        .pm-img-big { width: 96px; height: 96px; flex: none; }
+        @media (max-width: 360px) { .pm-img-big { width: 80px; height: 80px; } }
         .pm-img-txt { min-width: 0; flex: 1; } .pm-img-txt strong { display: block; font-size: 14px; }
         .pm-img-txt > span { display: block; font-size: 12.5px; color: var(--color-text-secondary); margin-top: 1px; }
         .pm-img-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
@@ -542,7 +543,7 @@
         .pm-menu button { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; font: inherit; font-size: 14.5px; font-weight: 600; color: var(--color-text); text-align: left; cursor: pointer; }
         .pm-menu button:active, .pm-menu button:hover { background: var(--color-bg); }
         .pm-menu button.danger { color: var(--color-danger); }
-        .pm-sold { grid-column: 1 / -1; margin: -4px 16px 14px 68px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 11px; border: 1px solid #CFE6DB; background: var(--color-mint); color: var(--color-primary); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+        .pm-sold { grid-column: 1 / -1; margin: -4px 16px 14px 76px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 11px; border: 1px solid #CFE6DB; background: var(--color-mint); color: var(--color-primary); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
         .pm-sold.on { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
 
         @media (max-width: 640px) {
@@ -562,7 +563,7 @@
         @media (max-width: 380px) {
             .pm-chev { display: none; }
             .pm-main { gap: 10px; padding-left: 14px; }
-            .pm-sold { margin-left: 64px; }
+            .pm-sold { margin-left: 72px; }
         }
 
         /* « Désactiver » : contour rouge, pas un gros bouton rouge qui fait peur */

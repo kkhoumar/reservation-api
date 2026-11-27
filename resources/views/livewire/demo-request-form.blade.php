@@ -24,6 +24,9 @@
         .demo textarea { resize: vertical; min-height: 70px; }
         .demo input:focus, .demo select:focus, .demo textarea:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(193,84,30,0.12); }
         .demo .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        /* Prénom et nom : courts, ils restent côte à côte même sur téléphone */
+        .demo .row-2.names { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        @media (max-width: 330px) { .demo .row-2.names { grid-template-columns: minmax(0, 1fr); } }
         .demo .chips { display: flex; flex-wrap: wrap; gap: 8px; }
         .demo .chip { border: 1px solid var(--color-border); background: white; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--color-text); }
         .demo .chip.on { background: var(--color-primary); border-color: var(--color-primary); color: white; }
@@ -89,17 +92,23 @@
             <p style="font-size: 14px; color: var(--color-text-secondary); margin: 0 0 20px;">Ça prend 1 minute.</p>
 
             <form x-data @submit.prevent="$wire.submit().then(() => $nextTick(() => { const e = $el.querySelector('.error'); if (e) { e.scrollIntoView({ behavior: 'smooth', block: 'center' }); e.closest('.field')?.querySelector('input, select, textarea')?.focus({ preventScroll: true }); } }))">
-                <div class="row-2">
+                <div class="row-2 names">
                     <div class="field">
-                        <label for="contactName">Votre nom</label>
-                        <input id="contactName" type="text" wire:model="contactName" placeholder="Koffi Yao" autocomplete="name">
-                        @error('contactName') <div class="error">{{ $message }}</div> @enderror
+                        <label for="contactFirstName">Votre prénom</label>
+                        <input id="contactFirstName" type="text" wire:model="contactFirstName" placeholder="Adjoua" autocomplete="given-name" autocapitalize="words" maxlength="80">
+                        @error('contactFirstName') <div class="error">{{ $message }}</div> @enderror
                     </div>
                     <div class="field">
-                        <label for="phone">Téléphone / WhatsApp</label>
-                        <input id="phone" type="tel" wire:model="phone" inputmode="tel" placeholder="07 XX XX XX XX" autocomplete="tel">
-                        @error('phone') <div class="error">{{ $message }}</div> @enderror
+                        <label for="contactLastName">Votre nom</label>
+                        <input id="contactLastName" type="text" wire:model="contactLastName" placeholder="Yao" autocomplete="family-name" autocapitalize="words" maxlength="80">
+                        @error('contactLastName') <div class="error">{{ $message }}</div> @enderror
                     </div>
+                </div>
+
+                <div class="field">
+                    <label for="phone">Téléphone / WhatsApp</label>
+                    <input id="phone" type="tel" wire:model="phone" inputmode="tel" placeholder="07 XX XX XX XX" autocomplete="tel">
+                    @error('phone') <div class="error">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="row-2">

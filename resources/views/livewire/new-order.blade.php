@@ -174,7 +174,7 @@
                         @if ($left <= 0)
                             <button type="button" class="pc" disabled wire:key="pc-{{ $product->id }}-{{ $q }}-0">
                                 @if ($q)<span class="q">{{ $q }}</span>@endif
-                                <x-product-icon :product="$product" :category="$category" size="40" class="pimg" />
+                                <x-product-icon :product="$product" :category="$category" size="56" photo-size="64" class="pimg" />
                                 <span class="pn">{{ $product->name }}</span>
                                 <span class="pp"><span class="price">{{ $fcfa($product->selling_price) }} F</span><span class="out">{{ $product->isSoldOutToday() ? 'Fini aujourd\'hui' : 'Épuisé' }}</span></span>
                             </button>
@@ -185,7 +185,7 @@
                                     aria-label="Ajouter {{ $product->name }}">
                                 <span class="plus" aria-hidden="true"><x-icon name="plus" size="14" stroke="2.6" /></span>
                                 <span class="q" x-cloak x-show="count({{ $q }}, {{ $product->id }}) > 0" x-text="count({{ $q }}, {{ $product->id }})">{{ $q }}</span>
-                                <x-product-icon :product="$product" :category="$category" size="40" class="pimg" />
+                                <x-product-icon :product="$product" :category="$category" size="56" photo-size="64" class="pimg" />
                                 <span class="pn">{{ $product->name }}</span>
                                 <span class="pp">
                                     <span class="price">{{ $fcfa($product->selling_price) }} F</span>

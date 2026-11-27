@@ -54,7 +54,7 @@ class PublicPagesTest extends TestCase
     {
         Livewire::test(DemoRequestForm::class)
             ->assertSee('Demander une démo')
-            ->set('contactName', 'Koffi Yao')
+            ->set('contactFirstName', 'Koffi')->set('contactLastName', 'Yao')
             ->set('restaurantName', 'Maquis Chez Koffi')
             ->set('phone', '07 88 99 00 11')
             ->call('$set', 'establishmentType', 'Bar')
@@ -71,7 +71,7 @@ class PublicPagesTest extends TestCase
     public function test_type_et_taille_inconnus_refuses(): void
     {
         Livewire::test(DemoRequestForm::class)
-            ->set('contactName', 'Koffi Yao')
+            ->set('contactFirstName', 'Koffi')->set('contactLastName', 'Yao')
             ->set('restaurantName', 'Maquis Chez Koffi')
             ->set('phone', '0788990011')
             ->set('establishmentType', 'Casino')

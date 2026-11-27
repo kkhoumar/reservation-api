@@ -24,7 +24,7 @@ class DemoRequest extends Model
     ];
 
     protected $fillable = [
-        'contact_name', 'restaurant_name', 'phone', 'commune', 'message',
+        'contact_name', 'contact_first_name', 'contact_last_name', 'restaurant_name', 'phone', 'commune', 'message',
     ];
 
     public function restaurant(): BelongsTo

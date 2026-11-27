@@ -27,7 +27,8 @@ class DemoRequestForm extends Component
         '10+' => 'Plus de 10 personnes',
     ];
 
-    public string $contactName = '';
+    public string $contactFirstName = '';
+    public string $contactLastName = '';
     public string $restaurantName = '';
     public string $phone = '';
     public string $commune = '';
@@ -57,7 +58,8 @@ class DemoRequestForm extends Component
         $this->phone = User::normalizePhone($this->phone);
 
         $this->validate([
-            'contactName' => 'required|string|max:120',
+            'contactFirstName' => 'required|string|max:80',
+            'contactLastName' => 'required|string|max:80',
             'restaurantName' => 'required|string|max:120',
             'phone' => ['required', 'regex:' . User::PHONE_REGEX],
             'commune' => 'nullable|string|max:80',
@@ -65,6 +67,8 @@ class DemoRequestForm extends Component
             'establishmentType' => ['nullable', \Illuminate\Validation\Rule::in(self::TYPES)],
             'teamSize' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(self::TEAM_SIZES))],
         ], [
+            'contactFirstName.required' => 'Écrivez votre prénom.',
+            'contactLastName.required' => 'Écrivez votre nom de famille.',
             'phone.regex' => 'Numéro invalide : 10 chiffres, par exemple 07 11 22 33 44.',
         ]);
 
@@ -92,7 +96,9 @@ class DemoRequestForm extends Component
 
         if (! $request) {
             $request = DemoRequest::create([
-                'contact_name' => trim($this->contactName),
+                'contact_first_name' => $first = trim($this->contactFirstName),
+                'contact_last_name' => $last = trim($this->contactLastName),
+                'contact_name' => mb_substr($first . ' ' . $last, 0, 120),
                 'restaurant_name' => trim($this->restaurantName),
                 'phone' => $this->phone,
                 'commune' => trim($this->commune) ?: null,

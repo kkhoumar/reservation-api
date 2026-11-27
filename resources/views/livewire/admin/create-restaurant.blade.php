@@ -121,6 +121,11 @@
 
             <div class="card">
                 <h3 style="margin-top: 0;">Le propriétaire</h3>
+                @if ($nameGuessed)
+                    <div role="note" style="margin: -4px 0 12px; padding: 10px 12px; border-radius: 10px; background: #FFF1DC; border: 1px solid #F3C98B; color: #7A4A0A; font-size: 13px; line-height: 1.4;">
+                        <strong>Vérifiez le prénom et le nom.</strong> Cette ancienne demande n'avait qu'un seul champ pour le nom : l'application a deviné. Si le nom de famille est écrit en premier, inversez-les.
+                    </div>
+                @endif
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                     <div>

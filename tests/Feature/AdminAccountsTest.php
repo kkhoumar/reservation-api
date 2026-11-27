@@ -118,7 +118,7 @@ class AdminAccountsTest extends TestCase
         auth()->logout();
 
         Livewire::test(\App\Livewire\DemoRequestForm::class)
-            ->set('contactName', 'Kouassi Yao')
+            ->set('contactFirstName', 'Kouassi')->set('contactLastName', 'Yao')
             ->set('restaurantName', 'Kinéo 2')
             ->set('phone', '0711223344')
             ->call('submit')
