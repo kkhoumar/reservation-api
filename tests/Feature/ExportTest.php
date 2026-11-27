@@ -53,7 +53,7 @@ class ExportTest extends TestCase
 
     private function csv(string $type, array $query = []): string
     {
-        $response = $this->actingAs($this->patron)->get(route('exports.download', ['type' => $type] + $query));
+        $response = $this->actingAs($this->patron)->get(route('exports.download', ['type' => $type, 'format' => 'csv'] + $query));
         $response->assertOk();
 
         return $response->streamedContent();
@@ -61,7 +61,7 @@ class ExportTest extends TestCase
 
     public function test_la_page_exports_est_reservee_au_patron_et_a_la_gerante(): void
     {
-        $this->actingAs($this->patron)->get(route('exports.index'))->assertOk()->assertSee('Télécharger');
+        $this->actingAs($this->patron)->get(route('exports.index'))->assertOk()->assertSee('Tout télécharger (Excel)');
 
         $this->actingAs($this->jean)->get(route('exports.index'))->assertRedirect(route('tables.index'));
         $this->actingAs($this->jean)->get(route('exports.download', 'ventes'))->assertRedirect(route('tables.index'));
@@ -69,7 +69,7 @@ class ExportTest extends TestCase
 
     public function test_le_fichier_s_ouvre_dans_excel_en_francais(): void
     {
-        $response = $this->actingAs($this->patron)->get(route('exports.download', 'depenses'));
+        $response = $this->actingAs($this->patron)->get(route('exports.download', ['type' => 'depenses', 'format' => 'csv']));
 
         $response->assertOk();
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
@@ -143,7 +143,7 @@ class ExportTest extends TestCase
     {
         $this->bon(1000);
 
-        $this->assertStringContainsString('ÉTAT;', $this->csv('stock'));
+        $this->assertStringContainsString('ÉTAT DU STOCK', $this->csv('stock'));
         $this->assertStringContainsString('Ouverture;Clôture', $this->csv('caisses'));
     }
 
