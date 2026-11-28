@@ -52,7 +52,9 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
         .prod { position: relative; text-align: left; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 12px;
             min-height: 78px; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; color: var(--text); }
-        .prod .n { font-weight: 700; font-size: 14px; line-height: 1.25; }
+        .prod .top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .prod .pi { width: 44px; height: 44px; }
+        .prod .n { font-weight: 700; font-size: 14px; line-height: 1.25; min-width: 0; overflow-wrap: anywhere; }
         .prod .p { font-weight: 800; color: var(--primary); font-size: 14px; }
         .prod .q { position: absolute; top: -6px; right: -6px; min-width: 24px; height: 24px; border-radius: 999px; background: var(--accent);
             color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
@@ -109,6 +111,7 @@
     </style>
 </head>
 <body>
+    @include('partials.product-icons')
     <header>
         <a href="/comptoir" aria-label="Retour au comptoir">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
@@ -223,13 +226,19 @@
             }).join('');
         }
 
+        // Dessin du produit (les dessins sont dans la page : ils marchent sans internet)
+        function drawing(p) {
+            if (!/^[a-z0-9-]+$/.test(p.shape || '') || !/^#[0-9A-Fa-f]{3,8}$/.test(p.color || '')) return '';
+            return '<span class="pi" style="--c: ' + p.color + ';" aria-hidden="true"><svg viewBox="0 0 64 64"><use href="#pi-' + p.shape + '"/></svg></span>';
+        }
+
         function renderGrid() {
             var cat = catalog.categories[activeCat];
             $('grid').innerHTML = cat.products.map(function (p) {
                 var q = cart[p.id] || 0;
                 return '<button type="button" class="prod" data-id="' + p.id + '">'
                     + (q ? '<span class="q">' + q + '</span>' : '')
-                    + '<span class="n">' + esc(p.name) + '</span><span class="p">' + fcfa(p.price) + '</span></button>';
+                    + '<span class="top">' + drawing(p) + '<span class="n">' + esc(p.name) + '</span></span><span class="p">' + fcfa(p.price) + '</span></button>';
             }).join('');
         }
 

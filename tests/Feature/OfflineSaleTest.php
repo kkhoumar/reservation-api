@@ -191,6 +191,20 @@ class OfflineSaleTest extends TestCase
         $this->assertNotEmpty($response->json('csrf'));
     }
 
+    public function test_la_vente_de_secours_montre_le_dessin_des_produits(): void
+    {
+        $product = collect($this->actingAs($this->jean)->getJson(route('offline.catalogue'))->json('categories'))
+            ->pluck('products')->flatten(1)->firstWhere('name', 'Flag');
+
+        $key = $this->flag->iconKey($this->flag->category);
+        $this->assertSame(\App\Support\ProductIcon::shape($key), $product['shape']);
+        $this->assertSame(\App\Support\ProductIcon::color($key), $product['color']);
+
+        // Les dessins sont dans la page elle-même : ils restent visibles sans internet
+        $this->actingAs($this->jean)->get(route('offline.page'))
+            ->assertSee('id="pi-' . $product['shape'] . '"', false);
+    }
+
     public function test_la_page_de_secours_marche_pour_le_comptoir_seulement(): void
     {
         $this->actingAs($this->jean)->get(route('offline.page'))->assertOk()->assertSee('Vente de secours');

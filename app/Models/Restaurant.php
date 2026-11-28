@@ -156,7 +156,7 @@ class Restaurant extends Model
     }
 
     /** Durée d'essai gratuit proposée par défaut (création d'un maquis, site public). */
-    public const DEFAULT_TRIAL_DAYS = 14;
+    public const DEFAULT_TRIAL_DAYS = 30;
 
     /** Jours de tolérance après la date payée avant le verrouillage. */
     public const GRACE_DAYS = 3;
@@ -253,12 +253,16 @@ class Restaurant extends Model
         return $this->isPaymentOverdue() && ! $this->isSubscriptionExpired();
     }
 
-    /** Jours restants avant l'échéance (négatif si dépassée), null sans échéance. */
+    /**
+     * Jours restants avant l'échéance (négatif si dépassée), null sans échéance.
+     * On compte en jours du calendrier : le jour de l'inscription à un essai
+     * de 30 jours, le patron lit « 30 jours », pas « 29 » à cause des heures.
+     */
     public function daysLeft(): ?int
     {
         $end = $this->accessEndsAt();
 
-        return $end ? (int) floor(now()->diffInDays($end, false)) : null;
+        return $end ? (int) now()->startOfDay()->diffInDays($end->copy()->startOfDay(), false) : null;
     }
 
     /** À rappeler au patron : échéance proche, ou dépassée mais encore en grâce. */

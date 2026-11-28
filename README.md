@@ -22,7 +22,7 @@ Logiciel de gestion en ligne (SaaS) pour les **maquis et restaurants en Côte d'
 
 ## Fonctionnalités actuelles
 
-- **Comptes** : inscription d'un établissement (14 jours d'essai), connexion par numéro de téléphone.
+- **Comptes** : inscription d'un établissement (30 jours d'essai), connexion par numéro de téléphone.
 - **Rôles** : `owner`, `manager`, `cashier`, `server`, plus un Super Admin de la plateforme.
 - **Tables et zones** : plan des tables avec leur statut (libre, occupée, en attente de paiement).
 - **Commandes** : sur place ou à emporter, notes par article, envoi en cuisine, contrôle du stock.

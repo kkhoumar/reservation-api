@@ -34,7 +34,7 @@ class OfflineSaleController extends Controller
         $products = Product::with('category')
             ->where('is_available', true)->whereNull('archived_at')
             ->orderBy('name')
-            ->get(['id', 'name', 'selling_price', 'stock_quantity', 'track_stock', 'sold_out_on', 'category_id'])
+            ->get(['id', 'name', 'icon', 'selling_price', 'stock_quantity', 'track_stock', 'sold_out_on', 'category_id'])
             ->reject(fn (Product $p) => $p->isSoldOutToday());
 
         $categories = $products->groupBy(fn ($p) => $p->category?->name ?? 'Autres')
@@ -45,6 +45,9 @@ class OfflineSaleController extends Controller
                     'id' => $p->id,
                     'name' => $p->name,
                     'price' => (int) $p->selling_price,
+                    // Le dessin du produit (gardé dans la page, il marche sans internet)
+                    'shape' => \App\Support\ProductIcon::shape($key = $p->iconKey($p->category)),
+                    'color' => \App\Support\ProductIcon::color($key),
                     'stock' => $p->track_stock ? (int) $p->stock_quantity : null,
                 ])->values(),
             ])

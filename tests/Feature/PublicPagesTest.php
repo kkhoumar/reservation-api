@@ -25,7 +25,7 @@ class PublicPagesTest extends TestCase
             ->assertSee('Crédits clients')
             ->assertSee('Stock surveillé')
             ->assertSee('Le rapport du soir sur WhatsApp')
-            ->assertSee('14 jours d')
+            ->assertSee('30 jours d')
             ->assertSee("Installer l'application mobile", false)
             ->assertSee(route('demo.request'), false);
     }
